@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-from fermiMCCD import *
+from DECamCCD import *
 from scipy.optimize import leastsq
 from enthought.mayavi.mlab import *
 

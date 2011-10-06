@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-from fermiMCCD import *
+from DECamCCD import *
 from scipy.optimize import leastsq
 from enthought.mayavi.mlab import *
 
@@ -308,41 +308,3 @@ np.savetxt(baseDir+'flatness_lowerleft.txt',data)
 
 
 
-"""
-----analysis----
-from fermiMCCD import *
-from scipy.optimize import leastsq
-from enthought.mayavi.mlab import *
-
-baseDir = '/home/jghao/research/ccd/imager/flatness_7_29_11/lowerleft/'
-data=pf.getdata(baseDir+'flatness_lowerleft.fit')
-x=data.field('x')
-y=data.field('y')
-z=data.field('z')
-zerr=data.field('zerr')
-zoffset=data.field('zoffset')
-name=data.field('CCD')
-
-pl.figure(figsize=(11,6))
-pl.plot(np.arange(len(name)),zoffset,'b.')
-pl.errorbar(np.arange(len(name)),zoffset,yerr=zerr,ecolor='b',fmt='.')
-pl.xticks(np.arange(len(name)),name)
-pl.hlines(np.median(zoffset),-1,len(x)+1,'r')
-pl.hlines(np.median(zoffset)+2.1,-1,len(x)+1,'g')
-pl.hlines(np.median(zoffset)-2.1,-1,len(x)+1,'g')
-pl.ylabel('offset (pixels)')
-pl.xlabel('CCDs')
-pl.savefig('/home/jghao/research/ccd/imager/flatness_7_29_11/results/lowerleft.png')
-
-
-scale=2048.
-xx=x/scale
-yy=y/scale
-zz=z/20.
-zzoffset=zoffset/20.
-
-barchart(xx,yy,zz)
-barchart(xx,yy,zzoffset)
-
-
-"""

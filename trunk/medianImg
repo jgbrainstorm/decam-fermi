@@ -6,7 +6,10 @@ import glob as gl
 from fermiMCCD_def import * 
 
 if len(sys.argv) == 1:
-    print 'syntax: medianImg image1.fits image2.fits ... '
+    print 'syntax: '
+    print 'For a given set of images: medianImg image1.fits image2.fits ... '
+    print 'For all images in the current dir: medianImg all'
+    print 'The resulting median image will be named as median.fits'
 elif sys.argv[1]=='all':
     ff=gl.glob('*.fits')
     nimg=len(ff)-1
@@ -18,6 +21,7 @@ elif sys.argv[1]=='all':
             b.append(pf.getdata(ff[j],i))
         hdu[i].data=np.median(b,axis=0)
         hdu[i].scale('int16','',bzero=32768)
+    hdu.writeto('median.fits')
 else:
     nimg=len(sys.argv)-1
     hdu=pf.open(sys.argv[1])
@@ -29,4 +33,4 @@ else:
             b.append(pf.getdata(sys.argv[j],i))
         hdu[i].data=np.median(b,axis=0)
         hdu[i].scale('int16','',bzero=32768)
-hdu.writeto('median.fits')
+    hdu.writeto('median.fits')

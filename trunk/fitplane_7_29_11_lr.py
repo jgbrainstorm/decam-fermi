@@ -1,11 +1,7 @@
 #! /usr/bin/env python
-from fermiMCCD import *
+from DECamCCD import *
 from scipy.optimize import leastsq
 from enthought.mayavi.mlab import *
-
-import rpy2.robjects as robjects
-import rpy2.robjects.numpy2ri
-r=robjects.r
 
 ccd=['s1','s2','s3','s4','n4','n3','n2','n1','n8','n9','n10','n16','n15','n14','n20','n21','n22','n26','n25','n29','n30']
 
