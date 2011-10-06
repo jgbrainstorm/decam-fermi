@@ -7,7 +7,7 @@ Python packages needed:
   * scipy
   * matplotlib
 
-== Standalone routines==
+== Standalone routines== (type the command to see the usage)
   * noise        (calculate the noise for a given extension)
   * noisenew     (calculate the noise for a given extension using two images)
   * noiseall     (calculate the noise using one image for all extensions)
