@@ -1,0 +1,46 @@
+#! /usr/bin/env python
+"""
+standalone code to calculate the dark current for individual extension of the ccds images from imager. the ccd file needs to be the standard DES ccd fits image with the convention of 1 extension corresponding to 2k x 4k with overscans on the sides.
+Created by: Jiangang Hao @ Fermilab, 12/5/2010 
+"""
+
+
+import sys
+if len(sys.argv) == 1:
+    print 'syntax: dark imageName extension'
+else:
+    import numpy as np
+    import pylab as pl
+    import pyfits as pf
+    b=pf.getdata(sys.argv[1],sys.argv[2])
+    hdr=pf.getheader(sys.argv[1],sys.argv[2])
+    moscanL=np.median(b[1500:2000,10:50])
+    mimgL=np.median(b[1500:2000,400:440])
+    #bins=np.unique(np.append(b[1500:2000,10:50],b[1500:2000,400:440]))
+    bins=np.arange(moscanL-20,mimgL+20,1)
+    fig=pl.figure(figsize=(15,8))
+    ax=fig.add_subplot(1,2,1)
+    pl.hist(b[1500:2000,10:50].flatten(),bins=bins,facecolor='green',normed=True)
+    pl.hist(b[1500:2000,400:440].flatten(),bins=bins,facecolor='blue',alpha=0.5,normed=True)
+    pl.ylim(0,0.3)
+    pl.xlabel('Counts (ADU)')
+    pl.text(0.1,0.8,'left Overscan: '+str(np.round(moscanL,4))+'(ADU)',transform = ax.transAxes)
+    pl.text(0.1,0.85,'left Image: '+str(np.round(mimgL,4))+'(ADU)',transform = ax.transAxes)
+    pl.text(0.1,0.9,'dark: '+str(np.round(mimgL-moscanL,4))+'(ADU)',transform = ax.transAxes)
+    pl.title(hdr['detpos']+' Left: Dark'+' Extension: '+sys.argv[2])
+    print '----- Left dark is: '+str(np.round(mimgL-moscanL,4))+' -----'
+    ax=fig.add_subplot(1,2,2)
+    moscanR=np.median(b[1500:2000,2110:2150])
+    mimgR=np.median(b[1500:2000,1400:1440])
+    #bins=np.unique(np.append(b[1500:2000,2110:2150],b[1500:2000,1400:1440]))
+    bins=np.arange(moscanR-20,mimgR+20,1)
+    pl.hist(b[1500:2000,2110:2150].flatten(),bins=bins,facecolor='green',normed=True)
+    pl.hist(b[1500:2000,1400:1440].flatten(),bins=bins,facecolor='blue',alpha=0.5,normed=True)
+    pl.ylim(0,0.3)
+    pl.xlabel('Counts (ADU)')
+    pl.text(0.1,0.8,'right Overscan: '+str(np.round(moscanR,4))+'(ADU)',transform = ax.transAxes)
+    pl.text(0.1,0.85,'right Image: '+str(np.round(mimgR,4))+'(ADU)',transform = ax.transAxes)
+    pl.text(0.1,0.9,'dark: '+str(np.round(mimgR-moscanR,4))+'(ADU)',transform = ax.transAxes)
+    pl.title(hdr['detpos']+' Right: Dark'+' Extension: '+sys.argv[2])
+    print '----- Right dark is: '+str(np.round(mimgR-moscanR,4))+' -----'
+    pl.show()

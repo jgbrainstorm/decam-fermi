@@ -1,0 +1,43 @@
+#! /usr/bin/env python
+"""
+standalone code to calculate the noise for all extensions of the ccds images from imager. the ccd file needs to be the standard DES ccd fits image with the convention of 1 extension corresponding to 2k x 4k with overscans on the sides.
+Created by: Jiangang Hao @ Fermilab, 9/4/2010 
+"""
+
+import sys
+sys.path.append('/home/jghao/fmccd')
+from fermiMCCD import *
+if len(sys.argv) == 1:
+    print 'syntax: noiseall imageName1 imageName2'
+else:
+    import numpy as np
+    import pylab as pl
+    import pyfits as pf
+    ccd=[]
+    noise=[]
+    print '----extension----Position----noiseL (ADU)----noiseR (ADU)'
+    for i in extidx:
+        b=pf.getdata(sys.argv[1],i)-pf.getdata(sys.argv[2],i)
+        hdr=pf.getheader(sys.argv[1],i)
+        if hdr['detpos'][0]=='N':
+            noiseL=np.std(b[500:4000,20:40])/np.sqrt(2.)
+            noiseR=np.std(b[500:4000,2120:2140])/np.sqrt(2.)
+        if hdr['detpos'][0]=='S':
+            noiseL=np.std(b[500:4000,2120:2140])/np.sqrt(2.)
+            noiseR=np.std(b[500:4000,20:40])/np.sqrt(2.)       
+        ccd.append(hdr['detpos']+'_L')
+        ccd.append(hdr['detpos']+'_R')
+        noise.append(noiseL)
+        noise.append(noiseR)
+        print i,'--',hdr['detpos'],'---',noiseL,noiseR
+    noise=np.array(noise)
+    if os.path.isfile('noise.txt'):
+        os.system('rm noise.txt')
+    f = open('noise.txt', 'w')
+    for j in range(len(ccd)):
+        f.write(ccd[j]+'   '+str(round(noise[j],4))+'\n')
+    f.close()
+        
+    print '---- noise analysis complete ----'
+
+    
