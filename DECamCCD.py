@@ -16,7 +16,7 @@ import glob as gl
 import os
 import sys
 import string
-from fermiMCCD_def import *
+from DECamCCD_def import *
 
 #----gaussfit-----------------
 

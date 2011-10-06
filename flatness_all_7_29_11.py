@@ -2,7 +2,7 @@
 # examine the flatness
 import sys
 sys.path.append('/home/jghao/fmccd')
-from fermiMCCD import *
+from DECamCCD import *
 
 
 #---------------------upper left-----------
