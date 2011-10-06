@@ -1,4 +1,4 @@
-=The general idea of this package is to make it portable and easy to use. Therefore, it does not require any installation and special packages. =
+_*The general idea of this package is to make it portable and easy to use. Therefore, it does not require any installation and special packages.*_
 
 == dependency==
 Python packages needed: 
@@ -7,7 +7,8 @@ Python packages needed:
   * scipy
   * matplotlib
 
-== Standalone routines== (type the command to see the usage)
+== Standalone routines== 
+(type the command to see the usage)
   * noise        (calculate the noise for a given extension)
   * noisenew     (calculate the noise for a given extension using two images)
   * noiseall     (calculate the noise using one image for all extensions)
