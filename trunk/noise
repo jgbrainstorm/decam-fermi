@@ -1,0 +1,39 @@
+#! /usr/bin/env python
+
+"""
+standalone code to calculate the noise for individual extension of the ccds images from imager. the ccd file needs to be the standard DES ccd fits image with the convention of 1 extension corresponding to 2k x 4k with overscans on the sides.
+Created by: Jiangang Hao @ Fermilab, 9/4/2010 
+"""
+
+import sys
+if len(sys.argv) == 1:
+    print 'syntax: noise imageName extension'
+else:
+    import numpy as np
+    import pylab as pl
+    import pyfits as pf
+    b=pf.getdata(sys.argv[1],sys.argv[2])
+    hdr=pf.getheader(sys.argv[1],sys.argv[2])
+    noiseL=np.std(b[100:4000,10:50])
+    bins=np.unique(b[100:4000,10:50])
+    fig=pl.figure(figsize=(15,8))
+    ax=fig.add_subplot(1,2,1)
+    pl.hist(b[100:4000,10:50].flatten(),bins=bins,facecolor='green',normed=True)
+    pl.ylim(0,0.3)
+    pl.xlabel('Counts (ADU)')
+    pl.text(0.2,0.8,'noise: '+str(np.round(noiseL,4))+'(ADU)',transform = ax.transAxes)
+    pl.text(0.2,0.85,'Left Amp of ext: '+sys.argv[2],transform = ax.transAxes)
+    pl.title(hdr['detpos']+' Left: Noise')
+    print '----- Left noise is: '+str(noiseL)+' -----'
+    ax=fig.add_subplot(1,2,2)
+    noiseR=np.std(b[100:4000,2110:2150])
+    bins=np.unique(b[100:4000,2110:2150])
+    pl.hist(b[100:4000,2110:2150].flatten(),bins=bins,facecolor='orange',normed=True)
+    pl.ylim(0,0.3)
+    pl.xlabel('Counts (ADU)')
+    pl.text(0.2,0.8,'noise: '+str(np.round(noiseR,4))+'(ADU)',transform = ax.transAxes)
+    pl.text(0.2,0.85,'Right Amp of ext: '+sys.argv[2],transform = ax.transAxes)
+    pl.title(hdr['detpos']+' Right: Noise')
+    print '----- Right noise is: '+str(noiseR)+' -----'
+    pl.show()
+    

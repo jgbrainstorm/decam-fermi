@@ -1,0 +1,32 @@
+#! /usr/bin/env python
+import numpy as np
+import pyfits as pf
+import sys
+import glob as gl
+from fermiMCCD_def import * 
+
+if len(sys.argv) == 1:
+    print 'syntax: medianImg image1.fits image2.fits ... '
+elif sys.argv[1]=='all':
+    ff=gl.glob('*.fits')
+    nimg=len(ff)-1
+    hdu=pf.open(ff[0])
+    hdu.verify('silentfix')
+    for i in extidx:
+        for j in range(1,nimg+1):
+            b=[]
+            b.append(pf.getdata(ff[j],i))
+        hdu[i].data=np.median(b,axis=0)
+        hdu[i].scale('int16','',bzero=32768)
+else:
+    nimg=len(sys.argv)-1
+    hdu=pf.open(sys.argv[1])
+    hdu.verify('silentfix')
+    nExt=len(hdu)
+    for i in extidx:
+        for j in range(1,nimg+1):
+            b=[]
+            b.append(pf.getdata(sys.argv[j],i))
+        hdu[i].data=np.median(b,axis=0)
+        hdu[i].scale('int16','',bzero=32768)
+hdu.writeto('median.fits')

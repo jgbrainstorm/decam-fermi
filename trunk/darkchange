@@ -1,0 +1,56 @@
+#! /usr/bin/env python
+"""
+standalone code to calculate the mean dark current change between two images for a given number of extensions. The ccd file needs to be the standard DES ccd fits image with the convention of 1 extension corresponding to 2k x 4k with overscans on the sides.
+Created by: Jiangang Hao @ Fermilab, 12/15/2010 
+"""
+
+
+import sys
+if len(sys.argv) == 1:
+    print 'syntax: darkchange refName newName'
+else:
+    import numpy as np
+    import pylab as pl
+    import pyfits as pf
+    hdu=pf.open(sys.argv[1])
+    nn=len(hdu)
+    darkref=[]
+    darknew=[]
+    ccdpos=[]
+    ext=np.arange(1,nn,1)
+    for i in ext:
+        b=pf.getdata(sys.argv[1],i)
+        hdr=pf.getheader(sys.argv[1],i)
+        darkL=np.mean(b[1500:2000,400:440])-np.mean(b[1500:2000,10:50])
+        darkR=np.mean(b[1500:2000,1400:1440])-np.mean(b[1500:2000,2110:2150])
+        if np.mean(b[1500:2000,10:50]) != 0:
+            darkref.append(darkL)
+            ccdpos.append(hdr['detpos']+'L')
+        if np.mean(b[1500:2000,2110:2150]) != 0:
+            darkref.append(darkR)
+            ccdpos.append(hdr['detpos']+'L')
+    for i in ext:
+        b=pf.getdata(sys.argv[2],i)
+        hdr=pf.getheader(sys.argv[2],i)
+        darkL=np.mean(b[1500:2000,400:440])-np.mean(b[1500:2000,10:50])
+        darkR=np.mean(b[1500:2000,1400:1440])-np.mean(b[1500:2000,2110:2150])
+        if np.mean(b[1500:2000,10:50]) != 0:
+            darknew.append(darkL)
+        if np.mean(b[1500:2000,2110:2150]) != 0:
+            darknew.append(darkR)
+    new=np.array(darknew)
+    ref=np.array(darkref)
+    change=(new-ref)/ref
+    mchange=np.median((new-ref)/ref)
+    pl.figure(figsize=(15,8))
+    ext=np.arange(len(change))
+    pl.plot(ext,change,'bo')
+    pl.xticks(ext,ccdpos,rotation=45)
+    pl.xlabel('CCD Amps')
+    pl.ylabel('fraction change w.r.t. ref')
+    pl.hlines(mchange,ext[0],ext[-1],color='green',linestyle='dashed')
+    pl.ylim(mchange-0.5,mchange+0.5)
+    pl.title('Dark Current Analysis')
+    pl.figtext(0.2,0.85,'median fractional change: '+str(np.round(mchange,4)))
+    print 'median fractional change w.r.t. ref: ', mchange
+    pl.show()

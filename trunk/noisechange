@@ -1,0 +1,57 @@
+#! /usr/bin/env python
+"""
+standalone code to calculate the mean dark current change between two images for a given number of extensions. The ccd file needs to be the standard DES ccd fits image with the convention of 1 extension corresponding to 2k x 4k with overscans on the sides.
+Created by: Jiangang Hao @ Fermilab, 12/15/2010 
+"""
+
+
+import sys
+if len(sys.argv) == 1:
+    print 'syntax: noisechange refName newName'
+else:
+    import numpy as np
+    import pylab as pl
+    import pyfits as pf
+    hdu=pf.open(sys.argv[1])
+    nn=len(hdu)
+    noiseref=[]
+    noisenew=[]
+    ccdpos=[]
+
+    ext=np.arange(1,nn,1)
+    for i in ext:
+        b=pf.getdata(sys.argv[1],i)
+        hdr=pf.getheader(sys.argv[1],i)
+        noiseL=np.std(b[100:4000,10:50])
+        noiseR=np.std(b[100 :4000,2110:2150])
+        if np.mean(b[100:4000,10:50]) != 0:
+            noiseref.append(noiseL)
+            ccdpos.append(hdr['detpos']+'L')
+        if np.mean(b[100:4000,10:50]) != 0:
+            noiseref.append(noiseR)
+            ccdpos.append(hdr['detpos']+'R')
+    for i in ext:
+        b=pf.getdata(sys.argv[2],i)
+        hdr=pf.getheader(sys.argv[2],i)
+        noiseL=np.std(b[100:4000,10:50])
+        noiseR=np.std(b[100 :4000,2110:2150])
+        if np.mean(b[100:4000,10:50]) != 0:
+            noisenew.append(noiseL)
+        if np.mean(b[100 :4000,2110:2150]) != 0:
+            noisenew.append(noiseR)
+    new=np.array(noisenew)
+    ref=np.array(noiseref)
+    change=(new-ref)/ref
+    mchange=np.median((new-ref)/ref)
+    ext=np.arange(len(change))
+    pl.figure(figsize=(15,8))
+    pl.plot(ext,change,'bo')
+    pl.xticks(ext,ccdpos,rotation=45)
+    pl.xlabel('CCD Amps')
+    pl.ylabel('fraction change w.r.t. ref')
+    pl.hlines(mchange,ext[0],ext[-1],color='green',linestyle='dashed')
+    pl.ylim(mchange-0.5,mchange+0.5)
+    pl.title('Noise Analysis')
+    pl.figtext(0.2,0.85,'median fractional change: '+str(np.round(mchange,4)))
+    print 'median fractional change w.r.t. ref: ', mchange
+    pl.show()
