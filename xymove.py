@@ -3,7 +3,7 @@ This code define the CCD coordinate
 
 """
 import os
-from fermiMCCD_def import *
+from DECamCCD_def import *
 
 def moveto(CCD,xoffset=None,yoffset=None):
 
