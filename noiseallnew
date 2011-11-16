@@ -6,7 +6,7 @@ Created by: Jiangang Hao @ Fermilab, 9/4/2010
 
 import sys
 sys.path.append('/home/jghao/fmccd')
-from fermiMCCD import *
+from DECamCCD import *
 if len(sys.argv) == 1:
     print 'syntax: noiseall imageName1 imageName2'
 else:
