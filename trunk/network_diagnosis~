@@ -1,0 +1,15 @@
+#this code diagonise the network connection
+
+ping -i 10 -c 40000 readout1 >> /usr/remote/data2/jiangang_test/readout1.txt&
+ping -i 10 -c 40000 readout2 >> /usr/remote/data2/jiangang_test/readout2.txt&
+ping -i 10 -c 40000 readout3 >> /usr/remote/data2/jiangang_test/readout3.txt&
+ping -i 10 -c 40000 readout4 >> /usr/remote/data2/jiangang_test/readout4.txt&
+ping -i 10 -c 40000 readout5 >> /usr/remote/data2/jiangang_test/readout5.txt&
+ping -i 10 -c 40000 readout6 >> /usr/remote/data2/jiangang_test/readout6.txt&
+
+ping -i 10 -c 40000 pipeline1 >> /usr/remote/data2/jiangang_test/pipeline1.txt&
+ping -i 10 -c 40000 pipeline2 >> /usr/remote/data2/jiangang_test/pipeline2.txt&
+ping -i 10 -c 40000 pipeline3 >> /usr/remote/data2/jiangang_test/pipeline3.txt&
+ping -i 10 -c 40000 pipeline4 >> /usr/remote/data2/jiangang_test/pipeline4.txt&
+ping -i 10 -c 40000 pipeline5 >> /usr/remote/data2/jiangang_test/pipeline5.txt&
+ping -i 10 -c 40000 pipeline6 >> /usr/remote/data2/jiangang_test/pipeline6.txt&
