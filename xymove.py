@@ -121,7 +121,7 @@ def moveto(CCD,xoffset=None,yoffset=None):
     else:
         print "----Not in the range! Try again!-----"
 
-    os.system('/home/jghao/fmccd/sendsockcmd -h 131.225.90.52 -p 2055 -t 1000000 "ma,'+str(x_target)+','+str(y_target)+'"')
+    os.system('/usr/remote/user/sispi/jiangang/decam-fermi/sendsockcmd -h 139.229.14.66 -p 2055 -t 1000000 "ma,'+str(x_target)+','+str(y_target)+'"')
     return(x_target,y_target)    
    
 #------move to left channel-----
@@ -137,7 +137,7 @@ def moveto_l(CCD,xoffset=None,yoffset=None):
     else:
         y_target = y_target + 9.0
 
-    os.system('/home/jghao/fmccd/sendsockcmd -h 131.225.90.52 -p 2055 -t 1000000 "ma,'+str(x_target)+','+str(y_target)+'"')
+    os.system('/usr/remote/user/sispi/jiangang/decam-fermi/sendsockcmd -h 139.229.14.66 -p 2055 -t 1000000 "ma,'+str(x_target)+','+str(y_target)+'"')
     return(x_target,y_target)    
 
   
@@ -155,17 +155,17 @@ def moveto_r(CCD,xoffset=None,yoffset=None):
     else:
         y_target = y_target - 9.0
 
-    os.system('/home/jghao/fmccd/sendsockcmd -h 131.225.90.52 -p 2055 -t 1000000 "ma,'+str(x_target)+','+str(y_target)+'"')
+    os.system('/usr/remote/user/sispi/jiangang/decam-fermi/sendsockcmd -h 139.229.14.66 -p 2055 -t 1000000 "ma,'+str(x_target)+','+str(y_target)+'"')
    
     return(x_target,y_target)      
 
 #-------move to right channel----
 
 def moveto_origin():
-    os.system('/home/jghao/fmccd/sendsockcmd -h 131.225.90.52 -p 2055 -t 1000000 "ma,0,0"')
+    os.system('/usr/remote/usr/sispi/jiangang/decam-fermi/sendsockcmd -h 139.229.14.66 -p 2055 -t 1000000 "ma,0,0"')
     return("moved to origin")
 
 
 def moveto_xy(x,y):
-    os.system('/home/jghao/fmccd/sendsockcmd -h 131.225.90.52 -p 2055 1000000 "ma,'+str(x)+','+str(y)+'"')
+    os.system('/usr/remote/user/sispi/jiangang/decam-fermi/sendsockcmd -h 139.229.14.66 -p 2055 -t 1000000 "ma,'+str(x)+','+str(y)+'"')
     return("moved to the position you specified")

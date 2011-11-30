@@ -9,7 +9,6 @@ if len(sys.argv) == 1:
     print 'syntax: noiseall imageName'
 else:
     import numpy as np
-    import pylab as pl
     import pyfits as pf
     hdu=pf.open(sys.argv[1])
     nn=len(hdu)
