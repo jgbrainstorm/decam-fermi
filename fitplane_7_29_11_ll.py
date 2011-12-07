@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 from DECamCCD import *
-from scipy.optimize import leastsq
-from enthought.mayavi.mlab import *
+#from scipy.optimize import leastsq
+#from enthought.mayavi.mlab import *
 
-import rpy2.robjects as robjects
-import rpy2.robjects.numpy2ri
-r=robjects.r
+#import rpy2.robjects as robjects
+#import rpy2.robjects.numpy2ri
+#r=robjects.r
 
 ccd=['s7','s6','s5','s4','n4','n5','n6','n7','n13','n12','n11','n17','n18','n19','n24','n23','n22','n27','n28','n31','n30']
 
@@ -14,8 +14,8 @@ fileNo=range(len(ccd))
 ccd2fileNo=dict(zip(ccd,fileNo))
 
 
-
-baseDir = '/home/jghao/research/ccd/imager/flatness_7_29_11/lowerleft/'
+baseDir='/usr/remote/user/sispi/jiangang/test_flat/lowerleft/'
+#baseDir = '/home/jghao/research/ccd/imager/flatness_7_29_11/lowerleft/'
 cat=gl.glob(baseDir+'Image*catalog.fits')
 cat.sort()
 x=[]

@@ -46,7 +46,8 @@ for i in range(len(ext)):
 name = gl.glob(baseDir+'*sub.fits')
 name.sort()
 Nfile=len(name)
-sexdir='/home/jghao/software/sextractor-2.5.0/config/'
+#sexdir='/home/jghao/software/sextractor-2.5.0/config/'
+sexdir='/usr/remote/user/sispi/jiangang/sextractor-2.5.0/config/'
 
 for i in range(Nfile):
         img_name=name[i]
@@ -100,7 +101,8 @@ for i in range(len(ext)):
 name = gl.glob(baseDir+'*sub.fits')
 name.sort()
 Nfile=len(name)
-sexdir='/home/jghao/software/sextractor-2.5.0/config/'
+#sexdir='/home/jghao/software/sextractor-2.5.0/config/'
+sexdir='/usr/remote/user/sispi/jiangang/sextractor-2.5.0/config/'
 
 for i in range(Nfile):
         img_name=name[i]
@@ -153,7 +155,8 @@ for i in range(len(ext)):
 name = gl.glob(baseDir+'*sub.fits')
 name.sort()
 Nfile=len(name)
-sexdir='/home/jghao/software/sextractor-2.5.0/config/'
+#sexdir='/home/jghao/software/sextractor-2.5.0/config/'
+sexdir='/usr/remote/user/sispi/jiangang/sextractor-2.5.0/config/'
 
 for i in range(Nfile):
         img_name=name[i]
@@ -206,7 +209,8 @@ for i in range(len(ext)):
 name = gl.glob(baseDir+'*sub.fits')
 name.sort()
 Nfile=len(name)
-sexdir='/home/jghao/software/sextractor-2.5.0/config/'
+#sexdir='/home/jghao/software/sextractor-2.5.0/config/'
+sexdir='/usr/remote/user/sispi/jiangang/sextractor-2.5.0/config/'
 
 for i in range(Nfile):
         img_name=name[i]

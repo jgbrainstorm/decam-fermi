@@ -1479,7 +1479,8 @@ def offset(CCD1=None,CCD2=None,cat=None,xadd=None,yadd=None,sep=None,rot=None,cr
 
     in1,in2=ccd_match(CCD1=CCD1,xa=x0,ya=y0,CCD2=CCD2,xb=x1,yb=y1,xadd=xadd,yadd=yadd,sep=sep,rot=rot)
     mean_ltan,stdm_ltan=ccd_match_offset(CCD1=CCD1,xa=x0,ya=y0,CCD2=CCD2,xb=x1,yb=y1,ina=in1,inb=in2,xadd=xadd,yadd=yadd,rot=rot,crit_f=crit_f)
-    return mean_ltan,stdm_ltan,x0,y0,x1,y1,in1,in2
+    #return mean_ltan,stdm_ltan,x0,y0,x1,y1,in1,in2
+    return mean_ltan,stdm_ltan
 
 def offset_x(CCD1=None,CCD2=None,cat=None,xadd=None,yadd=None,sep=None,rot=None,crit_f=None,ccd2fileNo=None):
     """
