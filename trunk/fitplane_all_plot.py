@@ -1,6 +1,6 @@
-from fermiMCCD import *
-from scipy.optimize import leastsq
-from enthought.mayavi.mlab import *
+from DECamCCD import *
+#from scipy.optimize import leastsq
+#from enthought.mayavi.mlab import *
 
 #--------plot all ---------------
 
@@ -8,7 +8,7 @@ from enthought.mayavi.mlab import *
 ul=pf.getdata('/home/jghao/research/ccd/imager/flatness_7_29_11/upperleft/flatness_upperleft.fit')
 ur=pf.getdata('/home/jghao/research/ccd/imager/flatness_7_29_11/upperright/flatness_upperright.fit')
 
-ll=pf.getdata('/home/jghao/research/ccd/imager/flatness_7_29_11/lowerleft/flatness_lowerleft.fit')
+ll=pf.getdata('/usr/remote/user/sispi/jiangang/test_flat/lowerleft/flatness_lowerleft.fit')
 lr=pf.getdata('/home/jghao/research/ccd/imager/flatness_7_29_11/lowerright/flatness_lowerright.fit')
 
 x=np.append(ul.field('x'),ur.field('x'))

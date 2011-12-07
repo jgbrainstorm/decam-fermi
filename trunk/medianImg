@@ -3,7 +3,7 @@ import numpy as np
 import pyfits as pf
 import sys
 import glob as gl
-from fermiMCCD_def import * 
+from DECamCCD_def import *
 
 if len(sys.argv) == 1:
     print 'syntax: '
@@ -11,7 +11,7 @@ if len(sys.argv) == 1:
     print 'For all images in the current dir: medianImg all'
     print 'The resulting median image will be named as median.fits'
 elif sys.argv[1]=='all':
-    ff=gl.glob('*.fits')
+    ff=gl.glob('*.fits*')
     nimg=len(ff)-1
     hdu=pf.open(ff[0])
     hdu.verify('silentfix')

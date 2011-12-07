@@ -32,7 +32,7 @@ ccd=['s30','s29','s25','s26','s22','s21','s20','s14','s15','s16','s10','s9','s8'
 import sys, time
 import PML.core
 import SISPIlib.logger as Log
-from fermiMCCD import *
+from DEcamCCD import *
 try:
     # Connect to OCS
     ocs = PML.core.PML_Connection('OCS','OCS')
