@@ -1,0 +1,11 @@
+CRAY is an optical ray trace program oriented towards telescopes.
+
+Instructions for the impatient:
+
+1. Type "trace".
+
+2. Type "source demo.tcl"
+
+3. Read the file "cray/doc/www/ray.operation.html"
+
+4. Data files are in cray/data

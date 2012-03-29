@@ -1,0 +1,207 @@
+file hazcam.lns
+
+#Ray Pattern information
+nstep 6
+ntype 1
+
+typedef struct {
+   char comment<80>;
+   } HISTORY;
+
+typedef struct {
+   char param<10>;
+   double val;
+   } TEL;
+
+typedef struct {
+   int filter;
+   char param<10>;
+   double val;
+   } FOCAL;
+
+typedef struct {
+   int filter;
+   int mode;
+   } PUPIL;
+
+typedef struct {
+   double surfid;
+   char param<10>;
+   double val;
+   } SURF;
+
+typedef struct {
+   double surfid;
+   int filter;
+   double val;
+   } INDEX;
+
+typedef struct {
+   double surfid;
+   char glass<80>;
+   } GLASS;
+
+typedef struct {
+   double surfid;
+   char comment<80>;
+   } COM;
+
+history {Limited wavelengths, front window}
+history {Better scale, field size}
+history {Added pupil info}
+
+tel       diam               0
+tel        fr1               0
+tel        fr2               0
+tel       back               0
+tel     finner               0
+
+#Focal plane parameters
+#     Filter  Parameter           Value
+
+focal      1      xsize             6.4
+focal      1      ysize             6.4
+focal      1      scale         22036.5
+focal      1       wave             0.6
+focal      1     weight               1
+
+focal      2      xsize             6.4
+focal      2      ysize             6.4
+focal      2      scale         22036.5
+focal      2       wave             0.7
+focal      2     weight               1
+
+focal      3      xsize             6.4
+focal      3      ysize             6.4
+focal      3      scale         22036.5
+focal      3       wave             0.8
+focal      3     weight               1
+
+pupil      1          1
+pupil      2          1
+pupil      3          1
+
+Surface parameters
+#         SurfId  Parameter           Value
+
+surf      0               z          -1e+14
+index     0               1            1.43
+index     0               2            1.43
+index     0               3            1.43
+
+com       1      window
+surf      1               z             -35
+surf      1         outstop      34.8895601
+index     1               1      1.51634512
+index     1               2      1.51307516
+index     1               3      1.51090569
+glass     1                       BK7
+
+com       2      window
+surf      2               z             -33
+surf      2         outstop      33.3978195
+index     2               1               1
+index     2               2               1
+index     2               3               1
+glass     2                       air
+
+com       3      L1
+surf      3            curv    0.0190534258
+surf      3               z       -23.59795
+surf      3         outstop      11.0974928
+index     3               1      1.78738545
+index     3               2      1.78086384
+index     3               3       1.7767433
+glass     3                    LaFN21
+
+com       4      L1
+surf      4            curv     0.137797988
+surf      4               z       -19.59795
+surf      4         outstop      6.13609067
+index     4               1               1
+index     4               2               1
+index     4               3               1
+glass     4                       air
+
+com       5      L2
+surf      5            curv    0.0958129731
+surf      5               z       -12.74872
+surf      5         outstop      4.32875182
+index     5               1      1.51634512
+index     5               2      1.51307516
+index     5               3      1.51090569
+glass     5                       BK7
+
+com       6      L2
+surf      6            curv     0.187300993
+surf      6               z       -10.49872
+surf      6         outstop      3.28925419
+index     6               1               1
+index     6               2               1
+index     6               3               1
+glass     6                       air
+
+com       7      L3
+surf      7            curv      0.19219681
+surf      7               z          -5.568
+surf      7         outstop      2.14511675
+index     7               1      1.75352825
+index     7               2       1.7433656
+index     7               3      1.73683413
+glass     7                      SFL4
+
+com       8      L3
+surf      8               z          -0.127
+surf      8         outstop     0.430857598
+index     8               1               1
+index     8               2               1
+index     8               3               1
+glass     8                       air
+
+com       9      STOP
+surf      9         outstop            0.34
+surf      9        stoptype               2
+index     9               1               1
+index     9               2               1
+index     9               3               1
+glass     9                       air
+
+com       10     L4
+surf      10              z               1
+surf      10        outstop     0.944763794
+index     10              1      1.51064915
+index     10              2      1.50726034
+index     10              3      1.50506001
+glass     10                       K7
+
+com       11     L4
+surf      11              z               3
+surf      11        outstop      1.68759912
+index     11              1               1
+index     11              2               1
+index     11              3               1
+glass     11                      air
+
+com       12     L5
+surf      12              z           3.254
+surf      12        outstop      1.84400649
+index     12              1       1.5394536
+index     12              2      1.53584329
+index     12              3      1.53352084
+glass     12                     BaK2
+
+com       13     L5
+surf      13              z           5.254
+surf      13        outstop      2.57170297
+index     13              1               1
+index     13              2               1
+index     13              3               1
+glass     13                      air
+
+com       14     FOCAL
+surf      14              z        11.46976
+surf      14        outstop      6.40880378
+index     14              1               1
+index     14              2               1
+index     14              3               1
+glass     14                      air

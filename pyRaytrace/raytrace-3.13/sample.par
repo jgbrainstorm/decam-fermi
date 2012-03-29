@@ -1,0 +1,18 @@
+#Sample input file for decamspot
+
+RAYPATTERN 18		# Number of radial steps in PSF pattern
+NPIX 128		# Frame size
+SCALE .27		# arcsec/pixel
+FWHM .5			# Gaussian blur in arcsec
+
+#A comment
+
+ZENITH 30.		# Zenith angle in degrees
+FILTER g
+XMM 20.			# Nominal spot center in focal plne
+YMM 60.
+WEIGHTS 1 .9 .8 .7 .6	# Weights across filter bandpass
+THETA corrector 20.	# Tilt in arcsec
+X  c1 -2.		# Translation in mm (applied before tilt)
+Z  c1 2.
+OUTPUT sample.fit

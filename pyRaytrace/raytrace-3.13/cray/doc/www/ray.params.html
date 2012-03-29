@@ -1,0 +1,112 @@
+<HTML>
+<HEAD>
+<TITLE>Parameters</TITLE>
+</HEAD>
+<BODY bgcolor=white>
+<A NAME="ParamDefs"><H2>Definitions of all parameters</H2>
+<PRE>
+Note that every parmeter has a corresponding adjust flag.  Not all are
+useful.
+
+Focal plane mapping parameters
+Only flags 1-99 are of use.
+
+fplane	Param	Usage
+Index	Index
+
+0	Not used
+
+1	1-99	Field Y center for filter I (mm)
+1	101-199	Field Y width for filter I (mm)
+
+2	1-99	Field X center for filter I (mm)
+2	101-199	Field X width for filter I (mm)
+
+3	1-99	Scale factor for filter I
+3	101-199	Design wavelength for filter I
+
+4	1-99	Distortion correction for filter I
+4	101-199	0 = use normal mapping focal plane -> sky
+			1 = use "drift scan" mapping
+
+5	1-99	Rotation angle for filter I
+5	101-199	Weight
+
+6	1-99	Paraxial focal length (derived)
+6	100-199	Paraxial exit pupil z position (derived)
+
+optic
+index
+
+0	1-99	In principal, same meaning as for optical surface parameters.
+		In practice, only 5 (Z position) is used to store the
+		"point at infinity" z distance.
+0	100-199	Initial refraction index for filter I
+
+For all surface, parameter indices 200-399 are used for
+parameter increments for least squares.  Only 200-299 are
+of use.
+
+For surface 0 only, flags 0-99 are used to signal that the least squares
+program should use this color in the least squares fit.
+
+Optics Parameters:
+   Surfaces 1 to NSURF
+
+Parameter	Usage
+Index
+
+0		Not used
+1		Curvature (inverse mm)
+2		Conic constant
+3		X position (mm)
+4		Y position (mm)
+5		Z position (mm)
+6		Pos. angle for tilt - normally atan2 (X, Y)
+7		Tilt angle (line of nodes is perp. to direction in param 6)
+8		Polynomial A2 term
+9		Polynomial A4 term
+10		Polynomial A6 term
+11		Polynomial A8 term
+12		Polynomial A10 term
+13		Polynomial A12 term (not implemented yet)
+14		Polynomial A14 term (not implemented yet)
+15		Astigmatism amplitude
+16		Astimatism position angle (relative to lab X axis)
+
+101-199		Refraction index for filter I.
+
+201-399		Parameter increments for use in least squares
+
+400		Not used
+401		Inner stop (mm)
+402		Outer stop (mm)
+403		Stop Type
+404		Strut type stop x1
+405		Strut type stop y1
+406		Strut type stop x2
+407		Strut type stop y2
+408		Strut type stop x3
+409		Strut type stop y3
+410		Strut type stop x4
+411		Strut type stop y4
+412		Surface reflection coefficient
+413		Grating lines per mm
+414		Grating order
+415		Grating blaze wavelength (not used at present)
+
+Unnumbered structure members:
+
+idint		Integer part of surface id (default is surface index)
+idfract		Fraction part of surface id
+
+Unnumbered derived parameters
+q1		For strut stop, gives quadrant of p1-p2 line segment
+q2		Ditto for p2-p3
+q3		Ditto for p3-p4
+q4		Ditto for p4-p1
+
+For all surfaces, permissible flags are 1-199.
+</PRE>
+</BODY>
+</HTML>

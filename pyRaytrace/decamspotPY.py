@@ -1,0 +1,169 @@
+#---this is a python scrit that encapsulate the raytracing code from steve to make it more interactive/scriptable. 
+# J Hao 3/28/2012 @ FNAL
+
+import numpy as np
+import pyfits as pf
+import pylab as pl
+import os
+from DECamCCD_def import *
+
+#-----define the parameters --------
+# this parameter will be written into the header
+
+raypattern = 18
+npix = 40
+scale = 0.27
+fwhm = 0.5
+zenith = 0.
+filter = 'g'
+theta = 0.
+corrector = 'corrector'
+x = None
+y = None
+z = 0.1
+output='temp.fit'
+#------------------------------
+
+def decamspot(xmm=None,ymm=None):
+    #---generating the .par file------
+    file = open('temp.par','w')
+    file.write('RAYPATTERN '+str(raypattern) +'\n')
+    file.write('NPIX '+str(npix) +'\n')
+    file.write('SCALE '+str(scale)+'\n')
+    file.write('FWHM '+str(fwhm)+'\n')
+    file.write('ZENITH '+str(zenith)+'\n')
+    file.write('FILTER '+filter +'\n')
+    file.write('XMM '+str(xmm)+'\n')
+    file.write('YMM '+str(ymm)+'\n')
+    file.write('WEIGHTS 1 0.9 0.8 0.7 0.6 \n')
+    file.write('THETA '+corrector+' '+str(theta)+'\n')
+    if x is not None:
+        file.write('X '+corrector+' '+str(x)+'\n')
+    if y is not None:
+        file.write('Y '+corrector+' '+str(y)+'\n')
+    if z is not None:
+        file.write('Z '+corrector+' '+str(z)+'\n')
+    file.write('OUTPUT '+output+'\n')
+    file.close()
+    #---execute the raytrace code ------
+    os.system('raytrace-3.13/decamspot '+'temp.par')
+    #---output the result as an image vector
+    b=pf.getdata('temp.fit')
+    bb = b.reshape(npix*npix)
+    pos = np.array([xmm,ymm])
+    return np.concatenate((pos,bb))
+
+
+def genImgV(filename=None,Nstar=None,ccd=None):
+    datalist = []
+    randfactor=np.array([-1,1])
+    if ccd is None:
+        for i in range(Nstar):
+            xmm = np.random.rand()*225*randfactor[np.random.randint(0,2)]
+            ymm = np.random.rand()*225*randfactor[np.random.randint(0,2)]
+            datalist.append(decamspot(xmm=xmm,ymm=ymm))
+        data = np.array(datalist)
+    else:
+        for i in range(Nstar):
+            if i == 0:
+                xmm = ccd[1]
+                ymm = ccd[2]
+            else:
+                xmm = np.random.rand()*15*randfactor[np.random.randint(0,2)] + ccd[1]
+                ymm = np.random.rand()*30*randfactor[np.random.randint(0,2)] + ccd[2]
+            datalist.append(decamspot(xmm=xmm,ymm=ymm))
+        data = np.array(datalist)
+    if filename is not None:
+        hdu = pf.PrimaryHDU(data)
+        hdu.header.add_comment('RAYPATTERN: '+str(raypattern))
+        hdu.header.add_comment('NPIX: '+str(npix))
+        hdu.header.add_comment('SCALE: '+str(scale))
+        hdu.header.add_comment('FWHM: '+str(fwhm))
+        hdu.header.add_comment('ZENITH: '+str(zenith))
+        hdu.header.add_comment('FILTER: '+filter)
+        hdu.header.add_comment('THETA: '+str(theta))
+        hdu.header.add_comment('CORRECTOR: '+str(corrector))
+        hdu.header.add_comment('X: '+str(x))
+        hdu.header.add_comment('Y: '+str(y))
+        hdu.header.add_comment('Z: '+str(z))
+        if os.path.exists(filename):
+            os.system('rm '+filename)
+            hdu.writeto(filename)
+        else:
+            hdu.writeto(filename)        
+    return data
+
+   
+def disImg(data=None,colorbar=True):
+    """
+    data is a vector with first, second as the center position, then is an image vector.
+    """
+    #pl.figure()
+    size = np.sqrt(len(data[2:]))
+    xmm = data[0]
+    ymm = data[1]
+    pl.contourf(data[2:].reshape(size,size),100)
+    if colorbar == True:
+        pl.colorbar()
+    pl.xlim(0,size-1)
+    pl.ylim(0,size-1)
+    pl.xlabel('Pixels')
+    pl.ylabel('Pixels')
+    pl.title('x ='+str(round(xmm,4)) +', y = '+str(round(ymm,4)) + ' (mm)')
+    pl.grid(color='yellow')
+
+
+def disImgAll(imgV=None):
+    nrow,ncol = imgV.shape
+    for i in range(nrow):
+        x=imgV[i,0]*1000./15.
+        y=imgV[i,1]*1000./15.
+        size = np.sqrt(len(imgV[i,2:]))
+        img = imgV[i,2:].reshape(size,size)
+        xm = np.round(np.arange(size) - x,3)
+        ym = np.round(np.arange(size) - y,3)
+        pl.contourf(xm,ym,img,100)
+
+def disImgCCD(imgV=None,ccd=None):
+    """
+    the CCD names are S1,...S31, N1...N31 
+    """
+    x = imgV[:,0]
+    y = imgV[:,1]
+    ok = (x >= ccd[1]-15)*(x<=ccd[1]+15)*(y<=ccd[2]+30)*(y>=ccd[2]-30)
+    imgVV = imgV[ok,:]
+    xx = imgVV[:,0]
+    yy = imgVV[:,1]
+    dd = xx**2+yy**2
+    idx = np.argsort(dd)
+    imgVV = imgVV[idx,:]
+    nstar = imgVV.shape[0]
+    ncol = int(round(np.sqrt(nstar)))
+    if nstar/float(ncol)>nstar/ncol:
+        nrow = nstar/ncol + 1
+    else:
+        nrow = nstar/ncol
+    pl.figure(figsize=(nrow*5,ncol*5))
+    for i in range(nstar):
+        pl.subplot(min(nrow,ncol),max(nrow,ncol),i+1)
+        disImg(imgVV[i,:],colorbar=False)
+    return 'The image is done!'
+
+
+def imgCCDctr(ccd=None):
+    xmm = ccd[1]
+    ymm = ccd[2]
+    data = genImgV(Nstar=1, ccd = ccd)
+    disImgCCD(data,ccd)
+    pl.figtext(0.2,0.8,'CCD: '+ccd[0], color='r',weight='bold')
+    return '---done!-----'
+
+
+#-----main program to generate the image vector -----
+# need to specify the parameters here 
+#filename = '/home/jghao/research/decamFocus/PSFdata/imagevector_zenith_0_theta_0_z_1_small.fits'
+#Nstar = 700  # specify the number of PSF you want to generate. 700 should ensure each CCD got ~ 10 stars.
+
+#genImgV(filename='test.fit',Nstar=10)
+
+#imgV = pf.getdata(filename)

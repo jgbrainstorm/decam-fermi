@@ -1,0 +1,44 @@
+#RC Telescope design parameters
+       2000.000     Diameter
+          1.290     Primary Focal Ratio
+         10.000     Final Focal Ratio
+        756.000     Back Focal Distance in MM
+          0.210     Fractional inner radius of primary
+#The real optical parameters
+#SNAP design with secondary stop                                                
+   -1       101               283.5     Y half-width filter  1
+   -2       101               283.5     X half-width filter  1
+   -3         1               -10.3     Scale Factor for filter  1
+   -3       101                 0.5     Wavelength for filter  1
+   -4         1         4.85528e-06     Distortion for filter  1
+   -6         1             21783.6     Paraxial Focal Length  1
+   -6       101             950.458     Exit Pupil Z distance  1
+     0        5       -1.000000e+14     Z Position
+     0      101        1.000000e+00     Refraction Index for filter  1
+     1        5       -2.000000e+03     Z Position
+     1      101        1.000000e+00     Refraction Index for filter  1
+     1      401        2.152000e+02     Inner stop
+     1      402        2.000000e+03     Outer stop
+     1      403                   1     Stop type%
+     2        1       -2.037466e-04     Curvature
+     2        2       -9.821128e-01     Conic Constant
+     2       10       -2.688994e-22     A6
+     2      101       -1.000000e+00     Refraction Index for filter  1
+     2      402        1.000000e+03     Outer stop
+     2      403                   2     Stop type%
+     3        1       -9.099607e-04     Curvature
+     3        2       -1.847493e+00     Conic Constant
+     3        5       -1.999553e+03     Z Position
+     3       10       -2.347366e-18     A6
+     3      101        1.000000e+00     Refraction Index for filter  1
+     3      402        2.152374e+02     Outer stop
+     4        1       -7.112388e-04     Curvature
+     4        2       -5.990000e-01     Conic Constant
+     4        5        1.790218e+03     Z Position
+     4       10        4.868018e-19     A6
+     4      101       -1.000000e+00     Refraction Index for filter  1
+     4      402        3.564854e+02     Outer stop
+     5        5        8.080922e+00     Z Position
+     5        8        9.431524e-07     A2
+     5      101       -1.000000e+00     Refraction Index for filter  1
+     5      402        3.111643e+02     Outer stop

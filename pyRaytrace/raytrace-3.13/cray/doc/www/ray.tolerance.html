@@ -1,0 +1,63 @@
+<HTML>
+<head>
+<title>Tolerances</TITLE>
+</HEAD>
+<BODY bgcolor=white>
+<H2> SDSS 2.5 M COLLIMATION SENSITIVITY STUDY</H2>
+<CENTER>Prepared 9/17/97</center>
+<center>Steve Kent</center>
+<P>
+The following table gives the sensitivity of field center, distortion, and
+image size to various misalignments of the optical elements in the 2.5 m
+telescope.
+Only the spectroscopic mode is examined here (the results are comparable for
+imaging mode).
+<P>
+Vital information:  All calculations are done for a monochromatic image
+at about 0.48 micron wavelength.  The original spectroscopic design is
+tweaked in only one way: the secondary is refocused for a single wavelength;
+in the original design, focus was done for a polychromatic image.
+Each row in the following table corresponds to decollimation of a single
+degree of freedom followed by a refocus and a "repointing" of the telescope.
+The repointing is done so as to keep the center of the focal plane
+pointed to the same position on the sky.
+(In a previous analysis, I had allowed the focal plane to translate -
+this is not what happens in reality at the mountain, and leads to an
+erroneous calcuation of distortion errors).
+<P>
+The performance criteria that I use are all calculated for images in the focal
+plane.  The quantities that I measure are:
+<P>
+<DIR>
+<LI>1. Field shift (this is the mean shift in object positions in the focal
+plane before repointing the telescope)
+<LI>2. Distortion  (residual object position shift after repointing)
+<LI>3,4. Increase in FWHM in two directions (this is computed by subtracting the
+     new FWHM from the old FWHM in quadrature).
+</dir>
+<P>
+Image properties are measured for an array of points in the focal plane.
+The numbers entered in the table are the worst case changes across the
+array.  Typically, these occur for objects
+on the periphery of the field of view.
+I use a focal plane with a radius of 327 mm.
+<P>
+All image parameters in the following table are in units of microns.
+The units for the decollimation steps are given.
+
+<PRE>
+						-INCREMENTAL-
+Optic	Motion	Amount	Unit	Field	Distor-	FWHM X	FWHM Y
+				shift	tion		
+				------------microns-----------
+Spectroscopic Mode					
+							
+M1	Offset	1	mm	2183	0	61	50
+M1	Tilt	1	'	7210	1	86	74
+M2	Offset	1	mm	1185	6	64	49
+M2	Tilt	1	'	2545	3	65	31
+C1	Offset	1	mm	16	32	40	42
+C2	Offset	1	mm	12	15	0	0
+</PRE>
+</BODY>
+</HTML>

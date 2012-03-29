@@ -1,0 +1,70 @@
+<html>
+<head>
+<title>Quaternions</title>
+</head>
+<body>
+<h1> Why Quaternions? </h1>
+In optical design, one occassionally encounters situations, such as
+spectrographs, where optical elements are rotated in various ways relative to 
+a global coordinate system.  Sometimes one wants to perform calculations
+in a coordinate system centered on the optical element (the local,
+or "lens-o-centric" coordinate system), but these
+coordinates eventually
+need to be transformed to the local system of the next optical element.
+In Zemax, this transformation is accomplished by the use of "coordinate
+breaks", which are artificial surfaces introduced whose sole purpose
+is to specify the coordinate transformations.  If one wants to transform
+a local coordinate to a global system, one needs to run through all
+the coordinate breaks in succession, possibly a tedious process.
+<p>
+An arbitrary rotation can be represented by three numbers, of which
+there are many combinations that will work.  Planetary
+orbits, for example, are normally described by three Euler
+angles: the
+argument of periapse, the inclination, and the position angle of the
+nodes.  One applies these as a sequence of 2-d rotations about the Z, X,
+and Z axes in succession, and transform a point in the system of the
+orbit itself to a global system (e.g, the ICRS).  One can multiply
+the three 2-d rotation matrices together to get a composite rotation
+matrix that can be used to transform vectors from local to global coordinates
+and back.
+<p>
+The raytrace program uses these Euler angles to represent the orientation of a
+surface relative to a global frame.  (Note - the angle corresponding
+to argument of periapse is not completely implemented yet - it is of
+no consequence for a surface that is circularly symmetric).  It is usually
+straightforward to identify the Euler angles in many simple optics
+geometries.
+<p>
+A quaternion, invented by Hamilton, is another, particularly compact,
+way to represent an
+arbitrary rotation.  Essentially, one specifies an axis of rotation
+as a 3-d unit vector and a rotation angle about that axis.
+An arbitrary rotation is thus represented by 3 numbers (since the axis
+is normalized to be a unit vector).  A quaternion can be represented as
+a 4-vector, which is more compact than a rotation matrix, which requires
+9 elements (of which only 3 are independent).
+However, for calculation purposes,
+a quaternion is rather awkward, since one cannot apply it directly
+to a vector.  Instead, one needs to perform a large
+number of multiplies in order to construct the corresponding
+rotation matrix, which is what one actually needs to transform the vector.
+<p>
+Quaternions become more useful, however, when one encounters extra
+rotations beyond those represented by three Euler angles.  For example,
+one might have a design for a spectrograph with rotated elements,
+but the spectrograph needs to be rotated again to another orientation
+before being placed on a telescope.
+Every rotated surface can still be represented by a new set of Euler
+angles, but deriving these from the old set plus the extra rotations
+will be quite tedious.  It is here that quaternions shine.  Each rotation
+can be represented by a quaternion.  The product of two quaternions,
+corresponding to the successive application of rotations, is
+another quaternion.  (Quaternion multiplication is not commutative - the
+order in which one performs the rotations matters.)  The multiplication
+is simpler than the multiplication of rotation matrices.  The conversion
+to and from Euler angles is relatively straightforward.  Thus, one can
+derive the appropriate Euler angles for a surface relative to a global
+coordinate system with a very straightforward (if slightly tedious) process.
+</body>
+</html>

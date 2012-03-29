@@ -1,0 +1,124 @@
+RC Telescope parameters  Skent7.gcd from mannery
+       3500.000     Diameter
+          1.750     Primary Focal Ratio
+         10.000     Final Focal Ratio
+        2200.00     Back Focal Distance in MM
+# The real optical parameters
+   -3         1        11.84		Scale Factor for filter         1
+   -3         2        11.84		Scale Factor for filter         2
+   -3         3        11.84		Scale Factor for filter         3
+   -3       101        0.58756		Wavelength for filter 1
+   -3       102        0.36501          Wavelength for filter 2
+   -3        103        1.01398          Wavelength for filter 3
+   -2       101       -2.460000E+01	X half-width filter             1
+   -2       102       -2.460000E+01	X half-width filter             2
+   -2       103       -2.460000E+01	X half-width filter             3
+   -1       101       -2.460000E+01	Y half-width filter             1
+   -1       102       -2.460000E+01	Y half-width filter             2
+   -1       103       -2.460000E+01	Y half-width filter             3
+    0         5       -1.000000E+14     Z Position          
+    0       101        1.000000E+00     Refraction Index for filter  1
+    0       102        1.000000E+00     Refraction Index for filter  2
+    0       103        1.000000E+00     Refraction Index for filter  3
+# Primary mirror
+    1         1       -8.143320E-05	Curvature           
+    1         2       -1.019400E+00     Conic Constant      
+    1       101       -1.000000E+00     Refraction Index for filter  1
+    1       102       -1.000000E+00     Refraction Index for filter  2
+    1       103       -1.000000E+00     Refraction Index for filter  3
+    1       402       1755.		Outer radius
+# Secondary mirror
+    2         1       -3.172130E-04	Curvature           
+    2         2       -2.179000E+00     Conic Constant      
+    2         5       -4.839010E+03     Z Position          
+    2       101        1.000000E+00     Refraction Index for filter  1
+    2       102        1.000000E+00     Refraction Index for filter  1
+    2       103        1.000000E+00     Refraction Index for filter  1
+    2       402        700.		outer radius
+# Front of first element in first doublet; SIO2
+    3         1        0.		Curvature           
+    3         5        1.601100E+03	Z Position          
+    3       101        1.458464E+00     Refraction Index for filter  1
+    3       102        1.474540E+00     Refraction Index for filter  2
+    3       103        1.450219E+00     Refraction Index for filter  3
+    3       402        500.		outer radius
+# Back of first element in first doublet
+    4         1        4.224320E-03
+    4         5        1.605100E+03
+    4       101        1.000000E+00     Refraction Index for filter  1
+    4       102        1.000000E+00     Refraction Index for filter  1
+    4       103        1.000000E+00     Refraction Index for filter  1
+    4       402        500.		outer radius
+# Front of second element in first doublet; FK01 = FPL51
+    5         1        4.113760E-03	Curvature
+    5         5        1.610780E+03	Z Position          
+    5       101        1.497000E+00     Refraction Index for filter  1
+    5       102        1.511730E+00     Refraction Index for filter  2
+    5       103        1.490080E+00     Refraction Index for filter  3
+    5       402        500.		outer radius
+# Back of second element in first doublet
+    6         5        1.645780E+03	Z Position          
+    6       101        1.000000E+00     Refraction Index for filter  1
+    6       102        1.000000E+00     Refraction Index for filter  2
+    6       103        1.000000E+00     Refraction Index for filter  3
+    6       402        500.		outer radius
+# Front of first element in second doublet; FK03
+    7         1        4.508250E-03	Curvature           
+    7         5        1.847350E+03	Z Position          
+    7       101        1.497000E+00     Refraction Index for filter  1
+    7       102        1.511730E+00     Refraction Index for filter  2
+    7       103        1.490080E+00     Refraction Index for filter  3
+    7       402        500.		outer radius
+# Back of first element in second doublet
+    8         1       -5.715200E-04	Curvature           
+    8         5        1.881130E+03	Z Position          
+    8       101        1.000000E+00	Refraction Index for filter  1
+    8       102        1.000000E+00	Refraction Index for filter  1
+    8       103        1.000000E+00	Refraction Index for filter  1
+    8       402        500.		outer radius
+# Front of second element in second doublet; LF7
+    9         1       -3.348920E-04	Curvature           
+    9         5        1.882130E+03	Z Position          
+    9       101        1.575011E+00     Refraction Index for filter  1
+    9       102        1.611690E+00     Refraction Index for filter  2
+    9       103        1.560610E+00     Refraction Index for filter  3
+    9       402        500.		outer radius
+# Back of second element in second doublet
+   10         1        1.411750E-03	CURVATURE
+   10         5        1.887160E+03	Z Position          
+   10       101        1.000000E+00     Refraction Index for filter  1
+   10       102        1.000000E+00     Refraction Index for filter  2
+   10       103        1.000000E+00     Refraction Index for filter  3
+   10       402        500.		outer radius
+# Front of filter; BK7
+   11         5        2.069860E+03	Z Position          
+   11       101        1.516330E+00     Refraction Index for filter  1
+   11       102        1.535771E+00     Refraction Index for filter  2
+   11       103        1.506872E+00     Refraction Index for filter  3
+   11       402        500.		outer radius
+# Back of filter
+   12         5        2.076860E+03	Z Position          
+   12       101        1.000000E+00     Refraction Index for filter  1
+   12       102        1.000000E+00     Refraction Index for filter  2
+   12       103        1.000000E+00     Refraction Index for filter  3
+   12       402        500.		outer radius
+# Front of field flattener; SIO2
+   13         1       -5.969720E-03	Curvature           
+   13         5        2.133960E+03	Z Position          
+   13       101        1.458400E+00     Refraction Index for filter  1
+   13       102        1.474500E+00     Refraction Index for filter  2
+   13       103        1.450200E+00     Refraction Index for filter  3
+   13       402        500.		outer radius
+# Back of field flattener
+   14         5        2.148970E+03	Z Position          
+   14       101        1.000000E+00     Refraction Index for filter  1
+   14       102        1.000000E+00     Refraction Index for filter  2
+   14       103        1.000000E+00     Refraction Index for filter  3
+   14       402        500.		outer radius
+# Focal Plane
+   15         1        5.376340E-04	CURVATURE
+   15         5        2.195510E+03	Z Position          
+   15       101        1.000000E+00     Refraction Index for filter  1
+   15       102        1.000000E+00     Refraction Index for filter  2
+   15       103        1.000000E+00     Refraction Index for filter  3
+   15       402        500.		outer radius

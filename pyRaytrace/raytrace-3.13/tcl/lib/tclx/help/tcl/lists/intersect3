@@ -1,0 +1,7 @@
+       intersect3 lista listb
+              Procedure  to  intersects two lists, returning a list containing
+              three lists:  The first list returned  is  everything  in  lista
+              that wasn’t in listb.  The second list contains the intersection
+              of the two lists, and the third list contains all  the  elements
+              that  were  in  listb  but weren’t in lista.  The returned lists
+              will be sorted.

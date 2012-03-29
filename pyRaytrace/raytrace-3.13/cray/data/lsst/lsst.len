@@ -1,0 +1,416 @@
+file lsst.len
+
+typedef struct {
+   char comment<80>;
+   } HISTORY;
+
+typedef struct {
+   char param<10>;
+   double val;
+   } TEL;
+
+typedef struct {
+   int filter;
+   char param<10>;
+   double val;
+   } FOCAL;
+
+typedef struct {
+   double surfid;
+   char param<10>;
+   double val;
+   } SURF;
+
+typedef struct {
+   double surfid;
+   int filter;
+   double val;
+   } INDEX;
+
+typedef struct {
+   double surfid;
+   char glass<80>;
+   } GLASS;
+
+typedef struct {
+   double surfid;
+   char comment<80>;
+   } COM;
+
+history {R filter only}
+history {Added surface names}
+history {Added surface names and reflectivities}
+
+tel       diam               0
+tel        fr1               0
+tel        fr2               0
+tel       back               0
+tel     finner               0
+
+#Focal plane parameters
+#     Filter  Parameter           Value
+
+focal      1      xsize             275
+focal      1      ysize             275
+focal      1      scale         19.5951
+focal      1       wave          0.3254
+
+focal      2      xsize             275
+focal      2      ysize             275
+focal      2      scale         19.5951
+focal      2       wave            0.39
+
+focal      3      xsize             275
+focal      3      ysize             275
+focal      3      scale         19.5951
+focal      3       wave          0.3865
+
+focal      4      xsize             275
+focal      4      ysize             275
+focal      4      scale         19.5951
+focal      4       wave          0.4855
+
+focal      5      xsize             275
+focal      5      ysize             275
+focal      5      scale         19.5951
+focal      5       wave            0.49
+
+focal      6      xsize             275
+focal      6      ysize             275
+focal      6      scale         19.5951
+focal      6       wave           0.584
+
+focal      7      xsize             275
+focal      7      ysize             275
+focal      7      scale         19.5951
+focal      7       wave          0.5685
+
+focal      8      xsize             275
+focal      8      ysize             275
+focal      8      scale         19.5951
+focal      8       wave          0.7195
+
+focal      9      xsize             275
+focal      9      ysize             275
+focal      9      scale         19.5951
+focal      9       wave          0.7325
+
+focal     10      xsize             275
+focal     10      ysize             275
+focal     10      scale         19.5951
+focal     10       wave          0.8825
+
+focal     11      xsize             275
+focal     11      ysize             275
+focal     11      scale         19.5951
+focal     11       wave            0.84
+
+focal     12      xsize             275
+focal     12      ysize             275
+focal     12      scale         19.5951
+focal     12       wave            1.04
+
+Surface parameters
+#         SurfId  Parameter           Value
+
+surf      0               z          -1e+14
+index     0               1               1
+index     0               2               1
+index     0               3               1
+index     0               4               1
+index     0               5               1
+index     0               6               1
+index     0               7               1
+index     0               8               1
+index     0               9               1
+index     0              10               1
+index     0              11               1
+index     0              12               1
+
+com       1      STOP
+surf      1               z           -5625
+surf      1          instop            1600
+surf      1         outstop            6000
+surf      1        stoptype               1
+index     1               1               1
+index     1               2               1
+index     1               3               1
+index     1               4               1
+index     1               5               1
+index     1               6               1
+index     1               7               1
+index     1               8               1
+index     1               9               1
+index     1              10               1
+index     1              11               1
+index     1              12               1
+
+com       1.01   PRIMARY
+surf      1.01         curv -5.63073969e-05
+surf      1.01         ccon       -0.960331
+surf      1.01           a6     -1.0354e-25
+surf      1.01      outstop            4250
+surf      1.01     stoptype               2
+surf      1.01      reflect               1
+index     1.01            1              -1
+index     1.01            2              -1
+
+com       1.02   PRIMARY
+surf      1.02         curv -5.63073969e-05
+surf      1.02         ccon       -0.960331
+surf      1.02           a6     -1.0354e-25
+surf      1.02      outstop            4250
+surf      1.02     stoptype               2
+surf      1.02      reflect               1
+index     1.02            3              -1
+index     1.02            4              -1
+
+com       1.03   PRIMARY
+surf      1.03         curv -5.63073969e-05
+surf      1.03         ccon       -0.960331
+surf      1.03           a6     -1.0354e-25
+surf      1.03      outstop            4250
+surf      1.03     stoptype               2
+surf      1.03      reflect               1
+index     1.03            5              -1
+index     1.03            6              -1
+
+com       1.04   PRIMARY
+surf      1.04         curv -5.63073969e-05
+surf      1.04         ccon       -0.960331
+surf      1.04           a6     -1.0354e-25
+surf      1.04      outstop            4250
+surf      1.04     stoptype               2
+surf      1.04      reflect               1
+index     1.04            7              -1
+index     1.04            8              -1
+
+com       1.05   PRIMARY
+surf      1.05         curv -5.63073969e-05
+surf      1.05         ccon       -0.960331
+surf      1.05           a6     -1.0354e-25
+surf      1.05      outstop            4250
+surf      1.05     stoptype               2
+surf      1.05      reflect               1
+index     1.05            9              -1
+index     1.05           10              -1
+
+com       1.06   PRIMARY
+surf      1.06         curv -5.63073969e-05
+surf      1.06         ccon       -0.960331
+surf      1.06           a6     -1.0354e-25
+surf      1.06      outstop            4250
+surf      1.06     stoptype               2
+surf      1.06      reflect               1
+index     1.06           11              -1
+index     1.06           12              -1
+
+com       3      SECONDARY
+surf      3            curv -0.000162410642
+surf      3            ccon       -0.160446
+surf      3               z       -5625.867
+surf      3              a6     -1.3203e-20
+surf      3              a8      2.4052e-29
+surf      3             a10     -9.7751e-35
+surf      3         outstop      1696.25251
+surf      3         reflect               1
+index     3               1               1
+index     3               2               1
+index     3               3               1
+index     3               4               1
+index     3               5               1
+index     3               6               1
+index     3               7               1
+index     3               8               1
+index     3               9               1
+index     3              10               1
+index     3              11               1
+index     3              12               1
+
+com       4      TERTIARY
+surf      4            curv -0.000118871336
+surf      4            ccon        0.016852
+surf      4               z        3648.317
+surf      4              a6      4.2235e-22
+surf      4              a8      6.5001e-30
+surf      4         outstop       2735.1733
+surf      4         reflect               1
+index     4               1              -1
+index     4               2              -1
+index     4               3              -1
+index     4               4              -1
+index     4               5              -1
+index     4               6              -1
+index     4               7              -1
+index     4               8              -1
+index     4               9              -1
+index     4              10              -1
+index     4              11              -1
+index     4              12              -1
+
+com       5      C1
+surf      5            curv -0.000575173444
+surf      5               z         -44.238
+surf      5         outstop      677.134404
+surf      5         reflect            0.01
+index     5               1     -1.48173155
+index     5               2      -1.4714075
+index     5               3     -1.47185813
+index     5               4      -1.4632696
+index     5               5       -1.462978
+index     5               6       -1.458703
+index     5               7     -1.45933075
+index     5               8      -1.4548805
+index     5               9      -1.4546075
+index     5              10      -1.4520125
+index     5              11       -1.452664
+index     5              12       -1.449932
+
+com       6      C1
+surf      6            curv -0.000371897353
+surf      6            ccon        2.052976
+surf      6               z        -113.717
+surf      6              a6      1.9629e-17
+surf      6              a8      1.4461e-26
+surf      6         outstop      667.512978
+surf      6         reflect            0.01
+index     6               1              -1
+index     6               2              -1
+index     6               3              -1
+index     6               4              -1
+index     6               5              -1
+index     6               6              -1
+index     6               7              -1
+index     6               8              -1
+index     6               9              -1
+index     6              10              -1
+index     6              11              -1
+index     6              12              -1
+
+com       7      C2
+surf      7            curv -0.000244041066
+surf      7               z        -401.658
+surf      7         outstop      501.759137
+surf      7         reflect            0.01
+index     7               1     -1.48173155
+index     7               2      -1.4714075
+index     7               3     -1.47185813
+index     7               4      -1.4632696
+index     7               5       -1.462978
+index     7               6       -1.458703
+index     7               7     -1.45933075
+index     7               8      -1.4548805
+index     7               9      -1.4546075
+index     7              10      -1.4520125
+index     7              11       -1.452664
+index     7              12       -1.449932
+
+com       8      C2
+surf      8            curv  -0.00077441818
+surf      8            ccon       -0.646026
+surf      8               z        -431.658
+surf      8              a6     -5.9479e-17
+surf      8              a8     -7.0993e-23
+surf      8         outstop      460.960626
+surf      8         reflect            0.01
+index     8               1              -1
+index     8               2              -1
+index     8               3              -1
+index     8               4              -1
+index     8               5              -1
+index     8               6              -1
+index     8               7              -1
+index     8               8              -1
+index     8               9              -1
+index     8              10              -1
+index     8              11              -1
+index     8              12              -1
+
+com       9      FILTER
+surf      9            curv -0.000297973778
+surf      9               z        -735.658
+surf      9         outstop      331.637091
+surf      9         reflect            0.01
+index     9               1     -1.48173155
+index     9               2      -1.4714075
+index     9               3     -1.47185813
+index     9               4      -1.4632696
+index     9               5       -1.462978
+index     9               6       -1.458703
+index     9               7     -1.45933075
+index     9               8      -1.4548805
+index     9               9      -1.4546075
+index     9              10      -1.4520125
+index     9              11       -1.452664
+index     9              12       -1.449932
+
+com       10     FILTER
+surf      10           curv -0.000297973778
+surf      10              z        -750.329
+surf      10        outstop      326.127119
+surf      10        reflect            0.01
+index     10              1              -1
+index     10              2              -1
+index     10              3              -1
+index     10              4              -1
+index     10              5              -1
+index     10              6              -1
+index     10              7              -1
+index     10              8              -1
+index     10              9              -1
+index     10             10              -1
+index     10             11              -1
+index     10             12              -1
+
+com       11     C3
+surf      11           curv -0.000495472619
+surf      11              z        -773.317
+surf      11        outstop       309.18546
+surf      11        reflect            0.01
+index     11              1     -1.48173155
+index     11              2      -1.4714075
+index     11              3     -1.47185813
+index     11              4      -1.4632696
+index     11              5       -1.462978
+index     11              6       -1.458703
+index     11              7     -1.45933075
+index     11              8      -1.4548805
+index     11              9      -1.4546075
+index     11             10      -1.4520125
+index     11             11       -1.452664
+index     11             12       -1.449932
+
+com       12     C3
+surf      12           curv -8.01962113e-05
+surf      12              z        -804.253
+surf      12        outstop      304.800962
+surf      12        reflect            0.01
+index     12              1              -1
+index     12              2              -1
+index     12              3              -1
+index     12              4              -1
+index     12              5              -1
+index     12              6              -1
+index     12              7              -1
+index     12              8              -1
+index     12              9              -1
+index     12             10              -1
+index     12             11              -1
+index     12             12              -1
+
+com       13     FOCAL
+surf      13              z        -854.253
+surf      13        outstop      275.098183
+surf      13        reflect            0.15
+index     13              1              -1
+index     13              2              -1
+index     13              3              -1
+index     13              4              -1
+index     13              5              -1
+index     13              6              -1
+index     13              7              -1
+index     13              8              -1
+index     13              9              -1
+index     13             10              -1
+index     13             11              -1
+index     13             12              -1

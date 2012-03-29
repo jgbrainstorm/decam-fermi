@@ -1,0 +1,128 @@
+<HTML>
+<HEAD>
+<!--
+PRODUCT:	cray
+		ray.home.html
+
+AUTHOR:	Steve Kent, Creation date:  June, 1994
+-->
+
+<TITLE>Ray Trace Home Page</TITLE>
+</HEAD>
+<BODY bgcolor=white>
+
+<H1 align=center>The Ray Trace Home Page</H1>
+
+<h2>Introduction</h2>
+The ray trace program is a general purpose program to ray trace optical
+telescope designs and to perform optimization.  It has some of the
+functionality of commercial optical design programs such as ZEMAX and OSLO,
+and includes some unique features of its own.
+The program is well suited to tracing telescope designs with a mosaic
+of detectors.
+Designs for several telescopes, including the 2.5 m and 3.5 m at APO and
+the SNAP satellite, are supplied,
+but the program can be used to ray trace any general design.
+<p>
+The product includes C code which performs all crunching on the
+optical design, a set of basic commands, and TCL scripts to perform higher
+level operations.  It is designed for portability and is known to compile
+on recent versions of Linux, Solaris, IRIX, and OSF1.  It relies on native
+system utilities (such as make) and compilers.  One section of the build
+process requires perl.  (That dependence could be eliminated if necessary).
+For certain time-intensive commands, parallel processing has been
+implemented.  The maximum number of processors is in principle
+limited only by the hardware.  Parallelized routines have been tested on
+machines with up to 8 processors (SGI Origin 2000).
+
+<h2>History</h2>
+
+Historically, the major development of the program was done
+to support optimization of the SDSS 2.5 m telescope design.
+This telescope has a relatively large field of view and has a mosaic imager
+camera that operates in TDI mode.  The merit function for this design is
+quite non-standard and was beyond the capabilities of the existing
+optical design programs (circa 1992) and PC hardware on which they ran.
+An existing raytrace program written for a VAX/VMS system was ported to a
+6 processor SGI Challenge L and enhanced to provide the functionality
+needed for the problem.  This program was one of three that eventually
+produced the final design.
+
+<ul>
+<li>~1985 The program originated as a stand-alone VAX/VMS Fortran program
+that did simple tracing.  It was used to analyze the performance of
+the 0.6 and 1.2 m telescopes at the Whipple Observatory, AZ.
+<li>1993 The program was greatly enhanced, including the addition of an
+optimizer to enable it to aid in optimizing the SDSS 2.5 m telescope design.
+As the complexity grew, it became advantageous to embed the program
+in the SDSS Dervish framework.
+<li> 2000 All Fortran code was converted to C for portability.
+<li> 2003 Export version created. All needed infrastructure is supplied.
+</ul>
+<P>
+Author: Steve Kent, Fermilab
+
+<h2>Features and limitations</h2>
+<ul>
+<li>Object at finite or infinite distance
+<li>499 surfaces maximum (compilation constant).
+<li>99 configurations.  Note that each wavelength in the design is
+considered a separate configuration.
+<li>Arbitrary number of optical designs can be open at once.
+<li>Surface shapes include spheres, aspheres, even polynomials up to
+10th order, astigmatic shapes.
+<li>Surfaces may be decentered and tilted.
+<li>Offcenter aperture stops to support off-center telescope designs.
+<li>Circular and rectangular stops.  Spiders can be synthesized.
+<li>Multiple models for mapping the focal plane to the sky.
+<li>Schott, Hoya, Ohara, Sumita glass catalogs.
+<li>Design optimization via damped least squares. Uses a custom fast damping
+method.
+<li>Constraint function: rms spot size, with or without constraints on
+mapping positions to the sky.
+<li>External constraints via Lagrange multipliers.
+<li>Diffraction analyses with user specified field sizes and pixel sizes.
+Output in FITS format.
+<li>Wavefront errors and Zernike polynomial coefficients.
+<li>Both grid and circular ray patterns.
+<li>Rectangular and circular focal plane geometries.
+<li>Tolerance analysis.
+<li>Monte Carlo simulations.
+<li>Command line interface only.  [The designs that this program was developed
+for are not conducive to a GUI interface.]
+<li>Scripting language is standard Tcl/TclX/Tk with extensions for the
+raytracing code.  Why learn yet another nonstandard scripting
+language unique to some application?
+<li>Plot and displays in X, Tk canvas widgets, postscript files, and PPM
+format files.
+(External programs are used to convert PPM to JPEG, GIF, TIFF, or PNG formats).
+<li>Built-in web server.  [OK, I don't include it, but one could!]
+<li>Full source code.  Free!
+</ul>
+<h2>More Information</h2>
+<i>
+<A HREF="ray.intro.html">Basic Overview</A>
+</i>
+describes the ray trace product.
+<P>
+<i>
+<A HREF="ray.params.html">Parameters</A>
+</i>
+Defines all the parameters used to describe an optical design
+<p>
+<i>
+<A HREF="ray.commands.html">Commands</A>
+</i>
+describes the major high-level commands.
+<P>
+<i>
+<A HREF="ray.operation.html">Operation</A>
+</i>
+Give some examples on how to operate the program
+<P>
+<i>
+<A HREF="ray.designs.html">Designs</A>
+</i>
+Lists some designs stored in the "data" subdirectory of the ray trace product
+</BODY>
+</HTML>
