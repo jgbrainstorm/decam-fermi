@@ -1,0 +1,210 @@
+NAME
+       msgcat - Tcl message catalog
+
+SYNOPSIS
+       package require Tcl 8.2
+
+       package require msgcat 1.1
+
+       ::msgcat::mc src-string
+
+       ::msgcat::mclocale ?newLocale?
+
+       ::msgcat::mcpreferences
+
+       ::msgcat::mcload dirname
+
+       ::msgcat::mcset locale src-string ?translate-string?
+
+       ::msgcat::mcunknown locale src-string
+
+
+DESCRIPTION
+       The msgcat package provides a set of functions that can be used to man-
+       age multi-lingual user interfaces.   Text  strings  are  defined  in  a
+       ‘‘message  catalog’’  which  is  independent  from the application, and
+       which can be edited or  localized  without  modifying  the  application
+       source  code.   New  languages  or locales are provided by adding a new
+       file to the message catalog.
+
+       Use of the message catalog is optional by any application  or  package,
+       but  is  encouraged  if the application or package wishes to be enabled
+       for multi-lingual applications.
+
+
+COMMANDS
+       ::msgcat::mc src-string ?arg arg ...?
+              Returns a translation of src-string according to the user’s cur-
+              rent locale.  If additional arguments past src-string are given,
+              the format command is used to substitute  the  additional  argu-
+              ments in the translation of src-string.
+
+              ::msgcat::mc  will  search  the  messages defined in the current
+              namespace for a translation of src-string; if none is found,  it
+              will  search  in  the parent of the current namespace, and so on
+              until it reaches the global namespace.  If no translation string
+              exists,  ::msgcat::mcunknown  is  called and the string returned
+              from ::msgcat::mcunknown is returned.
+
+       ::msgcat::mc is the main function  used  to  localize  an  application.
+       Instead of using an English string directly, an applicaton can pass the
+       English string through ::msgcat::mc and use the result.  If an applica-
+       tion  is written for a single language in this fashion, then it is easy
+       to add support for additional languages later simply  by  defining  new
+       message catalog entries.
+
+       ::msgcat::mclocale ?newLocale?
+              This  function  sets  the  locale to newLocale.  If newLocale is
+              omitted, the current locale is returned, otherwise  the  current
+              locale  is set to newLocale.  The initial locale defaults to the
+              locale specified in the  user’s  environment.   See  LOCALE  AND
+              SUBLOCALE  SPECIFICATION  below  for a description of the locale
+              string format.
+
+       ::msgcat::mcpreferences
+              Returns an ordered list of the locales preferred  by  the  user,
+              based on the user’s language specification.  The list is ordered
+              from most specific to least preference.  If the user has  speci-
+              fied  LANG=en_US_funky, this procedure would return {en_US_funky
+              en_US en}.
+
+       ::msgcat::mcload dirname
+              Searches the specified directory for files that match  the  lan-
+              guage  specifications returned by ::msgcat::mcpreferences.  Each
+              file located is sourced.  The file extension is  ‘‘.msg’’.   The
+              number of message files which matched the specification and were
+              loaded is returned.
+
+       ::msgcat::mcset locale src-string ?translate-string?
+              Sets the translation for src-string to translate-string  in  the
+              specified  locale.   If  translate-string is not specified, src-
+              string is used for both.  The function returns translate-string.
+
+       ::msgcat::mcunknown locale src-string
+              This routine is called by ::msgcat::mc in the case when a trans-
+              lation for src-string is not defined in the current locale.  The
+              default  action  is to return src-string.  This procedure can be
+              redefined by the application, for example to log error  messages
+              for  each  unknown string.  The ::msgcat::mcunknown procedure is
+              invoked at the same stack context as the call  to  ::msgcat::mc.
+              The  return  vaue  of  ::msgcat::mcunknown is used as the return
+              vaue for the call to ::msgcat::mc.
+
+
+LOCALE AND SUBLOCALE SPECIFICATION
+       The locale is specified by a locale string.  The locale string consists
+       of  a  language code, an optional country code, and an optional system-
+       specific code, each separated by ‘‘_’’.  The country and language codes
+       are  specified  in  standards  ISO-639  and ISO-3166.  For example, the
+       locale ‘‘en’’ specifies English and
+        ‘‘en_US’’ specifes  U.S. English.
+
+       The locale defaults to the value in env(LANG) at the  time  the  msgcat
+       package  is  loaded.   If  env(LANG)  is  not  defined, then the locale
+       defaults to ‘‘C’’.
+
+       When a locale is specified by the user, a ‘‘best match’’ search is per-
+       formed  during  string  translation.   For example, if a user specifies
+       en_UK_Funky, the locales ‘‘en_UK_Funky’’,  ‘‘en_UK’’,  and  ‘‘en’’  are
+       searched  in order until a matching translation string is found.  If no
+       translation string is available, then ::msgcat::unknown is called.
+
+
+NAMESPACES AND MESSAGE CATALOGS
+       Strings stored in the message catalog are stored relative to the names-
+       pace  from which they were added.  This allows multiple packages to use
+       the same strings without fear of collisions with  other  packages.   It
+       also  allows  the  source  string to be shorter and less prone to typo-
+       graphical error.
+
+       For example, executing the code
+              mcset en hello "hello from ::"
+              namespace eval foo {mcset en hello "hello from ::foo"}
+              puts [mc hello]
+              namespace eval foo {puts [mc hello]}
+       will print
+              hello from ::
+              hello from ::foo
+
+       When searching for a translation of a message, the message catalog will
+       search  first  the  current  namespace,  then the parent of the current
+       namespace, and so on until  the  global  namespace  is  reached.   This
+       allows  child namespaces to "inherit" messages from their parent names-
+       pace.
+
+       For example, executing the code
+              mcset en m1 ":: message1"
+              mcset en m2 ":: message2"
+              mcset en m3 ":: message3"
+              namespace eval ::foo {
+                  mcset en m2 "::foo message2"
+                  mcset en m3 "::foo message3"
+              }
+              namespace eval ::foo::bar {
+                  mcset en m3 "::foo::bar message3"
+              }
+              puts "[mc m1]; [mc m2]; [mc m3]"
+              namespace eval ::foo {puts "[mc m1]; [mc m2]; [mc m3]"}
+              namespace eval ::foo::bar {puts "[mc m1]; [mc m2]; [mc m3]"}
+       will print
+              :: message1; :: message2; :: message3
+              :: message1; ::foo message2; ::foo message3
+              :: message1; ::foo message2; ::foo::bar message3
+
+
+LOCATION AND FORMAT OF MESSAGE FILES
+       Message files can be located in any directory, subject to the following
+       conditions:
+
+       [1]    All message files for a package are in the same directory.
+
+       [2]    The  message  file  name  is  a  locale  specifier  followed  by
+              ‘‘.msg’’.  For example:
+              es.msg    -- spanish
+              en_UK.msg -- UK English
+
+       [3]    The file contains a series of calls to mcset, setting the neces-
+              sary translation strings for the language. For example:
+              ::msgcat::mcset es "Free Beer!" "Cerveza Gracias!"
+
+
+RECOMMENDED MESSAGE SETUP FOR PACKAGES
+       If  a  package  is installed into a subdirectory of the tcl_pkgPath and
+       loaded via package require, the following procedure is recommended.
+
+       [1]    During package installation, create a  subdirectory  msgs  under
+              your package directory.
+
+       [2]    Copy your *.msg files into that directory.
+
+       [3]      Add  the  following  command  to  your  package initialization
+              script:
+              # load language files, stored in msgs subdirectory
+              ::msgcat::mcload [file join [file dirname [info script]] msgs]
+
+
+POSTITIONAL CODES FOR FORMAT AND SCAN COMMANDS
+       It is possible that a message string used  as  an  argument  to  format
+       might  have  positionally  dependent  parameters  that might need to be
+       repositioned.  For example, it  might  be  syntactically  desirable  to
+       rearrange the sentence structure while translating.
+              format "We produced %d units in location %s" $num $city
+              format "In location %s we produced %d units" $city $num
+
+       This can be handled by using the positional parameters:
+              format "We produced %1\$d units in location %2\$s" $num $city
+              format "In location %2\$s we produced %1\$d units" $num $city
+
+       Similarly,  positional parameters can be used with scan to extract val-
+       ues from internationalized strings.
+
+
+CREDITS
+       The message catalog code was developed by Mark Harrison.
+
+
+SEE ALSO
+       format(n), scan(n), namespace(n), package(n)
+
+KEYWORDS
+       internationalization, i18n, localization, l10n, message, text, transla-

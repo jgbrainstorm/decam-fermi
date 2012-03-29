@@ -1,0 +1,1391 @@
+file snapfull.lns
+
+#Ray Pattern information
+nstep 6
+ntype 1
+
+typedef struct {
+   char comment<80>;
+   } HISTORY;
+
+typedef struct {
+   char param<10>;
+   double val;
+   } TEL;
+
+typedef struct {
+   int filter;
+   char param<10>;
+   double val;
+   } FOCAL;
+
+typedef struct {
+   int filter;
+   int mode;
+   } PUPIL;
+
+typedef struct {
+   double surfid;
+   char param<10>;
+   double val;
+   } SURF;
+
+typedef struct {
+   double surfid;
+   int filter;
+   double val;
+   } INDEX;
+
+typedef struct {
+   double surfid;
+   char glass<80>;
+   } GLASS;
+
+typedef struct {
+   double surfid;
+   char comment<80>;
+   } COM;
+
+history {Added surface names}
+
+tel       diam            2000
+tel        fr1            1.29
+tel        fr2              10
+tel       back             756
+tel     finner           0.215
+
+#Focal plane parameters
+#     Filter  Parameter           Value
+
+focal      1      xsize           283.5
+focal      1      ysize           283.5
+focal      1      scale        -9.55917
+focal      1       wave            0.44
+focal      1       dist     4.85528e-06
+
+focal      2      xsize           283.5
+focal      2      ysize           283.5
+focal      2      scale        -9.55917
+focal      2       wave            0.51
+focal      2       dist     4.85528e-06
+
+focal      3      xsize           283.5
+focal      3      ysize           283.5
+focal      3      scale        -9.55917
+focal      3       wave             0.6
+focal      3       dist     4.85528e-06
+
+focal      4      xsize           283.5
+focal      4      ysize           283.5
+focal      4      scale        -9.55917
+focal      4       wave             0.7
+focal      4       dist     4.85528e-06
+
+focal      5      xsize           283.5
+focal      5      ysize           283.5
+focal      5      scale        -9.55917
+focal      5       wave            0.82
+focal      5       dist     4.85528e-06
+
+focal      6      xsize           283.5
+focal      6      ysize           283.5
+focal      6      scale        -9.55917
+focal      6       wave            0.96
+focal      6       dist     4.85528e-06
+
+focal      7      xsize           283.5
+focal      7      ysize           283.5
+focal      7      scale        -9.55917
+focal      7       wave            1.13
+focal      7       dist     4.85528e-06
+
+focal      8      xsize           283.5
+focal      8      ysize           283.5
+focal      8      scale        -9.55917
+focal      8       wave            1.32
+focal      8       dist     4.85528e-06
+
+focal      9      xsize           283.5
+focal      9      ysize           283.5
+focal      9      scale        -9.55917
+focal      9       wave            1.55
+focal      9       dist     4.85528e-06
+
+
+focal     11       xoff         18.4992
+focal     11       yoff        -37.6023
+focal     11      xsize         -9.1872
+focal     11      ysize         -9.1872
+focal     11      scale        -9.33273
+focal     11       wave            0.44
+focal     11        rot     2.86742e-08
+
+focal     12       xoff         15.6103
+focal     12       yoff        -37.6334
+focal     12      xsize         -9.1872
+focal     12      ysize         -9.1872
+focal     12      scale        -9.34838
+focal     12       wave            0.51
+focal     12        rot     2.69383e-08
+
+focal     13       xoff         18.5317
+focal     13       yoff        -34.7615
+focal     13      xsize         -9.1872
+focal     13      ysize         -9.1872
+focal     13      scale        -9.36597
+focal     13       wave            0.51
+focal     13        rot     2.09417e-08
+
+focal     14       xoff         15.6378
+focal     14       yoff        -34.7905
+focal     14      xsize         -9.1872
+focal     14      ysize         -9.1872
+focal     14      scale        -9.38174
+focal     14       wave             0.6
+focal     14        rot      2.0467e-08
+
+focal     15       xoff         12.1712
+focal     15       yoff        -37.6636
+focal     15      xsize         -9.1872
+focal     15      ysize         -9.1872
+focal     15      scale        -9.36355
+focal     15       wave             0.6
+focal     15        rot     2.47857e-08
+
+focal     16       xoff          9.2695
+focal     16       yoff        -37.6833
+focal     16      xsize         -9.1872
+focal     16      ysize         -9.1872
+focal     16      scale        -9.37343
+focal     16       wave             0.7
+focal     16        rot     1.88049e-08
+
+focal     17       xoff         12.1927
+focal     17       yoff        -34.8185
+focal     17      xsize         -9.1872
+focal     17      ysize         -9.1872
+focal     17      scale        -9.39703
+focal     17       wave             0.7
+focal     17        rot     1.66067e-08
+
+focal     18       xoff         9.28592
+focal     18       yoff        -34.8368
+focal     18      xsize         -9.1872
+focal     18      ysize         -9.1872
+focal     18      scale        -9.40699
+focal     18       wave            0.82
+focal     18        rot      1.5042e-08
+
+focal     19       xoff          5.8187
+focal     19       yoff        -37.6997
+focal     19      xsize         -9.1872
+focal     19      ysize         -9.1872
+focal     19      scale         -9.3817
+focal     19       wave            0.82
+focal     19        rot     1.12986e-08
+
+focal     20       xoff         2.90997
+focal     20       yoff        -37.7078
+focal     20      xsize         -9.1872
+focal     20      ysize         -9.1872
+focal     20      scale        -9.38574
+focal     20       wave            0.96
+focal     20        rot     6.15131e-09
+
+focal     21       xoff         5.82902
+focal     21       yoff        -34.8521
+focal     21      xsize         -9.1872
+focal     21      ysize         -9.1872
+focal     21      scale        -9.41533
+focal     21       wave            0.96
+focal     21        rot     9.13137e-09
+
+focal     22       xoff         2.91513
+focal     22       yoff        -34.8595
+focal     22      xsize         -9.1872
+focal     22      ysize         -9.1872
+focal     22      scale         -9.4194
+focal     22       wave            0.44
+focal     22        rot     5.06683e-09
+
+focal     23       xoff         18.5681
+focal     23       yoff          -31.28
+focal     23      xsize         -9.1872
+focal     23      ysize         -9.1872
+focal     23      scale        -9.40318
+focal     23       wave             0.6
+focal     23        rot     1.45045e-08
+
+focal     24       xoff         15.6686
+focal     24       yoff        -31.3062
+focal     24      xsize         -9.1872
+focal     24      ysize         -9.1872
+focal     24      scale        -9.41909
+focal     24       wave             0.7
+focal     24        rot     1.34498e-08
+
+focal     25       xoff         18.5953
+focal     25       yoff        -28.4088
+focal     25      xsize         -9.1872
+focal     25      ysize         -9.1872
+focal     25      scale        -9.43094
+focal     25       wave             0.7
+focal     25        rot     1.24703e-08
+
+focal     26       xoff         15.6916
+focal     26       yoff        -28.4328
+focal     26      xsize         -9.1872
+focal     26      ysize         -9.1872
+focal     26      scale        -9.44696
+focal     26       wave            0.82
+focal     26        rot     1.38115e-08
+
+focal     27       xoff         12.2168
+focal     27       yoff        -31.3316
+focal     27      xsize         -9.1872
+focal     27      ysize         -9.1872
+focal     27      scale        -9.43452
+focal     27       wave            0.82
+focal     27        rot     1.38741e-08
+
+focal     28       xoff         9.30429
+focal     28       yoff        -31.3482
+focal     28      xsize         -9.1872
+focal     28      ysize         -9.1872
+focal     28      scale        -9.44457
+focal     28       wave            0.96
+focal     28        rot     1.06899e-08
+
+focal     29       xoff         12.2348
+focal     29       yoff         -28.456
+focal     29      xsize         -9.1872
+focal     29      ysize         -9.1872
+focal     29      scale        -9.46249
+focal     29       wave            0.96
+focal     29        rot     2.97806e-09
+
+focal     30       xoff         9.31799
+focal     30       yoff        -28.4711
+focal     30      xsize         -9.1872
+focal     30      ysize         -9.1872
+focal     30      scale         -9.4726
+focal     30       wave            0.44
+focal     30        rot     7.12222e-09
+
+focal     31       xoff         5.84057
+focal     31       yoff         -31.362
+focal     31      xsize         -9.1872
+focal     31      ysize         -9.1872
+focal     31      scale        -9.45298
+focal     31       wave            0.44
+focal     31        rot     6.85581e-09
+
+focal     32       xoff         2.92091
+focal     32       yoff        -31.3688
+focal     32      xsize         -9.1872
+focal     32      ysize         -9.1872
+focal     32      scale        -9.45709
+focal     32       wave            0.51
+focal     32        rot     3.08107e-09
+
+focal     33       xoff         5.84918
+focal     33       yoff        -28.4837
+focal     33      xsize         -9.1872
+focal     33      ysize         -9.1872
+focal     33      scale        -9.48107
+focal     33       wave            0.51
+focal     33        rot     4.85168e-09
+
+focal     34       xoff         2.92522
+focal     34       yoff        -28.4899
+focal     34      xsize         -9.1872
+focal     34      ysize         -9.1872
+focal     34      scale         -9.4852
+focal     34       wave             0.6
+focal     34        rot     3.58373e-09
+
+focal     35       xoff          18.625
+focal     35       yoff        -24.8936
+focal     35      xsize         -9.1872
+focal     35      ysize         -9.1872
+focal     35      scale        -9.46132
+focal     35       wave            0.82
+focal     35        rot     1.39499e-09
+
+focal     36       xoff         15.7167
+focal     36       yoff        -24.9146
+focal     36      xsize         -9.1872
+focal     36      ysize         -9.1872
+focal     36      scale        -9.47745
+focal     36       wave            0.96
+focal     36        rot     5.19991e-09
+
+focal     37       xoff         18.6465
+focal     37       yoff        -21.9974
+focal     37      xsize         -9.1872
+focal     37      ysize         -9.1872
+focal     37      scale        -9.48335
+focal     37       wave            0.96
+focal     37        rot     8.78701e-09
+
+focal     38       xoff         15.7349
+focal     38       yoff        -22.0161
+focal     38      xsize         -9.1872
+focal     38      ysize         -9.1872
+focal     38      scale        -9.49956
+focal     38       wave            0.44
+focal     38        rot     3.61099e-09
+
+focal     39       xoff         12.2544
+focal     39       yoff        -24.9351
+focal     39      xsize         -9.1872
+focal     39      ysize         -9.1872
+focal     39      scale        -9.49309
+focal     39       wave            0.44
+focal     39        rot     6.42749e-09
+
+focal     40       xoff         9.33298
+focal     40       yoff        -24.9484
+focal     40      xsize         -9.1872
+focal     40      ysize         -9.1872
+focal     40      scale        -9.50328
+focal     40       wave            0.51
+focal     40        rot     8.10293e-11
+
+focal     41       xoff         12.2687
+focal     41       yoff        -22.0342
+focal     41      xsize         -9.1872
+focal     41      ysize         -9.1872
+focal     41      scale        -9.51528
+focal     41       wave            0.51
+focal     41        rot     2.50822e-09
+
+focal     42       xoff         9.34385
+focal     42       yoff         -22.046
+focal     42      xsize         -9.1872
+focal     42      ysize         -9.1872
+focal     42      scale        -9.52553
+focal     42       wave             0.6
+focal     42        rot    -5.75071e-10
+
+focal     43       xoff          5.8586
+focal     43       yoff        -24.9595
+focal     43      xsize         -9.1872
+focal     43      ysize         -9.1872
+focal     43      scale        -9.51181
+focal     43       wave             0.6
+focal     43        rot     2.70415e-09
+
+focal     44       xoff         2.92994
+focal     44       yoff        -24.9649
+focal     44      xsize         -9.1872
+focal     44      ysize         -9.1872
+focal     44      scale        -9.51597
+focal     44       wave             0.7
+focal     44        rot    -2.44212e-09
+
+focal     45       xoff         5.86543
+focal     45       yoff        -22.0559
+focal     45      xsize         -9.1872
+focal     45      ysize         -9.1872
+focal     45      scale         -9.5341
+focal     45       wave             0.7
+focal     45        rot     2.40509e-09
+
+focal     46       xoff         2.93336
+focal     46       yoff        -22.0607
+focal     46      xsize         -9.1872
+focal     46      ysize         -9.1872
+focal     46      scale        -9.53829
+focal     46       wave            0.82
+focal     46        rot     9.55791e-10
+
+focal     47       xoff        -4.36789
+focal     47       yoff        -36.2772
+focal     47      xsize        -18.3744
+focal     47      ysize        -18.3744
+focal     47      scale        -9.40035
+focal     47       wave            1.13
+focal     47        rot    -3.38732e-08
+
+focal     48       xoff        -10.7291
+focal     48       yoff        -36.2479
+focal     48      xsize        -18.3744
+focal     48      ysize        -18.3744
+focal     48      scale        -9.38506
+focal     48       wave            1.32
+focal     48        rot    -7.35316e-08
+
+focal     49       xoff        -17.0685
+focal     49       yoff        -36.1943
+focal     49      xsize        -18.3744
+focal     49      ysize        -18.3744
+focal     49      scale        -9.35701
+focal     49       wave            1.55
+focal     49        rot    -9.86723e-08
+
+focal     50       xoff        -4.38365
+focal     50       yoff        -29.9239
+focal     50      xsize        -18.3744
+focal     50      ysize        -18.3744
+focal     50      scale         -9.4689
+focal     50       wave            1.55
+focal     50        rot    -1.95172e-08
+
+focal     51       xoff        -10.7677
+focal     51       yoff        -29.8995
+focal     51      xsize        -18.3744
+focal     51      ysize        -18.3744
+focal     51      scale        -9.45336
+focal     51       wave            1.13
+focal     51        rot    -3.78653e-08
+
+focal     52       xoff        -17.1296
+focal     52       yoff        -29.8548
+focal     52      xsize        -18.3744
+focal     52      ysize        -18.3744
+focal     52      scale        -9.42485
+focal     52       wave            1.32
+focal     52        rot     -4.8239e-08
+
+focal     53       xoff        -4.39651
+focal     53       yoff        -23.5085
+focal     53      xsize        -18.3744
+focal     53      ysize        -18.3744
+focal     53      scale        -9.52486
+focal     53       wave            1.32
+focal     53        rot     -1.0318e-08
+
+focal     54       xoff        -10.7992
+focal     54       yoff        -23.4892
+focal     54      xsize        -18.3744
+focal     54      ysize        -18.3744
+focal     54      scale        -9.50911
+focal     54       wave            1.55
+focal     54        rot     -1.4939e-08
+
+focal     55       xoff        -17.1795
+focal     55       yoff        -23.4537
+focal     55      xsize        -18.3744
+focal     55      ysize        -18.3744
+focal     55      scale        -9.48023
+focal     55       wave            1.13
+focal     55        rot     -1.4719e-08
+
+
+Surface parameters
+#         SurfId  Parameter           Value
+
+surf      0               z          -1e+14
+index     0               1               1
+index     0               2               1
+index     0               3               1
+index     0               4               1
+index     0               5               1
+index     0               6               1
+index     0               7               1
+index     0               8               1
+index     0               9               1
+index     0              11               1
+index     0              12               1
+index     0              13               1
+index     0              14               1
+index     0              15               1
+index     0              16               1
+index     0              17               1
+index     0              18               1
+index     0              19               1
+index     0              20               1
+index     0              21               1
+index     0              22               1
+index     0              23               1
+index     0              24               1
+index     0              25               1
+index     0              26               1
+index     0              27               1
+index     0              28               1
+index     0              29               1
+index     0              30               1
+index     0              31               1
+index     0              32               1
+index     0              33               1
+index     0              34               1
+index     0              35               1
+index     0              36               1
+index     0              37               1
+index     0              38               1
+index     0              39               1
+index     0              40               1
+index     0              41               1
+index     0              42               1
+index     0              43               1
+index     0              44               1
+index     0              45               1
+index     0              46               1
+index     0              47               1
+index     0              48               1
+index     0              49               1
+index     0              50               1
+index     0              51               1
+index     0              52               1
+index     0              53               1
+index     0              54               1
+index     0              55               1
+
+com       1      STOP
+surf      1               z           -2000
+surf      1        stoptype               3
+surf      1              x1        17.32051
+surf      1              y1       -9.999992
+surf      1              x2       -482.6791
+surf      1              y2       -876.0256
+surf      1              x3       -517.3201
+surf      1              y3       -856.0256
+surf      1              x4       -17.32051
+surf      1              y4        9.999992
+index     1               1               1
+index     1               2               1
+index     1               3               1
+index     1               4               1
+index     1               5               1
+index     1               6               1
+index     1               7               1
+index     1               8               1
+index     1               9               1
+index     1              11               1
+index     1              12               1
+index     1              13               1
+index     1              14               1
+index     1              15               1
+index     1              16               1
+index     1              17               1
+index     1              18               1
+index     1              19               1
+index     1              20               1
+index     1              21               1
+index     1              22               1
+index     1              23               1
+index     1              24               1
+index     1              25               1
+index     1              26               1
+index     1              27               1
+index     1              28               1
+index     1              29               1
+index     1              30               1
+index     1              31               1
+index     1              32               1
+index     1              33               1
+index     1              34               1
+index     1              35               1
+index     1              36               1
+index     1              37               1
+index     1              38               1
+index     1              39               1
+index     1              40               1
+index     1              41               1
+index     1              42               1
+index     1              43               1
+index     1              44               1
+index     1              45               1
+index     1              46               1
+index     1              47               1
+index     1              48               1
+index     1              49               1
+index     1              50               1
+index     1              51               1
+index     1              52               1
+index     1              53               1
+index     1              54               1
+index     1              55               1
+
+com       2      STOP
+surf      2               z           -2000
+surf      2        stoptype               3
+surf      2              x1       -17.32051
+surf      2              y1             -10
+surf      2              x2       -517.3207
+surf      2              y2        856.0253
+surf      2              x3       -482.6797
+surf      2              y3        876.0253
+surf      2              x4        17.32051
+surf      2              y4              10
+index     2               1               1
+index     2               2               1
+index     2               3               1
+index     2               4               1
+index     2               5               1
+index     2               6               1
+index     2               7               1
+index     2               8               1
+index     2               9               1
+index     2              11               1
+index     2              12               1
+index     2              13               1
+index     2              14               1
+index     2              15               1
+index     2              16               1
+index     2              17               1
+index     2              18               1
+index     2              19               1
+index     2              20               1
+index     2              21               1
+index     2              22               1
+index     2              23               1
+index     2              24               1
+index     2              25               1
+index     2              26               1
+index     2              27               1
+index     2              28               1
+index     2              29               1
+index     2              30               1
+index     2              31               1
+index     2              32               1
+index     2              33               1
+index     2              34               1
+index     2              35               1
+index     2              36               1
+index     2              37               1
+index     2              38               1
+index     2              39               1
+index     2              40               1
+index     2              41               1
+index     2              42               1
+index     2              43               1
+index     2              44               1
+index     2              45               1
+index     2              46               1
+index     2              47               1
+index     2              48               1
+index     2              49               1
+index     2              50               1
+index     2              51               1
+index     2              52               1
+index     2              53               1
+index     2              54               1
+index     2              55               1
+
+com       3      STOP
+surf      3               z           -2000
+surf      3        stoptype               3
+surf      3              y1              20
+surf      3              x2            1000
+surf      3              y2              20
+surf      3              x3            1000
+surf      3              y3             -20
+surf      3              y4             -20
+index     3               1               1
+index     3               2               1
+index     3               3               1
+index     3               4               1
+index     3               5               1
+index     3               6               1
+index     3               7               1
+index     3               8               1
+index     3               9               1
+index     3              11               1
+index     3              12               1
+index     3              13               1
+index     3              14               1
+index     3              15               1
+index     3              16               1
+index     3              17               1
+index     3              18               1
+index     3              19               1
+index     3              20               1
+index     3              21               1
+index     3              22               1
+index     3              23               1
+index     3              24               1
+index     3              25               1
+index     3              26               1
+index     3              27               1
+index     3              28               1
+index     3              29               1
+index     3              30               1
+index     3              31               1
+index     3              32               1
+index     3              33               1
+index     3              34               1
+index     3              35               1
+index     3              36               1
+index     3              37               1
+index     3              38               1
+index     3              39               1
+index     3              40               1
+index     3              41               1
+index     3              42               1
+index     3              43               1
+index     3              44               1
+index     3              45               1
+index     3              46               1
+index     3              47               1
+index     3              48               1
+index     3              49               1
+index     3              50               1
+index     3              51               1
+index     3              52               1
+index     3              53               1
+index     3              54               1
+index     3              55               1
+
+com       4      STOP
+surf      4               z           -2000
+surf      4          instop           215.2
+surf      4         outstop            2000
+surf      4        stoptype               1
+index     4               1               1
+index     4               2               1
+index     4               3               1
+index     4               4               1
+index     4               5               1
+index     4               6               1
+index     4               7               1
+index     4               8               1
+index     4               9               1
+index     4              11               1
+index     4              12               1
+index     4              13               1
+index     4              14               1
+index     4              15               1
+index     4              16               1
+index     4              17               1
+index     4              18               1
+index     4              19               1
+index     4              20               1
+index     4              21               1
+index     4              22               1
+index     4              23               1
+index     4              24               1
+index     4              25               1
+index     4              26               1
+index     4              27               1
+index     4              28               1
+index     4              29               1
+index     4              30               1
+index     4              31               1
+index     4              32               1
+index     4              33               1
+index     4              34               1
+index     4              35               1
+index     4              36               1
+index     4              37               1
+index     4              38               1
+index     4              39               1
+index     4              40               1
+index     4              41               1
+index     4              42               1
+index     4              43               1
+index     4              44               1
+index     4              45               1
+index     4              46               1
+index     4              47               1
+index     4              48               1
+index     4              49               1
+index     4              50               1
+index     4              51               1
+index     4              52               1
+index     4              53               1
+index     4              54               1
+index     4              55               1
+
+com       5      PRIMARY
+surf      5            curv   -0.0002037466
+surf      5            ccon       -0.981128
+surf      5         outstop            1000
+surf      5        stoptype               2
+index     5               1              -1
+index     5               2              -1
+index     5               3              -1
+index     5               4              -1
+index     5               5              -1
+index     5               6              -1
+index     5               7              -1
+index     5               8              -1
+index     5               9              -1
+index     5              11              -1
+index     5              12              -1
+index     5              13              -1
+index     5              14              -1
+index     5              15              -1
+index     5              16              -1
+index     5              17              -1
+index     5              18              -1
+index     5              19              -1
+index     5              20              -1
+index     5              21              -1
+index     5              22              -1
+index     5              23              -1
+index     5              24              -1
+index     5              25              -1
+index     5              26              -1
+index     5              27              -1
+index     5              28              -1
+index     5              29              -1
+index     5              30              -1
+index     5              31              -1
+index     5              32              -1
+index     5              33              -1
+index     5              34              -1
+index     5              35              -1
+index     5              36              -1
+index     5              37              -1
+index     5              38              -1
+index     5              39              -1
+index     5              40              -1
+index     5              41              -1
+index     5              42              -1
+index     5              43              -1
+index     5              44              -1
+index     5              45              -1
+index     5              46              -1
+index     5              47              -1
+index     5              48              -1
+index     5              49              -1
+index     5              50              -1
+index     5              51              -1
+index     5              52              -1
+index     5              53              -1
+index     5              54              -1
+index     5              55              -1
+glass     5                    mirror
+
+com       6      SECONDARY
+surf      6            curv   -0.0009099607
+surf      6            ccon       -1.847493
+surf      6               z           -2000
+surf      6         outstop        213.0271
+index     6               1              -1
+index     6               2              -1
+index     6               3              -1
+index     6               4              -1
+index     6               5              -1
+index     6               6              -1
+index     6               7              -1
+index     6               8              -1
+index     6               9              -1
+index     6              11              -1
+index     6              12              -1
+index     6              13              -1
+index     6              14              -1
+index     6              15              -1
+index     6              16              -1
+index     6              17              -1
+index     6              18              -1
+index     6              19              -1
+index     6              20              -1
+index     6              21              -1
+index     6              22              -1
+index     6              23              -1
+index     6              24              -1
+index     6              25              -1
+index     6              26              -1
+index     6              27              -1
+index     6              28              -1
+index     6              29              -1
+index     6              30              -1
+index     6              31              -1
+index     6              32              -1
+index     6              33              -1
+index     6              34              -1
+index     6              35              -1
+index     6              36              -1
+index     6              37              -1
+index     6              38              -1
+index     6              39              -1
+index     6              40              -1
+index     6              41              -1
+index     6              42              -1
+index     6              43              -1
+index     6              44              -1
+index     6              45              -1
+index     6              46              -1
+index     6              47              -1
+index     6              48              -1
+index     6              49              -1
+index     6              50              -1
+index     6              51              -1
+index     6              52              -1
+index     6              53              -1
+index     6              54              -1
+index     6              55              -1
+glass     6                    mirror
+
+com       7      TERTIARY
+surf      7            curv   -0.0007112388
+surf      7            ccon          -0.599
+surf      7               z            1780
+surf      7         outstop        337.4009
+index     7               1              -1
+index     7               2              -1
+index     7               3              -1
+index     7               4              -1
+index     7               5              -1
+index     7               6              -1
+index     7               7              -1
+index     7               8              -1
+index     7               9              -1
+index     7              11              -1
+index     7              12              -1
+index     7              13              -1
+index     7              14              -1
+index     7              15              -1
+index     7              16              -1
+index     7              17              -1
+index     7              18              -1
+index     7              19              -1
+index     7              20              -1
+index     7              21              -1
+index     7              22              -1
+index     7              23              -1
+index     7              24              -1
+index     7              25              -1
+index     7              26              -1
+index     7              27              -1
+index     7              28              -1
+index     7              29              -1
+index     7              30              -1
+index     7              31              -1
+index     7              32              -1
+index     7              33              -1
+index     7              34              -1
+index     7              35              -1
+index     7              36              -1
+index     7              37              -1
+index     7              38              -1
+index     7              39              -1
+index     7              40              -1
+index     7              41              -1
+index     7              42              -1
+index     7              43              -1
+index     7              44              -1
+index     7              45              -1
+index     7              46              -1
+index     7              47              -1
+index     7              48              -1
+index     7              49              -1
+index     7              50              -1
+index     7              51              -1
+index     7              52              -1
+index     7              53              -1
+index     7              54              -1
+index     7              55              -1
+glass     7                    mirror
+
+com       8      FOCAL
+surf      8               z              10
+surf      8         outstop        283.8133
+index     8               1              -1
+index     8               2              -1
+index     8               3              -1
+index     8               4              -1
+index     8               5              -1
+index     8               6              -1
+index     8               7              -1
+index     8               8              -1
+index     8               9              -1
+glass     8                    mirror
+
+com       11     FOCAL
+surf      11              x       -117.1368
+surf      11              y         238.098
+surf      11              z              10
+surf      11            phi        2.027998
+surf      11        outstop        13.16367
+index     11             11              -1
+glass     11                   mirror
+
+com       12     FOCAL
+surf      12              x        -98.7624
+surf      12              y         238.098
+surf      12              z              10
+surf      12            phi        1.963994
+surf      12        outstop        13.13915
+index     12             12              -1
+glass     12                   mirror
+
+com       13     FOCAL
+surf      13              x       -117.1368
+surf      13              y        219.7236
+surf      13              z              10
+surf      13            phi         2.06058
+surf      13        outstop        13.15091
+index     13             13              -1
+glass     13                   mirror
+
+com       14     FOCAL
+surf      14              x        -98.7624
+surf      14              y        219.7236
+surf      14              z              10
+surf      14            phi        1.993222
+surf      14        outstop        13.12825
+index     14             14              -1
+glass     14                   mirror
+
+com       15     FOCAL
+surf      15              x        -76.9428
+surf      15              y         238.098
+surf      15              z              10
+surf      15            phi        1.883359
+surf      15        outstop        13.10995
+index     15             15              -1
+glass     15                   mirror
+
+com       16     FOCAL
+surf      16              x        -58.5684
+surf      16              y         238.098
+surf      16              z              10
+surf      16            phi        1.811992
+surf      16        outstop        13.08527
+index     16             16              -1
+glass     16                   mirror
+
+com       17     FOCAL
+surf      17              x        -76.9428
+surf      17              y        219.7236
+surf      17              z              10
+surf      17            phi        1.907631
+surf      17        outstop        13.10124
+index     17             17              -1
+glass     17                   mirror
+
+com       18     FOCAL
+surf      18              x        -58.5684
+surf      18              y        219.7236
+surf      18              z              10
+surf      18            phi        1.831294
+surf      18        outstop        13.07842
+index     18             18              -1
+glass     18                   mirror
+
+com       19     FOCAL
+surf      19              x        -36.7488
+surf      19              y         238.098
+surf      19              z              10
+surf      19            phi        1.723931
+surf      19        outstop        13.05585
+index     19             19              -1
+glass     19                   mirror
+
+com       20     FOCAL
+surf      20              x        -18.3744
+surf      20              y         238.098
+surf      20              z              10
+surf      20            phi        1.647815
+surf      20        outstop        13.03106
+index     20             20              -1
+glass     20                   mirror
+
+com       21     FOCAL
+surf      21              x        -36.7488
+surf      21              y        219.7236
+surf      21              z              10
+surf      21            phi        1.736513
+surf      21        outstop        13.05119
+index     21             21              -1
+glass     21                   mirror
+
+com       22     FOCAL
+surf      22              x        -18.3744
+surf      22              y        219.7236
+surf      22              z              10
+surf      22            phi        1.654227
+surf      22        outstop        13.02817
+index     22             22              -1
+glass     22                   mirror
+
+com       23     FOCAL
+surf      23              x       -117.1368
+surf      23              y        197.3298
+surf      23              z              10
+surf      23            phi        2.106504
+surf      23        outstop        13.13561
+index     23             23              -1
+glass     23                   mirror
+
+com       24     FOCAL
+surf      24              x        -98.7624
+surf      24              y        197.3298
+surf      24              z              10
+surf      24            phi        2.034839
+surf      24        outstop        13.11519
+index     24             24              -1
+glass     24                   mirror
+
+com       25     FOCAL
+surf      25              x       -117.1368
+surf      25              y        178.9554
+surf      25              z              10
+surf      25            phi         2.15037
+surf      25        outstop        13.12304
+index     25             25              -1
+glass     25                   mirror
+
+com       26     FOCAL
+surf      26              x        -98.7624
+surf      26              y        178.9554
+surf      26              z              10
+surf      26            phi        2.075084
+surf      26        outstop        13.10443
+index     26             26              -1
+glass     26                   mirror
+
+com       27     FOCAL
+surf      27              x        -76.9428
+surf      27              y        197.3298
+surf      27              z              10
+surf      27            phi        1.942583
+surf      27        outstop         13.0908
+index     27             27              -1
+glass     27                   mirror
+
+com       28     FOCAL
+surf      28              x        -58.5684
+surf      28              y        197.3298
+surf      28              z              10
+surf      28            phi        1.859319
+surf      28        outstop        13.07015
+index     28             28              -1
+glass     28                   mirror
+
+com       29     FOCAL
+surf      29              x        -76.9428
+surf      29              y        178.9554
+surf      29              z              10
+surf      29            phi        1.976857
+surf      29        outstop        13.08218
+index     29             29              -1
+glass     29                   mirror
+
+com       30     FOCAL
+surf      30              x        -58.5684
+surf      30              y        178.9554
+surf      30              z              10
+surf      30            phi        1.887088
+surf      30        outstop        13.06337
+index     30             30              -1
+glass     30                   mirror
+
+com       31     FOCAL
+surf      31              x        -36.7488
+surf      31              y        197.3298
+surf      31              z              10
+surf      31            phi        1.754917
+surf      31        outstop        13.04559
+index     31             31              -1
+glass     31                   mirror
+
+com       32     FOCAL
+surf      32              x        -18.3744
+surf      32              y        197.3298
+surf      32              z              10
+surf      32            phi        1.663644
+surf      32        outstop        13.02479
+index     32             32              -1
+glass     32                   mirror
+
+com       33     FOCAL
+surf      33              x        -36.7488
+surf      33              y        178.9554
+surf      33              z              10
+surf      33            phi        1.773332
+surf      33        outstop        13.04096
+index     33             33              -1
+glass     33                   mirror
+
+com       34     FOCAL
+surf      34              x        -18.3744
+surf      34              y        178.9554
+surf      34              z              10
+surf      34            phi        1.673114
+surf      34        outstop        13.02199
+index     34             34              -1
+glass     34                   mirror
+
+com       35     FOCAL
+surf      35              x       -117.1368
+surf      35              y        156.5616
+surf      35              z              10
+surf      35            phi        2.213134
+surf      35        outstop        13.10762
+index     35             35              -1
+glass     35                   mirror
+
+com       36     FOCAL
+surf      36              x        -98.7624
+surf      36              y        156.5616
+surf      36              z              10
+surf      36            phi        2.133571
+surf      36        outstop         13.0912
+index     36             36              -1
+glass     36                   mirror
+
+com       37     FOCAL
+surf      37              x       -117.1368
+surf      37              y        138.1872
+surf      37              z              10
+surf      37            phi        2.273935
+surf      37        outstop        13.09485
+index     37             37              -1
+glass     37                   mirror
+
+com       38     FOCAL
+surf      38              x        -98.7624
+surf      38              y        138.1872
+surf      38              z              10
+surf      38            phi         2.19132
+surf      38        outstop        13.08023
+index     38             38              -1
+glass     38                   mirror
+
+com       39     FOCAL
+surf      39              x        -76.9428
+surf      39              y        156.5616
+surf      39              z              10
+surf      39            phi        2.027584
+surf      39        outstop        13.07157
+index     39             39              -1
+glass     39                   mirror
+
+com       40     FOCAL
+surf      40              x        -58.5684
+surf      40              y        156.5616
+surf      40              z              10
+surf      40            phi         1.92877
+surf      40        outstop        13.05498
+index     40             40              -1
+glass     40                   mirror
+
+com       41     FOCAL
+surf      41              x        -76.9428
+surf      41              y        138.1872
+surf      41              z              10
+surf      41            phi        2.078846
+surf      41        outstop        13.06278
+index     41             41              -1
+glass     41                   mirror
+
+com       42     FOCAL
+surf      42              x        -58.5684
+surf      42              y        138.1872
+surf      42              z              10
+surf      42            phi        1.971679
+surf      42        outstop        13.04801
+index     42             42              -1
+glass     42                   mirror
+
+com       43     FOCAL
+surf      43              x        -36.7488
+surf      43              y        156.5616
+surf      43              z              10
+surf      43            phi        1.801347
+surf      43        outstop         13.0352
+index     43             43              -1
+glass     43                   mirror
+
+com       44     FOCAL
+surf      44              x        -18.3744
+surf      44              y        156.5616
+surf      44              z              10
+surf      44            phi        1.687624
+surf      44        outstop        13.01849
+index     44             44              -1
+glass     44                   mirror
+
+com       45     FOCAL
+surf      45              x        -36.7488
+surf      45              y        138.1872
+surf      45              z              10
+surf      45            phi        1.830715
+surf      45        outstop        13.03036
+index     45             45              -1
+glass     45                   mirror
+
+com       46     FOCAL
+surf      46              x        -18.3744
+surf      46              y        138.1872
+surf      46              z              10
+surf      46            phi        1.702988
+surf      46        outstop        13.01552
+index     46             46              -1
+glass     46                   mirror
+
+com       47     FOCAL
+surf      47              x         27.5616
+surf      47              y        228.9108
+surf      47              z              10
+surf      47            phi         1.45097
+surf      47        outstop        26.10119
+index     47             47              -1
+glass     47                   mirror
+
+com       48     FOCAL
+surf      48              x         67.7556
+surf      48              y        228.9108
+surf      48              z              10
+surf      48            phi        1.283021
+surf      48        outstop        26.20907
+index     48             48              -1
+glass     48                   mirror
+
+com       49     FOCAL
+surf      49              x        107.9496
+surf      49              y        228.9108
+surf      49              z              10
+surf      49            phi        1.130143
+surf      49        outstop        26.31586
+index     49             49              -1
+glass     49                   mirror
+
+com       50     FOCAL
+surf      50              x         27.5616
+surf      50              y        188.1426
+surf      50              z              10
+surf      50            phi        1.425338
+surf      50        outstop        26.08257
+index     50             50              -1
+glass     50                   mirror
+
+com       51     FOCAL
+surf      51              x         67.7556
+surf      51              y        188.1426
+surf      51              z              10
+surf      51            phi        1.225127
+surf      51        outstop        26.17291
+index     51             51              -1
+glass     51                   mirror
+
+com       52     FOCAL
+surf      52              x        107.9496
+surf      52              y        188.1426
+surf      52              z              10
+surf      52            phi        1.049891
+surf      52        outstop        26.26229
+index     52             52              -1
+glass     52                   mirror
+
+com       53     FOCAL
+surf      53              x         27.5616
+surf      53              y        147.3744
+surf      53              z              10
+surf      53            phi        1.385914
+surf      53        outstop        26.06333
+index     53             53              -1
+glass     53                   mirror
+
+com       54     FOCAL
+surf      54              x         67.7556
+surf      54              y        147.3744
+surf      54              z              10
+surf      54            phi        1.139863
+surf      54        outstop        26.13598
+index     54             54              -1
+glass     54                   mirror
+
+com       55     FOCAL
+surf      55              x        107.9496
+surf      55              y        147.3744
+surf      55              z              10
+surf      55            phi       0.9385991
+surf      55        outstop        26.20787
+index     55             55              -1
+glass     55                   mirror

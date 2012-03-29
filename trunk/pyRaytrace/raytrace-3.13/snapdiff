@@ -1,0 +1,181 @@
+#!/bin/sh
+#
+#Create a FITS file of a diffracted SNAP image.
+#Usage:  snapdiff <paramfile>
+#
+# ---------------------------------------------------------------------
+# This script file is a front-end to the trace program.
+# It defines necessary environment variables and then runs the binary.
+# It is designed to be relocatable!  One logical link to it is allowed!
+#
+#How does this file work?  It doubles as a shell script and a tcl script!
+#(Ousterhout's hack).  TCL continues comment lines that end with a backslash,
+#where as sh does not.  So, we run it as a shell script and then source the
+#same file as a tcl script.  The shell commands are ignored by TCL.
+#
+#The shell commands get the absolute path of the script (and allows for
+#dereferencing one link to the script!).  I assume that the "trace" program is
+#colocated in the same directory.  All other command-line arguments are
+#passed to the trace program.  This file is sourced by trace, the shell
+#commands are passed over, and the tcl commands are picked up.
+#
+#Trace is run with the -noTk flag. The -file flag tells it to read this
+#file.  The "--" tells TclX to not treat any remaining command line arguments
+#as a file name.
+#
+#=======================================================================
+#!/bin/sh
+#Prefix arg0 with current path if arg0 is a relative path
+# \
+CWD=`pwd`; \
+ARG0=`echo $0 | sed -e "s%^\([^/]\)%$CWD/\1%"`; \
+ARG0=`ls -l $ARG0 | awk '{ print $NF }'`; \
+DIRECTORY=`echo $ARG0 | sed -e 's%/[^/]*$%%'`; \
+exec ${DIRECTORY}/trace -noTk -file "$0" -- ${1+"$@"} </dev/null >/dev/null
+
+echo Input arguments are $argv
+
+proc usage {} {
+   puts stderr {USAGE: "snapdiff <paramfile>"}
+   puts stderr {Optional parameters:}
+   puts stderr ""
+   puts stderr \
+	{    PIXMM   Size of one pixel in mm (.001 is a nice value to start)}
+   puts stderr \
+	{    NPIX    Total size of image (must be even, 512 is nice)}
+   puts stderr \
+	{    FILTER  Filter 1 is .44 microns, filter 9 is 1.55 microns.}
+   puts stderr \
+	{    XMM     Position in the focal plane (max 283 mm radius)}
+   puts stderr \
+	{    YMM }
+   puts stderr \
+	{    OUTPUT  Name of output file}
+   puts stderr ""
+   puts stderr {    X surf offset	(mm)}
+   puts stderr {    Y surf offset	(mm)}
+   puts stderr {    Z surf offset	(mm)}
+   puts stderr {    THETA surf offset	(radians)}
+   puts stderr {    PHI surf offset	(radians)}
+   puts stderr {    CURV surf offset	(inverse mm)}
+   puts stderr {    CCON surf offset	(dimensionless)}
+   puts stderr \
+	{    surf: 1 = primary, 2 = secondary, 3 = tertiary, 4 = focal plane}
+   exit 1
+   }
+
+#Check for valid input
+if {![info complete $argv]} usage
+if {[llength $argv] != 1} usage
+set paramfile [string trim $argv]
+if {![file exists $paramfile]} {
+   puts stderr "Error: No parameter file $paramfile"
+   exit 1
+   }
+
+#Defaults
+set PIXMM .00125
+set NPIX 512
+set FILTER 1
+set XMM 0
+set YMM 0
+set OUTPUT fft1.fit
+
+set fid [open $paramfile]
+while {1} {
+   set line [string trim [gets $fid]]
+   if {[eof $fid]} break
+   if {[string index $line 0] == "#"} continue
+   if {[string length $line] == 0} continue
+   if {![info complete $line]} {
+	puts stderr "Bad line in parameter file: $line"
+	close $fid
+	exit 1
+	}
+   set param [string toupper [lindex $line 0]]
+   foreach name "PIXMM NPIX FILTER XMM YMM OUTPUT" {
+	if {$param == "$name"} {
+	   set val [lindex $line 1]
+	   set $name $val
+
+#Validate value
+	   foreach option "NPIX FILTER" {
+		if {$param == "$option"} {
+		   if {![ctype digit $val]} {
+			close $fid
+			puts stderr "Bad value $val for parameter $param"
+			exit 1
+			}
+		   }
+		}
+	   foreach option "PIXMM XMM YMM" {
+		if {$param == "$option"} {
+		   if {[catch {format %f $val}]} {
+			close $fid
+			puts stderr "Bad value $val for parameter $param"
+			exit 1
+			}
+		   }
+		}
+	   }
+	}
+   foreach name "X Y Z THETA PHI CURV CCON" {
+	if {$param == "$name"} {
+	   set surf [lindex $line 1]
+	   if {![ctype digit $surf]} {
+		puts stderr "Bad surface identifier $surf"
+		exit 1
+		}
+	   if {$surf < 1 || $surf > 4} {
+		puts stderr "Surface identifier $surf out of bounds"
+		exit 1
+		}
+
+#If filter is a specific CCD in the focal plane and surf = 4, convert surf
+#to point to specific focal plane surface.
+	   if {$FILTER > 10 && $surf == 4} {
+		set surf $filter
+		}
+	   set val [lindex $line 2]
+	   if {[catch {format %f $val}]} {
+		puts stderr "Bad value $val for parameter $param"
+		close $fid
+		exit 1
+		}
+	   set ${name}($surf) $val
+	   }
+	}
+   }
+close $fid
+
+#Check that output directory is writable
+set dir [file dirname $OUTPUT]
+if {![file writable $dir]} {
+   puts stderr "Output directory $dir is not writable!"
+   exit 1
+   }
+
+#Read the SNAP design
+set optic [opticRead snapfull]
+
+#Update optical design
+foreach name "X Y Z THETA PHI CURV CCON" {
+   foreach surf "1 2 3 4" {
+	if {[info exists ${name}($surf)]} {
+	   set isurf [expr $surf+4]
+	   set param [string tolower $name]
+	   set val0 [showSurf $optic $isurf $param]
+	   set val [expr $val0 + [set ${name}($surf)]]
+	   setSurf $optic $isurf $param $val
+	   }
+	}
+   }
+
+psfMap $optic $XMM $YMM $FILTER
+set tempfile fft$FILTER.fit
+if {"$tempfile" != "$OUTPUT"} {
+   exec cp $tempfile $OUTPUT
+   exec rm $tempfile
+   }
+
+exit 0

@@ -1,0 +1,65 @@
+#!/bin/sh
+# ---------------------------------------------------------------------
+# This script file is a front-end to the trace program.
+# It defines necessary environment variables and then runs the binary.
+# It is designed to be relocatable!  One logical link to it is allowed!
+#
+#=======================================================================
+#Prefix arg0 with current path if arg0 is a relative path
+CWD=`pwd`
+ARG0=`echo $0 | sed -e "s%^\([^/]\)%$CWD/\1%"`
+
+#Dereference link (just one round)
+
+ARG0=`ls -l $ARG0 | awk '{ print $NF }'`
+
+#Copy this file to root of export directory
+DIRECTORY=`echo $ARG0 | sed -e 's%/[^/]*$%%'`
+
+if [ -d ${DIRECTORY}/install ]; then SUBDIR=install; else SUBDIR=tcl; fi; \
+   export SUBDIR
+
+#Grrr, there is a mismatch between "trace" and "environ".
+#Here, I take "PRD" to be the root directory, not the "prd" subdirectory.
+#In "environ", I do it the other way.  This isi probably because for
+#development work, it is easier to not have to install products all the
+#time as they are updated.  I'll figure out a best way at some point.
+
+PRD=${DIRECTORY}; export PRD
+
+
+#In the "install" directory, the tcl-specific directories include the version
+#numbers - e.g., tcl8.3.  The following should have been set up as logical
+#links.
+
+TCL_LIBRARY=${DIRECTORY}/${SUBDIR}/lib/tcl; export TCL_LIBRARY
+TK_LIBRARY=${DIRECTORY}/${SUBDIR}/lib/tk; export TK_LIBRARY
+TCLX_LIBRARY=${DIRECTORY}/${SUBDIR}/lib/tclx; export TCLX_LIBRARY
+TKX_LIBRARY=${DIRECTORY}/${SUBDIR}/lib/tkx; export TKX_LIBRARY
+echo TCL_LIBRARY = ${TCL_LIBRARY}
+
+#
+#plplot is in the prd area
+PLPLOT_LIB=${PRD}/pplot/lib; export PLPLOT_LIB
+PL_LIBRARY=${PRD}/pplot/etc; export PL_LIBRARY
+
+#tkTable makefile is also egregiously non-portable.  Yet another special
+#case
+#tkTable is also in the prd area
+
+TKTABLE_DIR=${PRD}/tktable; export TKTABLE_DIR
+TK_TABLE_LIBRARY=${PRD}/tktable/etc; export TK_TABLE_LIBRARY
+
+#ftcl only creates a library, but it might mess with installation
+#directories, so let it be in its own subdirectory.
+
+FTCL_DIR=${PRD}/ftcl; export FTCL_DIR
+FTCL_INSTALL_DIR=${FTCL_DIR}; export FTCL_INSTALL_DIR
+
+DERVISH_STARTUP=${DIRECTORY}/dervish/etc/init.tcl; export DERVISH_STARTUP
+
+RAY_STARTUP=${DIRECTORY}/cray/etc/rayStartup.tcl; export RAY_STARTUP
+CRAY_DIR=${DIRECTORY}/cray; export CRAY_DIR
+SETUP_CRAY="cray UNKNOWN"; export SETUP_CRAY
+
+exec ${DIRECTORY}/cray/bin/trace.bin "$@"

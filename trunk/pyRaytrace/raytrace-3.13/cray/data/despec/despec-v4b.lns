@@ -1,0 +1,250 @@
+file despec-v4b.lns
+
+#Ray Pattern information
+nstep 6
+ntype 1
+
+typedef struct {
+   char comment<80>;
+   } HISTORY;
+
+typedef struct {
+   char param<10>;
+   double val;
+   } TEL;
+
+typedef struct {
+   int filter;
+   char param<10>;
+   double val;
+   } FOCAL;
+
+typedef struct {
+   int filter;
+   int mode;
+   } PUPIL;
+
+typedef struct {
+   double surfid;
+   char param<10>;
+   double val;
+   } SURF;
+
+typedef struct {
+   double surfid;
+   int filter;
+   double val;
+   } INDEX;
+
+typedef struct {
+   double surfid;
+   char glass<80>;
+   } GLASS;
+
+typedef struct {
+   double surfid;
+   char comment<80>;
+   } COM;
+
+history {Refocused from RB file}
+history {Single focus; doubled up bandpass for refraction}
+history {Added ADC elements}
+history {Thin ADCs; prism angles set}
+history {Use N-BK7 and LLF1}
+history {C5 window same as decam}
+history {Adjusted thickness of ADC elements to min of ~10 mm}
+history {ADC lenses now fit in slot}
+history {Ran stopComp, opticInfo, opticInc}
+history {No ADC, lenses C5, C6 thinned}
+history {Better optimization of lens positions}
+
+tel       diam               0
+tel        fr1               0
+tel        fr2               0
+tel       back               0
+tel     finner               0
+tel  fiberdiam             0.1
+
+#Focal plane parameters
+#     Filter  Parameter           Value
+
+focal      1      xsize         227.161
+focal      1      ysize         227.161
+focal      1      scale         -17.589
+focal      1       wave             0.5
+focal      1     weight               1
+
+focal      2      xsize         227.161
+focal      2      ysize         227.161
+focal      2      scale         -17.589
+focal      2       wave            0.68
+focal      2     weight               1
+
+focal      3      xsize         227.161
+focal      3      ysize         227.161
+focal      3      scale         -17.589
+focal      3       wave            0.82
+focal      3     weight               1
+
+focal      4      xsize         227.161
+focal      4      ysize         227.161
+focal      4      scale         -17.589
+focal      4       wave            1.08
+focal      4     weight               1
+
+
+Surface parameters
+#         SurfId  Parameter           Value
+
+surf      0               z          -1e+14
+index     0               1               1
+index     0               2               1
+index     0               3               1
+index     0               4               1
+
+com       1      PRIMARY
+surf      1            curv  -4.6922803e-05
+surf      1            ccon        -1.09763
+surf      1         outstop            2005
+surf      1        stoptype               2
+index     1               1              -1
+index     1               2              -1
+index     1               3              -1
+index     1               4              -1
+glass     1                    mirror
+
+com       2      C1
+surf      2            curv  -0.00145810703
+surf      2               z       -8863.671
+surf      2         outstop      482.359472
+index     2               1      1.46233157
+index     2               2      1.45576649
+index     2               3      1.45298266
+index     2               4      1.44944186
+glass     2                      SIO2
+
+com       3      C1
+surf      3            curv   -0.0014048364
+surf      3               z       -8973.671
+surf      3         outstop      453.205184
+index     3               1               1
+index     3               2               1
+index     3               3               1
+index     3               4               1
+glass     3                       air
+
+com       4      C2
+surf      4            curv -0.000295216413
+surf      4               z       -9632.172
+surf      4         outstop      338.442662
+index     4               1      1.46233157
+index     4               2      1.45576649
+index     4               3      1.45298266
+index     4               4      1.44944186
+glass     4                      SIO2
+
+com       5      C2
+surf      5            curv  -0.00197217323
+surf      5               z       -9684.172
+surf      5              a4    1.579446e-10
+surf      5              a6     1.04254e-16
+surf      5              a8   -1.351096e-22
+surf      5         outstop      312.345872
+index     5               1               1
+index     5               2               1
+index     5               3               1
+index     5               4               1
+glass     5                       air
+
+com       6      C3
+surf      6            curv  -0.00105935027
+surf      6               z       -9779.532
+surf      6         outstop      315.023044
+index     6               1      1.46233157
+index     6               2      1.45576649
+index     6               3      1.45298266
+index     6               4      1.44944186
+glass     6                      SIO2
+
+com       7      C3
+surf      7            curv -0.000413915502
+surf      7               z       -9854.594
+surf      7         outstop       312.25573
+index     7               1               1
+index     7               2               1
+index     7               3               1
+index     7               4               1
+glass     7                       air
+
+com       8      C4
+surf      8            curv  -0.00150879952
+surf      8               z      -10382.362
+surf      8              a4   -1.798203e-10
+surf      8              a6   -1.125898e-15
+surf      8              a8   -7.906995e-21
+surf      8         outstop      290.530811
+index     8               1      1.46233157
+index     8               2      1.45576649
+index     8               3      1.45298266
+index     8               4      1.44944186
+glass     8                      SIO2
+
+com       9      C4
+surf      9            curv -0.000556271707
+surf      9               z      -10484.023
+surf      9         outstop      280.394887
+index     9               1               1
+index     9               2               1
+index     9               3               1
+index     9               4               1
+glass     9                       air
+
+com       10     C5
+surf      10           curv  0.000946458829
+surf      10              z       -10688.12
+surf      10        outstop      261.312301
+index     10              1      1.49144862
+index     10              2      1.48472959
+index     10              3      1.48189292
+index     10              4      1.47831034
+glass     10                      FK5
+
+com       11     C5
+surf      11           curv   0.00144929774
+surf      11              z       -10718.12
+surf      11        outstop      261.290071
+index     11              1               1
+index     11              2               1
+index     11              3               1
+index     11              4               1
+glass     11                      air
+
+com       12     C6
+surf      12           curv  0.000970979257
+surf      12              z       -10723.12
+surf      12        outstop      241.811132
+index     12              1      1.52141448
+index     12              2      1.51361483
+index     12              3      1.51038887
+index     12              4      1.50642542
+glass     12                      BK7
+
+com       13     C6
+surf      13           curv  0.000497795109
+surf      13              z       -10748.12
+surf      13        outstop      238.677433
+index     13              1               1
+index     13              2               1
+index     13              3               1
+index     13              4               1
+glass     13                      air
+
+com       14     FOCAL
+surf      14           curv   -0.0001074416
+surf      14              z     -10782.0498
+surf      14        outstop      228.970511
+index     14              1               1
+index     14              2               1
+index     14              3               1
+index     14              4               1
+glass     14                      air

@@ -1,0 +1,378 @@
+#!/bin/sh
+#
+#Create a file of a blurred DECam image.
+#Usage:  decamspot <paramfile>
+#
+# ---------------------------------------------------------------------
+# This script file is a front-end to the trace program.
+# It defines necessary environment variables and then runs the binary.
+# It is designed to be relocatable!  One logical link to it is allowed!
+#
+#How does this file work?  It doubles as a shell script and a tcl script!
+#(Ousterhout's hack).  TCL continues comment lines that end with a backslash,
+#where as sh does not.  So, we run it as a shell script and then source the
+#same file as a tcl script.  The shell commands are ignored by TCL.
+#
+#The shell commands get the absolute path of the script (and allows for
+#dereferencing one link to the script!).  I assume that the "trace" program is
+#colocated in the same directory.  All other command-line arguments are
+#passed to the trace program.  This file is sourced by trace, the shell
+#commands are passed over, and the tcl commands are picked up.
+#
+#Trace is run with the -noTk flag. The -file flag tells it to read this
+#file.  The "--" tells TclX to not treat any remaining command line arguments
+#as a file name.
+#
+#=======================================================================
+#!/bin/sh
+#Prefix arg0 with current path if arg0 is a relative path
+# \
+CWD=`pwd`; \
+ARG0=`echo $0 | sed -e "s%^\([^/]\)%$CWD/\1%"`; \
+ARG0=`ls -l $ARG0 | awk '{ print $NF }'`; \
+DIRECTORY=`echo $ARG0 | sed -e 's%/[^/]*$%%'`; \
+exec ${DIRECTORY}/trace -noTk -file "$0" -- ${1+"$@"} </dev/null >/dev/null
+
+echo Input arguments are $argv
+
+proc usage {} {
+   puts stderr {USAGE: "decamspot <paramfile>"}
+   puts stderr {Optional parameters:}
+   puts stderr ""
+   puts stderr \
+	{    RAYPATTERN  Number of radial steps in ray pattern (12 is nice)}
+   puts stderr \
+	{    SCALE   Size of one pixel in arcsec (.05 is nice)}
+   puts stderr \
+	{    NPIX    Total size of image (128 is nice)}
+   puts stderr \
+	{    FWHM   Blur in arcsec (to smooth out spot diagram) (.5 is nice)}
+   puts stderr \
+	{    FILTER  Filter {g r i z}}
+   puts stderr \
+	{    XMM     X Position in the focal plane (max 225 mm radius)}
+   puts stderr \
+	{    YMM     Y Position}
+   puts stderr \
+	{    ZENITH    Zenith angle}
+   puts stderr \
+	{    WEIGHTS Weighting by wavelength across a filter bandpass}
+   puts stderr \
+	{    OUTPUT  Name of output file (default is spot-r.fit)}
+   puts stderr ""
+   puts stderr {    X <surf> <offset>	(mm)}
+   puts stderr {    Y <surf> <offset>	(mm)}
+   puts stderr {    Z <surf> <offset>	(mm)}
+   puts stderr {    THETA <surf> offset	(arcsec)}
+   puts stderr \
+	{       <surf>: {primary C1 C2 C3 filter C4 C5 Focal corrector}}
+   puts stderr ""
+   exit 1
+   }
+
+#Check for valid input
+if {![info complete $argv]} usage
+if {[llength $argv] != 1} usage
+set paramfile [string trim $argv]
+if {![file exists $paramfile]} {
+   puts stderr "Error: No parameter file $paramfile"
+   exit 1
+   }
+
+#Defaults
+set RAYPATTERN 12
+set SCALE .05
+set NPIX 128
+set FILTER r
+set XMM 0
+set YMM 0
+set ZENITH 0.
+set WEIGHTS "1 1"
+
+#Valid filters
+set filterlist() "g r i z"
+
+set filterlist(g) "1 2"
+set filterlist(r) "3 4"
+set filterlist(i) "5 6"
+set filterlist(z) "7 8"
+
+#Valid surfs
+set surfs() "primary c1 c2 c3 filter c4 c5 corrector"
+
+#Conversion from <surf> to surfids
+
+set surfs(primary,g) 3.01
+set surfs(primary,r) 3.02
+set surfs(primary,i) 3.03
+set surfs(primary,z) 3.04
+
+foreach filter $filterlist() {
+   set surfs(c1,$filter) "12 13"
+   set surfs(c2,$filter) "16 17"
+   set surfs(c3,$filter) "19 20"
+   set surfs(c4,$filter) "25 26"
+   set surfs(c5,$filter) "28 29"
+   set surfs(focal,$filter) 31
+   }
+
+set surfs(filter,g) "22.01 23.01"
+set surfs(filter,r) "22.02 23.02"
+set surfs(filter,i) "22.03 23.03"
+set surfs(filter,z) "22.04 23.04"
+
+#Entire corrector is interesting.  I omit the primary.
+
+foreach filter $filterlist() {
+   set surfs(corrector,$filter) ""
+   foreach surf "c1 c2 c3 filter c4 c5 focal" {
+	set surfs(corrector,$filter) [join "$surfs(corrector,$filter) \
+	   $surfs($surf,$filter)" " "]
+	}
+   }
+
+set fid [open $paramfile]
+while {1} {
+   set line [string trim [gets $fid]]
+   if {[eof $fid]} break
+   if {[string index $line 0] == "#"} continue
+   if {[string length $line] == 0} continue
+   if {![info complete $line]} {
+	puts stderr "Bad line in parameter file: $line"
+	close $fid
+	exit 1
+	}
+   set param [string toupper [lindex $line 0]]
+   foreach name "SCALE NPIX FWHM FILTER XMM YMM RAYPATTERN OUTPUT ZENITH" {
+	if {$param == "$name"} {
+	   set val [lindex $line 1]
+	   set $name $val
+
+#Validate value
+	   foreach option "NPIX RAYPATTERN" {
+		if {$param == "$option"} {
+		   if {![ctype digit $val]} {
+			close $fid
+			puts stderr "Bad value $val for parameter $param"
+			exit 1
+			}
+echo integer option $param value $val
+		   }
+		}
+	   foreach option "SCALE FWHM XMM YMM ZENITH" {
+		if {$param == "$option"} {
+		   if {[catch {format %f $val}]} {
+			close $fid
+			puts stderr "Bad value $val for parameter $param"
+			exit 1
+			}
+echo floating option $param value $val
+		   }
+		}
+	   }
+	}
+
+   foreach name "X Y Z THETA PHI" {
+	if {$param == "$name"} {
+	   set surf [lindex $line 1]
+	   set surf [string tolower $surf]
+	   if {[lsearch $surfs() $surf] < 0} {
+		puts stderr "Bad surface identifier $surf"
+		exit 1
+		}
+	   set val [lindex $line 2]
+	   if {[catch {format %f $val}]} {
+		puts stderr "Bad value $val for parameter $param"
+		close $fid
+		exit 1
+		}
+
+#Convert angular items to radians.  PHI is input in deg.
+	   if {$name == "PHI"} {
+		set val [expr $val/57.296]
+		}
+
+#THETA is only used by lensRotate and wants to be in degrees.
+#Input is arcsec
+	   if {$name == "THETA"} {
+		set val [expr $val/3600.]
+		}
+echo Surface parameter $param surface $surf value $val
+	   set ${name}($surf) $val
+	   }
+	}
+   foreach name "WEIGHTS" {
+	if {$param == "$name"} {
+	   set list [lrange $line 1 end]
+	   set WEIGHTS ""
+	   foreach e $list {
+		if {[string index $e 0] == "#"} break
+		if {[catch {format %f $e}]} {
+		   puts stderr "Invalid weight $e"
+		   exit 1
+		   }
+		lappend WEIGHTS $e
+		}
+echo WEIGHTS $WEIGHTS
+	   }
+	}
+   }
+close $fid
+
+if {![info exists OUTPUT]} {
+   set OUTPUT spot-$FILTER.fit
+   }
+
+#Convert FILTER to internal icolors, since each filter has 2 wavelengths
+if {[lsearch $filterlist() $FILTER] < 0} {
+   puts stderr "Invalid filter: $FILTER"
+   exit 1
+   }
+set ICOLORS $filterlist($FILTER)
+
+#Check that output directory is writable
+set dir [file dirname $OUTPUT]
+if {![file writable $dir]} {
+   puts stderr "Output directory $dir is not writable!"
+   exit 1
+   }
+
+#Read the DECam design
+set optic [lensRead decam]
+
+#Dense grid of points
+rayPattern $optic $RAYPATTERN 2
+
+#Now we have logic to tweak lenses.  I will not tweak shapes because I would
+#want to go back to the single surface case.
+#The following parameters require calling incrSurf
+
+foreach name "X Y Z" {
+   foreach surf "primary c1 c2 c3 filter c4 c5 focal corrector" {
+	if {[info exists ${name}($surf)]} {
+	   set surfids $surfs($surf,$FILTER)
+	   set param [string tolower $name]
+echo Incrementing surfaces $surfids parameter $param amount [set ${name}($surf)]
+	   incrSurf $optic $surfids $param [set ${name}($surf)]
+	   }
+	}
+   }
+
+#Theta parameter requires calling lensRotate.  This only tilts the lens in
+#X-direction (would need to enhance lensRotate to do arbitrary tilts).
+foreach name "THETA" {
+   foreach surf "primary c1 c2 c3 filter c4 c5 focal corrector" {
+	if {[info exists ${name}($surf)]} {
+	   set surfids $surfs($surf,$FILTER)
+	   set param [string tolower $name]
+echo Rotating lens surfaces $surfids amount [set ${name}($surf)]
+	   lensRotate $optic $surfids [set ${name}($surf)]
+	   }
+	}
+   }
+
+#Let's do a dense sampling of the filter.  Number of samples is given
+#by number of "weights".  This code is copied (more or less) from denseSample
+#and filterSample
+
+set icolor0 [lindex $ICOLORS 0]
+set icolor1 [lindex $ICOLORS 1]
+
+set wave0 [showFocal $optic $icolor0 wave]
+set wave1 [showFocal $optic $icolor1 wave]
+
+set nweight [llength $WEIGHTS]
+if {$nweight == 0} {
+   puts stderr "No weights!"
+   exit 1
+   }
+
+#Create a list of wavelengths that are equally spaced and start, end inside
+#the bandpass limits.
+
+set winc [expr ($wave1-$wave0)/($nweight*1.)]
+set waves ""
+loop i 0 $nweight {
+   lappend waves [expr $wave0 + ($i+0.5)*$winc]
+   }
+
+#Copy template to color 1.  Note that this will set the surfaces appropriately
+#We are destroying our optic structure (should make a copy if we want to
+#loop through this section multiple times).
+
+if {$icolor0 != 1} {
+   waveCopy $optic $icolor0 1
+   }
+
+#Clear out remaining colors
+
+set ncolor [exprGet $optic.ncolor]
+if {$ncolor > 1} {
+   for {set i 2} {$i <= $ncolor} {incr i} {setIndex $optic 0 $i 0}
+   }
+
+colorcount $optic
+
+#OK, we now have an optic structure with just one color, and it is the
+#wrong wavelength.  Let's fix it, then add all the remaining wavelengths.
+
+set wave0 [lindex $waves 0]
+set weight [lindex $WEIGHTS 0]
+waveSwitch $optic 1 $wave0
+setFocal $optic 1 weight $weight
+set icolors 1
+
+#Refraction
+
+loop i 1 [llength $waves] {
+   set wave [lindex $waves $i]
+   set weight [lindex $WEIGHTS $i]
+   set icolor [expr $i+1]
+   waveAdd $optic $wave 1
+   setFocal $optic $icolor weight $weight
+   lappend icolors $icolor
+
+#Refraction
+   set refract [diffRefract $wave $wave0 $ZENITH]
+echo refract $refract
+#Convert refract to arcsec
+   setFocal $optic $icolor yoff [expr -1.*$refract/60.]
+   }
+
+#Bingo.  We now have an optic structure with nothing but our densly-sampled
+#filter wavelengths and the proper weights and the proper refraction settings.
+#Now I am ready to make a spot diagram.
+
+spotMap $optic $XMM $YMM $icolors
+set tempfile spot.fit
+
+#Read in image, add more params to header
+set reg [regReadFromFits $tempfile]
+exec rm -f $tempfile
+
+hdrInsWithAscii $reg.hdr FILTER $FILTER "Filter"
+hdrInsWithAscii $reg.hdr OUTPUT $OUTPUT "Ouput file name"
+hdrInsWithDbl $reg.hdr ZENITH $ZENITH "Zenith Angle (deg)"
+hdrInsWithInt $reg.hdr RAYPTRN $RAYPATTERN "Radial steps in ray pattern"
+
+foreach name "X Y Z" {
+   foreach surf "primary c1 c2 c3 filter c4 c5 focal corrector" {
+	if {[info exists ${name}($surf)]} {
+	   hdrInsWithDbl $reg.hdr $name \
+		[set ${name}($surf)] "Offset to $surf (mm)"
+	   }
+	}
+   }
+foreach name "THETA" {
+   foreach surf "primary c1 c2 c3 filter c4 c5 focal corrector" {
+	if {[info exists ${name}($surf)]} {
+
+#Convert back to arcsec
+	   set arcsec [format %.1f [expr [set ${name}($surf)]*3600.]]
+	   hdrInsWithDbl $reg.hdr $name $arcsec "Tilt of $surf (arcsec)"
+	   }
+	}
+   }
+regWriteAsFits $reg $OUTPUT
+echo $OUTPUT
+exit 0

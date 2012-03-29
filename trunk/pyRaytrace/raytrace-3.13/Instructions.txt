@@ -1,0 +1,194 @@
+Generating DECam PSF spots
+
+=============================================
+Quick Installation (Linux-only for now).
+
+1. Download raytrace-3.13.tar.gz   (this has Linux binaries)
+   "tar xvfz raytrace-3.13.tar.gz"
+
+2. For convenience,
+   "ln -s raytrace-3.13/decamspot decamspot"
+
+3. Download sample.par.  Edit as desired.
+
+4. To run, type
+   "decamspot sample.par"
+
+   Output is a FITS-format file sample.fit.
+
+============================================
+How It Works
+
+The raytrace program "trace" is a Tcl/TK application built, in part, using
+old SDSS infrastructure.  Normally it is run as an interactive process,
+but for our purposes here it is run as a non-interactive job.  The binary
+distribution tree is designed so it can be installed and run from an
+arbitrary location - no need to install configuration files or initialize
+environment variables first.  It has been tested on various versions of
+32-bit and 64-bit Scientific Linux, Fedora, and Ubuntu.
+
+Note: it is presumed that "/bin/sh" is linked to a POSIX-compliant Bourne 
+shell (usually bash, but Ubuntu now uses a variant called "dash", which 
+seems to work fine.)  [The sources may also still compile on IRIX, 
+Solaris, OSF/1, and AIX, but I no longer have access to any such systems 
+to test.]
+
+The file "decamspot" is a shell script that launches the "trace" 
+executable and runs a series of TCL commands to read an parse a 
+configuration file and then generate a psf spot diagram in the form of a 
+FITS file.  One run of the job creates one spot diagram. Anyone feeling 
+adventurous can edit the "decamspot" file to have it generate a series of 
+spot diagrams all at once.
+
+The "decamspot" file is in the top-level directory of the binary 
+distribution tree.  For convenience, you can either include this directory 
+in your PATH environment variable or create a symbolic link to this file 
+from some other directory that you might use as a workspace.  (You cannot 
+just copy the file directly; it uses the file path information from where 
+it is located to find other initialization files.)
+
+==============================
+Configuration File
+
+The "decamspot" command takes one argument, which is the name of a
+configuration file.  The configuration file specifies parameters such as
+the location in the focal plane of a spot, the filter, possibly a zenith
+angle for refraction, and various parameters to impose decenters and/or
+tilts on various optical components in the telescope and corrector.
+
+Running "decamspot" without any file specified gives a summary listing
+of all the options.
+
+The configuration file contains zero or more lines.  Lines that start with 
+"#" are treated as comments.  Blank lines are ignored.
+
+Otherwise, each line specifies the name of a parameter, a possible 
+subparameter, and a value (or, in one case, a set of values).
+Parameter names should be uppercase.  Subparameters are case-insensitive.
+Values might be integer, floating point, or ascii. Ascii values should NOT
+be delineated by any quotes.
+
+The following is a description of the optical design and image creation
+algorithm, along with the parameters that control various options.
+In all cases, the default value is shown in [brackets].
+
+The baseline DECam design is in a file "decam.lns".  This file contains
+the optical design, including the location of baffles, and incorporating
+the as-built lens curvatures.  It does NOT include wedges and decenters.
+(These are expected to be quite small.)  Only one surface height error
+map is included in the distribution - that for the aspheric, convex side
+of C4, but it is currently NOT used in the raytrace calculations (since it
+slows things down considerably).
+
+The output is a FITS file.  Once can configure the pixel size and total 
+image size.  If an image is, say 128x128 pixels, the nominal center of the 
+spot is at pixel 65, 65 (i.e. the pixel just above and right of the image 
+center as you view it in DS9).  The FITS file header should contain a copy 
+of all parameters (including those using default values) used in 
+generating that spot.
+
+NPIX	[128]	Size of image (square).
+SCALE	[0.05]	Arcsec/pixel in the image.
+OUTPUT	[spot-r.fit]	Name of output file.
+
+NOTE: Because of distortion, the plate scale (arcsec/mm) varies across the
+focal plane.  The SCALE parameter gives a nominal value for this 
+conversion.  In practice, this value is combined with the telescope focal
+length to determine a pixel size in mm that is rigorously constant across
+the focal plane.  This size (PIXMM) is given in the FITS header.  A 
+rigorously constant pix size in mm is probably what one wants for a weak
+lensing simulation.
+
+A spot diagram is created by following a set of rays from a source at
+infinity impacting the primary mirror through to the focal plane.  
+Incoming rays are distributed uniformly across the primary.  The density
+of rays can be adjusted.
+
+RAYPATTERN	[12]	Number of radial steps in the ray pattern
+
+The density of rays is still not enough to make a smooth spot diagram.
+Each ray is blurred with a circularly-symmetric Gaussian
+
+FWHM	[0.5]	Blur in arcsec of a Gaussian smoothing function.
+
+Note that, because of distortion, the contribution of atmospheric seeing 
+to a PSF will not be circularly symmetric.  However, the local CCD
+diffusion will be.  Thus, the FWHM of this Gaussian might be adjusted to
+match that of diffusion.  (Note that the blur FWHM is converted to pixels,
+and it is the blur in pixels that is rigorously constant across the focal
+plane.)
+
+Off-axis spots are specified by the nominal spot location in the focal 
+plane where they will fall:
+
+XMM	[0]	Nominal X position in mm (max 225 mm radius)
+YMM	[0]
+
+This position is mapped back to the sky using a nominal scale factor. 
+Because of distortion, the returning rays will impact the focal plane in a 
+slightly different location from the nominal.  The true location is given 
+by parameters XCEN and YCEN in the FITS header.  There is no particular 
+mapping of X and Y to the layout of CCDs in the focal plane or to the N-S 
+E-W axes of the sky. In the FITS images, increasing X correspongs to 
+increasing column number (NAXIS1), and increasing Y to increasing row 
+number (NAXIS2).
+
+Spots can be generated for any of the four main DECam filters.
+
+FILTER	[r]	g,r, i, or z
+
+The bandpass limits are fixed and are as follows (in microns)
+
+g	0.40 - 0.54
+r	0.56 - 0.68
+i	0.69 - 0.82
+z	0.82 - 1.08
+
+The specified bandpass is actually divided into sub-bands of equal width 
+in microns, and these are weighted individually in the combined psf.
+
+WEIGHTS		[1 1]	Weighting by wavelength across a filter bandpass
+
+An arbitrary number of weights can be specified (all on one line), and the 
+number is used to determine the number of sub-bands that are created.  
+The weights can be used to mimic objects of different spectral shape. Note 
+that CCDs are photon detectors, so the weights should be computed 
+accordingly.  The weights should also include the effects of CCD quantum 
+efficiency variation across the bandpass (particularly for g and z), since 
+these are otherwise not included.
+
+It is possible to mimic the effects of differential refraction for 
+pointings other than the zenith.
+
+ZENITH	[0.]	Zenith angle
+
+The effect is implemented by adjusting the mapping between the focal
+plane position and the sky for each sub-band.  The first sub-band has zero
+offset.  Refraction occurs in the Y direction only.  (Is the blue-end
+displaced to + or - Y?)  The refraction constant is appropriate for 
+CTIO.  Changes in differential refraction across the focal plane are not
+implemented.
+
+It is possible to tweak the position and tilt of the optical elements
+in the telescope and corrector.  The parameters are X, Y, Z, and THETA 
+(tilt).  The Z direction increases from the focal plane towards the
+primary mirror.  At present the only tilts that can be imposed are
+those that pivot about the Y axis.  The sense of a tilt is as follows - if 
+one constructs a vector normal to the vertex of an optical surface such 
+that it points in the +Z direction, then a + tilt will cause the vector to 
+move in the +X direction.
+
+X <surf> <offset>	[0]	(mm)
+Y <surf> <offset>	[0]	(mm)
+Z <surf> <offset>	[0]	(mm)
+THETA <surf> <offset>	[0]	(arcsec)
+
+The allowable options for <surf> are: primary, c1, c2, c3, filter, c4,
+c5, focal, or corrector.  For lenses, the pivot point is located on the
+Z axis midway between the vertices of the front and back surfaces.
+For the corrector (i.e., all optical elements from c1 to focal combined),
+the pivot point is at the average Z position of each surface in the 
+optical train.
+
+The raytrace program is capabile of more arbitrary tilts - I have just not
+exposed them through the parameter interface here.

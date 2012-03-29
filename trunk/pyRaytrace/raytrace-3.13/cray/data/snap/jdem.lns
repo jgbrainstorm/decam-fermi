@@ -1,0 +1,148 @@
+file snapfull.lns
+
+#Ray Pattern information
+nstep 6
+ntype 1
+
+typedef struct {
+   char comment<80>;
+   } HISTORY;
+
+typedef struct {
+   char param<10>;
+   double val;
+   } TEL;
+
+typedef struct {
+   int filter;
+   char param<10>;
+   double val;
+   } FOCAL;
+
+typedef struct {
+   int filter;
+   int mode;
+   } PUPIL;
+
+typedef struct {
+   double surfid;
+   char param<10>;
+   double val;
+   } SURF;
+
+typedef struct {
+   double surfid;
+   int filter;
+   double val;
+   } INDEX;
+
+typedef struct {
+   double surfid;
+   char glass<80>;
+   } GLASS;
+
+typedef struct {
+   double surfid;
+   char comment<80>;
+   } COM;
+
+history {Added surface names}
+
+tel       diam            1100
+tel        fr1            1.29
+tel        fr2              10
+tel       back             756
+tel     finner           0.
+
+#Focal plane parameters
+#     Filter  Parameter           Value
+
+focal      1      xsize           283.5
+focal      1      ysize           283.5
+focal      1      scale        -17.0467
+focal      1       wave            0.5
+
+focal      2      xsize           283.5
+focal      2      ysize           283.5
+focal      2      scale        -17.0467
+focal      2       wave            1.0
+
+focal      3      xsize           283.5
+focal      3      ysize           283.5
+focal      3      scale        -17.0467
+focal      3       wave             1.2
+
+focal      4      xsize           283.5
+focal      4      ysize           283.5
+focal      4      scale        -17.0467
+focal      4       wave             1.4
+
+focal      5      xsize           283.5
+focal      5      ysize           283.5
+focal      5      scale        -17.0467
+focal      5       wave            1.6
+
+focal      6      xsize           283.5
+focal      6      ysize           283.5
+focal      6      scale        -17.0467
+focal      6       wave            1.8
+
+focal      7      xsize           283.5
+focal      7      ysize           283.5
+focal      7      scale        -17.0467
+focal      7       wave            2.0
+
+
+Surface parameters
+#         SurfId  Parameter           Value
+
+surf      0               z          -1e+14
+index     0               1               1
+index     0               2               1
+index     0               3               1
+index     0               4               1
+index     0               5               1
+index     0               6               1
+index     0               7               1
+glass     0           air
+
+com       1      PRIMARY
+surf      1            curv   -4.1322314e-5
+surf      1            ccon       -1.
+surf      1         outstop             550
+surf      1        stoptype               2
+index     1               1              -1
+index     1               2              -1
+index     1               3              -1
+index     1               4              -1
+index     1               5              -1
+index     1               6              -1
+index     1               7              -1
+glass     1                    mirror
+
+com       2      FLAT
+surf      2            curv          0.
+surf	  2 		  z          -4000.
+surf      2         outstop             550
+surf      2        stoptype               0
+index     2               1              -1
+index     2               2              -1
+index     2               3              -1
+index     2               4              -1
+index     2               5              -1
+index     2               6              -1
+index     2               7              -1
+glass     2                    mirror
+
+
+com       3      FOCAL
+surf      3               z           4100.
+surf      3         outstop        283.8133
+index     3               1               1
+index     3               2               1
+index     3               3               1
+index     3               4               1
+index     3               5               1
+index     3               6               1
+index     3               7               1
+glass     3                    air

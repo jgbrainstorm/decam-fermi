@@ -1,0 +1,20 @@
+NAME
+       tell - Return current access position for an open channel
+
+SYNOPSIS
+       tell channelId
+
+
+DESCRIPTION
+       Returns  an  integer string giving the current access position in chan-
+       nelId.  This value returned is a byte offset that can be passed to seek
+       in  order  to set the channel to a particular position.  Note that this
+       value is in terms of  bytes,  not  characters  like  read.   The  value
+       returned is -1 for channels that do not support seeking.
+
+
+SEE ALSO
+       file(n), open(n), close(n), gets(n), seek(n)
+
+
+KEYWORDS

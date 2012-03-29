@@ -1,0 +1,336 @@
+<HTML>
+<HEAD>
+<TITLE>INTRODUCTION</TITLE>
+</HEAD>
+<BODY bgcolor=white>
+<A NAME="Intro"><H2>A Guide to Ray Tracing</H2>
+<P>
+CRAY is a general purpose optimizing raytrace program.  It is designed
+to trace telescope and instrument optics.  A useful feature is
+that it has the capability to handle complex optical layouts - in particular,
+it allows for mosaicing in the focal plane,
+where multiple detectors might be used, say, each with its own
+filter.  Another feature of CRAY
+is that in its optimizing mode, one can link parameters of different
+elements of the telescope.  For example if you have
+a mosaic of 4 detectors, each with its own field flattener, you can
+adjust the curvature of the field flatteners such that they all have
+the same curvature, or you can adjust them independently.  The optimizer
+can optionally minimize distortion as well as image size.
+CRAY measures distortion using either image centroids or
+positions of the chief rays.  The drawback
+to having this flexibility is that it requires more work up front to
+specify the optical system parameters and to specify what parameters
+get varied during optimization.  Another drawback to CRAY is that
+it is not a polished product.  But then, it is free.
+<P>
+CRAY was originally written as a set of Fortran subroutines embedded in the
+Dervish framework of the SDSS software systems.  Because the Fortran used
+nonstandard extensions and would not compile on some systems, the code
+was converted to all-C.  (Dervish still retains some ANSI-77 Fortran code
+for the plotting package, but that code is quite portable).
+The Dervish framework
+provides considerable flexibility with regard to running the ray trace
+program.  The ray trace program is implemented as a series of commands.
+With Dervish, it is possible to define higher level procedures that
+execute some combination of commands to simplify the program operation,
+yet the ease with which procedures can be changed means that the user
+interface is still quite flexible.
+<P>
+It is necessary to adopt notational and sign conventions.
+CRAY follows the conventions given in Schroeder's book "Astronomical
+Optics".  The user should obtain a copy.  Space is defined by an
+x, y, z coordinate system.  The z axis is the optical axis of the
+telescope.  Light from a distant object travels from the -z to the +z
+direction.   z=0 corresponds to the vertex of the primary mirror.
+One often uses r = sqrt(x**2+y**2).
+<P>
+In simple terms, ray tracing involves
+following the light from a source such as a star through the optics of
+the telescope and plotting a spot diagrom of all the rays from that
+star in the focal plane.  The physics of ray tracing is simple:
+Snell's law for refractive surfaces, and angle of incidence equals
+angle of reflection for mirrors.  The only complicated aspect is
+using analytical geometry to actually compute the path of a ray given
+the above principles and creating the necessary bookkeepping to track
+the inevitable complexities of a design.  The bookkeeepping is easily
+the bulk of the code.  The code that the actual raytracing is in
+subroutine SURFACE.  It is about 10% of the total.
+<P>
+An optical system consists of a set of surfaces, which can be
+mirrors and/or lenses.
+While one thinks of things like lenses as being one optical element
+with two surfaces, the program treats surfaces independently and
+does not know anything about their physical implementation.
+The first surface is the primary mirror or lens
+and the last surface is the focal plane.  The shape of any surface
+is conventionally described either as a conic surface or as a polynomial
+function.  Both forms are allowed in CRAY.  A conic surface is parameterized
+by a curvature C (inverse of radius of curvature) and a conic constant
+k = -e**2 (where e is the eccentricity of the conic surface; 0 &lt. e &lt. 1
+for ellipses; 1 &lt. e for hyperboloids).  The equation for a surface is
+<PRE>
+z = r * C / (1 + sqrt ( 1 - r**2 * C**2 * (1+k))) + A2 * r**2 + A4 * r**4
+   + A6 * r**6 + A8 * r**8.
+</PRE>
+The primary mirror vertex should be set to
+x=0, y=0, z=0 (although this is not required).  If the center of
+curvature of a surface is to the -z side of the vertex, then the curvature
+(and radius of curvature) have a negative sign.
+<P>
+Surfaces can be translated and rotated.  Translation is described by
+three parameters: xvert, yvert, zvert, which give the spatial position 
+of the surface vertex.  Two angles are used to describe rotation.
+Normally a surface lies in a plane that is perpendicular to the z axis.
+This plane is tilted by an angle "theta" about a line that has a position
+angle "phi+pi/2" w.r.t the x axis.
+A typical application where tilting is needed is for
+a CCD detector that lies off the optical axis of the telescope and needs
+to be tilted to follow focal plane curvature; in the case,
+"phi" is the position angle of a line connecting the optical axis with
+the center of the CCD detector (phi = 0 corresponds to the x axis,
+and position angles increase in the +y direction) and the CCD is rotated
+about a line perpendicular to this line.  If theta is
+positive, then a point on the optical axis to the +z side of that surface
+moves in the phi direction.  Large tilts (such as induced by a folding
+flat, for example) are now possible.  (Some plotting applications do
+not yet handle arbitrarily complex combinations of tilts for different
+elements, but the ray tracing should be done correctly).
+<P>
+In the CRAY program, information on each optical surface is stored in
+two arrays of structures.  A single structure is called an
+<A HREF="../../include/optic.h">OPTIC_DEF</A>.
+One array of OPTIC_DEFs is called "fplane" and the other is called "optic".
+The "fplane" array stores information on mapping from the sky to the
+focal plane and is described later.
+Indices 1 to NSURF within the "optic"
+array are used to store the parameters for each optical surface.
+A pre-compiled limit of 500 surfaces is allowed.  Within each OPTIC_DEF,
+CRAY allows up to 100 parameters to describe
+a single surface, although only 11 are used at present.
+<P>
+CRAY provides extensive supports for multiple configurations
+within an optical system.  It uses configurations in a way that might differ
+somewhat from other ray trace programs.  A single configuration is defined
+by a single wavelength and a set of surfaces in one geometric configuration.
+In optical systems using lenses, it is usually necessary to perform ray
+traces for multiple wavelengths to monitor potential chromatic aberrations.
+In many systems all wavlengths fall on the same detector.
+In other systems, such as those with a mosaic of
+detectors, light from different locations on the sky and/or different
+wavelengths can pass through different optical
+components, and so one must keep track of the wavelength and particular optical
+configuration for each element of the mosaic.  CRAY uses the term "color"
+frequently to desribe different configurations (even though it is not required
+that they have different wavelengths).  The reason this convention is that
+CRAY was originally written for handling mosaiced focal planes.
+CRAY can store information for up to 500
+colors (or configurations).  The information stored for each color is of
+two types: a) parameters that describe how positions on the sky map
+onto the focal plane; b) the refraction index of each surface for each
+color.  Thus, for example, in a mosaic of 3 CCDs, if the user wishes
+to perform traces for 4 wavelengths for each CCD, 12 colors total are
+defined.  CRAY supports up to 500 colors/configurations.
+The OPTIC_DEF structure for
+each surface has storage for up to 100 refraction indices, one for
+each color or configuration.  If a surface is not used for a particular color,
+then the refaction index for that color should be 0.
+Some surfaces will have a value set for
+all colors; e.g., the secondary mirror will have a refraction index of
+1 for all colors (this is the index of whatever immediately follows
+the surface).  Other surfaces (e.g. the front surface of the green
+filter that is part of a 4 color mosaic in the focal plane) will have
+an index set only for those colors that the surface is going to pass;
+all remaining indices are set to 0.  To determine which
+optical elements are included in a particular configuration, therefore,
+CRAY selects only those surfaces with non-zero refraction indices.
+There is no special flag used to indicated which surface is the focal
+plane; CRAY just uses the last surface that it encounters.
+There is no requirement that the surfaces used by a particular color
+be numbered contiguously in the OPTIC array; only that they
+be ordered first to last.  (CRAY does not support arbitrary non-sequential
+surfaces.)
+There is also no requirement that the
+surfaces for different colors be physically distinct.  For example,
+the secondary mirror could be entered 3 times in the OPTIC
+array (i.e. as 3 separate surfaces),
+with each entry corresponding to a different color, and the only
+difference between them being that the z position is different.
+Physically, this could be used as a way of describing a telescope in
+which the secondary is refocused for each color to give the best images
+in the focal plane.  This feature would also be use in describing zoom lenses,
+where multiple optical components are repositioned at each zoom factor.
+To summarize,
+different focal positions in the telescope are identified as being
+distinct colors (whether or not they actually respond to different
+wavelengths).
+<P>
+Surface 1 must be common to all colors.  If necessary, it can be
+an infinitesimal bit of air that does nothing optically.
+<P>
+The program assumes that rays travel primarily parallel to the z
+axis.  Right angle bends won't be handled properly.  UPDATE: Right angle
+bends are now OK.  Not all sections of code have been tested yet, so use
+with caution.
+<P>
+When the optimizer is used, it is necessary to provide an increment for
+each parameter.  The optimizer will trace rays for the original and
+incremented parameters.  (NOTE: It now uses centered differences to compute
+derivatives.)  The increment cannot be too small (or else one will
+suffer from round-off error) nor too large, or the resulting ray trace
+may result in nonsense results.  Both the surface parameters (curvature,
+conic constant, etc) and the refraction indices for any given surface
+can be adjusted by the optimizer.  Thus, within the OPTIC_DEF structure,
+there is an array of parameter increments of size 200 (100 surface
+parameters and 100 colors).  The user need not worry about inputting
+this set of increments; CRAY contains a routine to compute sensible
+increments for all parameters.
+<P>
+In addition to the above parameters (all of which could be adjusted in
+a least squares fit), every surface has two parameters that are fixed:
+inner and outer stop radii (in mm).  In certain routines a flag is supplied
+so that when rays are traced, those
+that fall outside the stop limits are eliminated.
+Normally one avoids intercepting rays during the
+optimization phase (because the number of rays is finite) but includes
+them in the analysis.  CRAY ignores stops during optimization.  Analysis
+routines often have a flag (stopcheck) that will cause stops to be check
+if it is 1.  One surface, called the aperture stop, is treated a little
+special.  The pattern of rays used in a trace are normally laid out to
+fall within the aperture stop.  Due to the vagaries of rounoff errors and
+aberrations, rays aimed at the periphery of the aperture stop might fall
+just outside.  For this reason, CRAY does not check the outer stop limits
+for the aperture stop surface.
+<P>
+Each color has its own set of parameters
+describing how the sky is mapped to the focal plane.
+These parameters are stored in the "fplane" array introduced above.
+The parameters are: design wavelength (microns),
+x and y center on the sky (arcmin), rotation angle
+(radians), scale factor (arcsec/mm), focal plane x width and y width
+(mm), weighting factor in the least squares,
+and a distortion correction (arcsec /mm**3).  There is also a flag
+that describes two models for mapping.  In the first model (flag = 0),
+an object has sky coordinates "m" and "theta"  w.r.t. the optical axis.
+"m" is the angular distance between the object and the optical axis,
+and "theta" is the position angle of the geodesic connecting the
+object to the optical axis as measured at the optical axis ("theta"=0
+lies along the x axis).  The the mapping function is
+<PRE>
+   x = m * cos(theta)
+   y = m * sin(theta).
+</PRE>
+The second mapping function is appropriate for drift scan observations.
+For this, it is convenient to define great circle coordinates "mu" and
+"nu", where the scan direction on the sky defines a great circle that is
+the equator of the coordinate system, "mu" is the longitude in this system,
+and "nu" is the latitude.  The mapping (using the grey book conventions) is
+<PRE>
+   x = nu
+   y = mu
+</PRE>
+The two transformations do NOT map a given point of the sky onto the
+same x,y coordinate of the array.  The transformation between the two
+systems for a given point on the sky is 
+<PRE>
+sin(mu) = sin(m) * sin(theta) / sqrt [1 - sin(m)^2 * cos(theta)^2]
+sin(nu) = sin(m) * cos(theta)
+</PRE>
+<P>
+In addition to the above information, the "fplane" array contains two derived
+numbers for each configuration: the paraxial focal length and the location
+of the exit pupil.  Either of these can be used as constraints in the
+least squares.  This feature is sometimes useful when lots of parameters are
+allowed to float at once.
+<p>
+The mapping parameters are stored in the "fplane" array
+as follows:
+<PRE>
+fplane<6> contains
+fplane<5> contains the rotation angle between the sky and focal plane
+fplane<4> contains the third order distortion parameter
+fplane<3> contains the scale factor and design wavelength
+fplane<2> contains the x center of the field (arcmin)
+fplane<1> contains the y center of the field (arcmin)
+</PRE>
+<P>
+Translations and rotations are defined as follows:
+Let a point on the sky have coordinates
+theta, phi with respect to the telescope optical axis; phi is the position
+angle on the sky and theta is the (angular) radial distance from the optical
+axis in arcmin.  Then
+<PRE>
+  angx = OPTIC(-3) * (theta + OPTIC(-4) * theta**3) * cos(phi) - OPTIC(-2)
+  angy = OPTIC(-3) * (theta + OPTIC(-4) * theta**3) * sin(phi) - OPTIC(-1)
+  x(focal) = [angx * cos(OPTIC(-5)) + angy * sin(OPTIC(-5))] * 60. / OPTIC(-3)
+  y(focal) = [angy * cos(OPTIC(-5)) - angx * sin(OPTIC(-5))] * 60. / OPTIC(-3)
+</PRE>
+OPTIC(-2) and OPTIC(-1) have the half-widths in the x and y directions
+of the focal plane for each color.  They are used to determine the
+star positions used by the optimizer.
+<P>
+The optimizer is a nonlinear least squares model fitter.  For each color,
+it selects a computed set of star positions based on the physical size
+of the focal plane and the nominal telescope scale factor and
+computes spot diagrams for each star position.
+It adjusts all adustable parameters to minimize the rms spot sizes
+relative to their centroids.  Optionally, it can also fit the image
+centroids to a model for the focal plane scale, orientation, and distortion.
+Also, it can optimize for a telecentric design such as might be needed for
+a multifiber focal plane.  (The balance between telecentricity and
+spot size is set by a parameter "fiber" that is roughly the fiber diameter
+in mm; the balance is supposed to mimic the optimization of overall
+S/N ratio).
+The optimizer is fairly ignorant and does not give much of a clue
+if more parameters are freed than can be constrained properly; however,
+it does have logic to shrink step sizes so that the merit function always
+improves at each step.
+<p>
+CRAY also has the ability to apply external constraints during the least
+squares using the Lagrange multiplier method.  The only useful constraint
+at present is the paraxial focal length.  This contraint should be applied
+for only one configuration (including wavelength) if mutiple configurations
+are defined.
+<P>
+All parameters that are adjustable by the optimizer have corresponding
+increments and adjust flags.  The program normally
+computes parameters increments automatically.  Some parameter
+increments are computed only if you specify the outer aperture stop
+(this is to give the program a clue as to how large the surface is).
+Normally one sets the flag to 0 for fixed
+parameters and 1 for adjustable parameters.  Colors likewise must be
+flagged if they are to be included in the least squares fit.
+This is accomplished by setting flags in surface 0 - if one wants to
+include color "i", then one sets the flag of parameter "i" in surface
+0.
+<P>
+There are times when one wants to link two or more parameters in the
+least squares (also known as "pickups" in some ray trace programs).
+For example, in the secondary mirror example given above, the same secondary
+mirror is described by 3 surfaces in the OPTIC array.  One might
+want to adjust the z position for each surface separately
+(since this corresponds to refocusing the telescope) but
+adjust the mirror curvature of the 3 surfaces in tandem.
+The mechanism to accomplish this is as follows.  For the z position
+parameter, the adjust flag is set to 1 as normal.  For the curvature parameter,
+a) the initial curvature of the three surfaces is set to be the same;
+b) the curvature increment parameters for each surface is set
+by hand and set them to the same value; and c) the adjust flags are set to some
+number other than 0 or 1 that is the same for the three surfaces and
+that is unique to this situation.  The
+program looks at all the adjust flags, and if it finds a set of flags that
+have the value, say, 7, then it adjusts those parameters synchronously
+(the actual value that you use for the flag is of no significance).
+Two parameters could be linked such that one increments by two units
+for every one unit that the other increments; this would be accomplished
+by setting the parameter increment values appropriately.  
+<P>
+Colors can be linked as well.  This is typically done when minimizing
+chromatic aberration.  Colors are also linked by setting their flags
+to a common number other than 0 or 1.  The program will use a
+common centroid for each sky position for all colors that are linked.
+<P>
+Constraints (for now, just the focal length) are signified by setting the
+adjust flag to -1.
+</BODY>
+</HTML>

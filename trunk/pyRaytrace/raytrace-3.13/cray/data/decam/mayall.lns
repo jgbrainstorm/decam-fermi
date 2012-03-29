@@ -1,0 +1,297 @@
+file mayall.lns
+
+#Ray Pattern information
+nstep 6
+ntype 1
+
+typedef struct {
+   char comment<80>;
+   } HISTORY;
+
+typedef struct {
+   char param<10>;
+   double val;
+   } TEL;
+
+typedef struct {
+   int filter;
+   char param<10>;
+   double val;
+   } FOCAL;
+
+typedef struct {
+   int filter;
+   int mode;
+   } PUPIL;
+
+typedef struct {
+   double surfid;
+   char param<10>;
+   double val;
+   } SURF;
+
+typedef struct {
+   double surfid;
+   int filter;
+   double val;
+   } INDEX;
+
+typedef struct {
+   double surfid;
+   char glass<80>;
+   } GLASS;
+
+typedef struct {
+   double surfid;
+   char comment<80>;
+   } COM;
+
+history {New and improved}
+history {Converted from mayall.len}
+
+tel       diam               0
+tel        fr1               0
+tel        fr2               0
+tel       back               0
+tel     finner               0
+
+#Focal plane parameters
+#     Filter  Parameter           Value
+
+focal      1      xsize              85
+focal      1      ysize              85
+focal      1      scale        -17.4366
+focal      1       wave            0.39
+focal      1     weight               1
+
+focal      2      xsize              85
+focal      2      ysize              85
+focal      2      scale        -17.4366
+focal      2       wave             0.5
+focal      2     weight               1
+
+focal      3      xsize              85
+focal      3      ysize              85
+focal      3      scale        -17.4366
+focal      3       wave            0.65
+focal      3     weight               1
+
+focal      4      xsize              85
+focal      4      ysize              85
+focal      4      scale        -17.4366
+focal      4       wave             0.9
+focal      4     weight               1
+
+
+Surface parameters
+#         SurfId  Parameter           Value
+
+surf      0               z          -1e+14
+index     0               1               1
+index     0               2               1
+index     0               3               1
+index     0               4               1
+
+com       1      STOP
+surf      1               z           -7800
+surf      1          instop             700
+surf      1         outstop            4000
+surf      1        stoptype               1
+index     1               1               1
+index     1               2               1
+index     1               3               1
+index     1               4               1
+glass     1                       air
+
+com       2      PRIMARY
+surf      2            curv -4.68691414e-05
+surf      2            ccon        -1.09763
+surf      2         outstop            2000
+surf      2        stoptype               2
+index     2               1              -1
+index     2               2              -1
+index     2               3              -1
+index     2               4              -1
+glass     2                    mirror
+
+com       3      C1
+surf      3            curv -0.000724700699
+surf      3               z         -9976.9
+surf      3         outstop      202.228654
+index     3               1       1.4714075
+index     3               2         1.46233
+index     3               3         1.45653
+index     3               4         1.45175
+glass     3                      SIO2
+
+com       4      C1
+surf      4            curv -0.000117874487
+surf      4               z        -10016.7
+surf      4         outstop      197.582153
+index     4               1               1
+index     4               2               1
+index     4               3               1
+index     4               4               1
+glass     4                       air
+
+com       5      C2
+surf      5            curv  -0.00374868796
+surf      5               z        -10018.2
+surf      5         outstop      180.764483
+index     5               1       1.4714075
+index     5               2         1.46233
+index     5               3         1.45653
+index     5               4         1.45175
+glass     5                      SIO2
+
+com       6      C2
+surf      6            curv  -0.00358564309
+surf      6               z       -10058.05
+surf      6         outstop      169.421344
+index     6               1               1
+index     6               2               1
+index     6               3               1
+index     6               4               1
+glass     6                       air
+
+com       7      C3
+surf      7            curv  -0.00120711716
+surf      7               z       -10185.19
+surf      7         outstop      145.192014
+index     7               1       1.4714075
+index     7               2         1.46233
+index     7               3         1.45653
+index     7               4         1.45175
+glass     7                      SIO2
+
+com       8      C3
+surf      8            curv  -0.00431090227
+surf      8               z       -10200.27
+surf      8         outstop      133.722703
+index     8               1               1
+index     8               2               1
+index     8               3               1
+index     8               4               1
+glass     8                       air
+
+com       9      ADC1
+surf      9               z       -10266.45
+surf      9           theta   0.00132635253
+surf      9         outstop      132.007046
+index     9               1      1.55400582
+index     9               2       1.5381824
+index     9               3      1.52874807
+index     9               4      1.52194384
+glass     9                      LLF6
+
+com       10     ADC1
+surf      10              z       -10279.04
+surf      10          theta    0.0366492147
+surf      10        outstop      131.720072
+index     10              1      1.53243537
+index     10              2      1.52152442
+index     10              3      1.51455567
+index     10              4      1.50908922
+glass     10                     UBK7
+
+com       11     ADC1
+surf      11              z       -10292.02
+surf      11        outstop       130.77703
+index     11              1               1
+index     11              2               1
+index     11              3               1
+index     11              4               1
+glass     11                      air
+
+com       12     ADC2
+surf      12              z       -10301.41
+surf      12          theta  -0.00129144852
+surf      12        outstop      130.083953
+index     12              1      1.55400582
+index     12              2       1.5381824
+index     12              3      1.52874807
+index     12              4      1.52194384
+glass     12                     LLF6
+
+com       13     ADC2
+surf      13              z       -10314.91
+surf      13          theta   -0.0389703316
+surf      13        outstop      129.773873
+index     13              1      1.53243537
+index     13              2      1.52152442
+index     13              3      1.51455567
+index     13              4      1.50908922
+glass     13                     UBK7
+
+com       14     ADC2
+surf      14              z       -10328.02
+surf      14        outstop       128.81306
+index     14              1               1
+index     14              2               1
+index     14              3               1
+index     14              4               1
+glass     14                      air
+
+com       15     C4
+surf      15           curv   -0.0027573276
+surf      15              z       -10613.82
+surf      15        outstop      107.144833
+index     15              1       1.4714075
+index     15              2         1.46233
+index     15              3         1.45653
+index     15              4         1.45175
+glass     15                     SIO2
+
+com       16     C4
+surf      16              z       -10642.42
+surf      16        outstop       105.34157
+index     16              1               1
+index     16              2               1
+index     16              3               1
+index     16              4               1
+glass     16                      air
+
+com       17     FILTER
+surf      17              z       -10687.02
+surf      17        outstop      95.6876128
+index     17              1      1.53247277
+index     17              2       1.5215321
+index     17              3      1.51454661
+index     17              4       1.5090633
+glass     17                      BK7
+
+com       18     FILTER
+surf      18              z       -10699.02
+surf      18        outstop      94.0150042
+index     18              1               1
+index     18              2               1
+index     18              3               1
+index     18              4               1
+glass     18                      air
+
+com       19     WINDOW
+surf      19              z       -10710.85
+surf      19        outstop      91.4543245
+index     19              1       1.4714075
+index     19              2         1.46233
+index     19              3         1.45653
+index     19              4         1.45175
+glass     19                     SIO2
+
+com       20     WINDOW
+surf      20              z       -10726.23
+surf      20        outstop      89.2197907
+index     20              1               1
+index     20              2               1
+index     20              3               1
+index     20              4               1
+glass     20                      air
+
+com       21     FOCAL
+surf      21              z       -10738.03
+surf      21        outstop      86.6693345
+index     21              1               1
+index     21              2               1
+index     21              3               1
+index     21              4               1
+glass     21                      air

@@ -1,0 +1,106 @@
+<H1> SDSS 2.5 M optical design</H1>
+
+<h1> Spectroscopic Mode</h1>
+This is design kmg001 taken from Steve Kent's file.  (Internally,
+I call it gunn06.dat.)  My copy dates from July 14, 1996.
+Refraction indices, where given, refer to just
+one wavelength, but the design was optimized for 3900-9000 A.;  Curvature
+is the inverse of radius of curvature that is normally given for an optical
+design.  I give absolute z positions rather than the more convential spacing
+to the next optical element.
+
+<pre>
+
+Here are my surface definitions:
+
+Surface
+ 1.0	Primary
+ 3.0	Secondary
+ 4.0	Front of common corrector
+ 5.0	Back of common corrector
+ 8.0	Front of spectroscopic corrector
+ 9.0	Back of spectroscopic corrector
+10.0	Focal plane
+
+Wave.     X Pos     Y pos    X rad    Y rad   Scale Factor Rot. Dist. Map  Wgt
+0.48      0.00      0.00      327.00   327.00   16.5338   0.0000 0.00   0  0.0
+
+Surf   Curvature    Con Con  Z pos     OFFSETS        TILTS          FILT/INDX
+ 0.0                                                                     1.0000
+ 1.0   -8.889e-05  -1.285      0.00     0.0     0.0   0.000   0.000   3 -1.0000
+ 3.0    -0.000139 -11.968  -3644.46     0.0     0.0   0.000   0.000   3  1.0000
+ 4.0            0   0.000    -24.55     0.0     0.0   0.000   0.000   3  1.4637
+ 5.0            0   0.000    -12.55     0.0     0.0   0.000   0.000   3  1.0000
+ 8.0   -0.0004307   0.000    660.09     0.0     0.0   0.000   0.000   3  1.4637
+ 9.0            0   0.000    670.09     0.0     0.0   0.000   0.000   3  1.0000
+10.0            0   0.000    756.70     0.0     0.0   0.000   0.000   3  1.0000
+
+Surf        A2         A4         A6         A8         A10   In Stop Out Stop
+ 1.0           0          0  3.814e-22 -1.518e-29          0     0.00 -1251.82
+ 3.0           0          0  1.785e-19          0          0     0.00  -540.36
+ 4.0   2.321e-05 -1.173e-10 -7.873e-17  1.592e-22          0     0.00  -361.94
+ 5.0           0          0          0          0          0     0.00  -361.60
+ 8.0           0          0          0          0          0     0.00  -332.06
+ 9.0  -7.747e-05 -4.123e-10  -6.53e-15  5.234e-20 -1.222e-25     0.00  -332.33
+10.0   -4.02e-06 -3.834e-10  1.189e-15          0          0     0.00  -327.81
+</pre>
+
+
+<h1> Imaging Mode</h1>
+The official copy of this design may be found at
+<a href=http://www.apo.nmsu.edu/Telescopes/SDSS/eng.papers/19950322_Optical_Design/19950322.html#aa1> APO </a>
+This is design kent003 taken from Steve Kent's file.
+My copy dates from Aug. 24, 1995.
+This gives the design for a corner "r" band CCD.
+Curvature
+is the inverse of radius of curvature that is normally given for an optical
+design.  I give absolute z positions rather than the more convential spacing
+to the next optical element.
+
+<pre>
+
+Here are my surface definitions:
+
+Surface
+ 1.0	Primary
+ 2.0	Secondary
+ 4.0	Front of common corrector
+ 5.0	Back of common corrector
+ 6.0	Front of imaging corrector
+ 7.0	Back of imaging 
+11.10	Front of filter
+12.10	Back of filter
+13.10	Back of field flattener
+14.10	Focal plane
+
+Wave.     X Pos     Y pos    X rad    Y rad   Scale Factor Rot. Dist. Map  Wgt
+0.63      -62.93    35.96     -24.60   -24.60   16.5030   -0.0001 0.00   1  0.0
+
+Surf   Curvature    Con Con  Z pos     OFFSETS        TILTS          FILT/INDX
+ 0.0                                                                     1.0000
+ 1.0   -8.889e-05  -1.285      0.00     0.0     0.0   0.000   0.000  10 -1.0000
+ 2.0    -0.000139 -11.968  -3646.14     0.0     0.0   0.000   0.000  10  1.0000
+ 4.0            0   0.000    -24.55     0.0     0.0   0.000   0.000  10  1.4576
+ 5.0            0   0.000    -12.55     0.0     0.0   0.000   0.000  10  1.0000
+ 6.0            0   0.000    701.45     0.0     0.0   0.000   0.000  10  1.4576
+ 7.0            0   0.000    746.45     0.0     0.0   0.000   0.000  10  1.5147
+11.10           0   0.000    746.45  -227.5   130.0   0.000   0.000  10  1.5147
+12.10           0   0.000    749.45  -227.5   130.0   0.000   0.000  10  1.5147
+13.10    0.001493   0.000    751.45  -227.5   130.0   0.000   0.000  10  0.9997
+14.10     0.00043   0.000    759.04  -227.5   130.0   2.622   0.020  10  0.9997
+
+Surf        A2         A4         A6         A8         A10   In Stop Out Stop
+ 1.0           0          0  3.814e-22 -1.518e-29          0     0.00 -1251.82
+ 2.0           0          0  1.785e-19          0          0     0.00  -539.95
+ 4.0   2.321e-05 -1.173e-10 -7.873e-17  1.592e-22          0     0.00  -361.04
+ 5.0           0          0          0          0          0     0.00  -360.69
+ 6.0  -0.0002732  2.056e-09 -5.809e-15  1.746e-20          0     0.00  -329.59
+ 7.0           0          0          0          0          0     0.00  -327.13
+11.10          0          0          0          0          0     0.00   -36.91
+12.10          0          0          0          0          0     0.00   -36.66
+13.10          0          0          0          0          0     0.00   -36.41
+14.10          0          0          0          0          0     0.00   -36.29
+</pre>
+<P>
+A limited tolerance analysis given <a href=ray.tolerance.html>here</a>.
+</html>

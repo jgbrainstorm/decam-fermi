@@ -1,0 +1,2108 @@
+#RC Telescope design parameters
+       2500.000     Diameter
+          2.250     Primary Focal Ratio
+          5.000     Final Focal Ratio
+        756.000     Back Focal Distance in MM
+          0.47      Fractional inner radius of primary	
+#The real optical parameters
+#Final imaging optical design with astrometric CCDs all included                
+   -5         6        9.300145E-05     Rotation angle for filter       6
+   -5         7        4.103067E-05     Rotation angle for filter       7
+   -5         8        1.877230E-06     Rotation angle for filter       8
+   -5         9       -4.598236E-05     Rotation angle for filter       9
+   -5        10       -9.298888E-05     Rotation angle for filter      10
+   -5        11        5.665801E-05     Rotation angle for filter      11
+   -5        12        2.975998E-05     Rotation angle for filter      12
+   -5        13        1.703097E-06     Rotation angle for filter      13
+   -5        14       -2.575475E-05     Rotation angle for filter      14
+   -5        15       -6.201740E-05     Rotation angle for filter      15
+   -5        16        1.787995E-05     Rotation angle for filter      16
+   -5        17        9.082933E-06     Rotation angle for filter      17
+   -5        18       -2.575415E-06     Rotation angle for filter      18
+   -5        19       -5.515972E-06     Rotation angle for filter      19
+   -5        20       -1.943694E-05     Rotation angle for filter      20
+   -5        21       -1.985081E-05     Rotation angle for filter      21
+   -5        22       -9.743124E-06     Rotation angle for filter      22
+   -5        23       -2.848368E-06     Rotation angle for filter      23
+   -5        24        1.392938E-05     Rotation angle for filter      24
+   -5        25        1.834823E-05     Rotation angle for filter      25
+   -5        26       -5.903196E-05     Rotation angle for filter      26
+   -5        27       -2.825719E-05     Rotation angle for filter      27
+   -5        28        2.085601E-06     Rotation angle for filter      28
+   -5        29        3.320101E-05     Rotation angle for filter      29
+   -5        30        5.310600E-05     Rotation angle for filter      30
+   -5        31       -9.638571E-05     Rotation angle for filter      31
+   -5        32       -5.325528E-05     Rotation angle for filter      32
+   -5        33        2.046936E-06     Rotation angle for filter      33
+   -5        34        4.747528E-05     Rotation angle for filter      34
+   -5        35        9.693408E-05     Rotation angle for filter      35
+   -5        36       -3.125786E-05     Rotation angle for filter      36
+   -5        37        1.300908E-04     Rotation angle for filter      37
+   -5        38       -4.217405E-07     Rotation angle for filter      38
+   -5        39       -1.316456E-04     Rotation angle for filter      39
+   -5        40        4.081190E-05     Rotation angle for filter      40
+   -5        41        1.696998E-04     Rotation angle for filter      41
+   -5        42       -7.296094E-05     Rotation angle for filter      42
+   -5        43        4.549720E-06     Rotation angle for filter      43
+   -5        44        7.794726E-05     Rotation angle for filter      44
+   -5        45       -1.407420E-04     Rotation angle for filter      45
+   -5        46       -3.751390E-04     Rotation angle for filter      46
+   -5        47        6.050524E-05     Rotation angle for filter      47
+   -5        48        7.572662E-05     Rotation angle for filter      48
+   -5        49       -7.359326E-05     Rotation angle for filter      49
+   -5        50       -7.480507E-05     Rotation angle for filter      50
+   -5        51        3.604260E-04     Rotation angle for filter      51
+   -5        52        2.850955E-04     Rotation angle for filter      52
+   -5        53       -1.152907E-04     Rotation angle for filter      53
+   -5        54       -8.577215E-05     Rotation angle for filter      54
+   -5        55        9.520942E-05     Rotation angle for filter      55
+   -5        56        1.046096E-04     Rotation angle for filter      56
+   -5        57       -3.092900E-04     Rotation angle for filter      57
+   -4       106        1.000000E+00     Mapping mode                    6
+   -4       107        1.000000E+00     Mapping mode                    7
+   -4       108        1.000000E+00     Mapping mode                    8
+   -4       109        1.000000E+00     Mapping mode                    9
+   -4       110        1.000000E+00     Mapping mode                   10
+   -4       111        1.000000E+00     Mapping mode                   11
+   -4       112        1.000000E+00     Mapping mode                   12
+   -4       113        1.000000E+00     Mapping mode                   13
+   -4       114        1.000000E+00     Mapping mode                   14
+   -4       115        1.000000E+00     Mapping mode                   15
+   -4       116        1.000000E+00     Mapping mode                   16
+   -4       117        1.000000E+00     Mapping mode                   17
+   -4       118        1.000000E+00     Mapping mode                   18
+   -4       119        1.000000E+00     Mapping mode                   19
+   -4       120        1.000000E+00     Mapping mode                   20
+   -4       121        1.000000E+00     Mapping mode                   21
+   -4       122        1.000000E+00     Mapping mode                   22
+   -4       123        1.000000E+00     Mapping mode                   23
+   -4       124        1.000000E+00     Mapping mode                   24
+   -4       125        1.000000E+00     Mapping mode                   25
+   -4       126        1.000000E+00     Mapping mode                   26
+   -4       127        1.000000E+00     Mapping mode                   27
+   -4       128        1.000000E+00     Mapping mode                   28
+   -4       129        1.000000E+00     Mapping mode                   29
+   -4       130        1.000000E+00     Mapping mode                   30
+   -4       131        1.000000E+00     Mapping mode                   31
+   -4       132        1.000000E+00     Mapping mode                   32
+   -4       133        1.000000E+00     Mapping mode                   33
+   -4       134        1.000000E+00     Mapping mode                   34
+   -4       135        1.000000E+00     Mapping mode                   35
+   -4       136        1.000000E+00     Mapping mode                   36
+   -4       137        1.000000E+00     Mapping mode                   37
+   -4       138        1.000000E+00     Mapping mode                   38
+   -4       139        1.000000E+00     Mapping mode                   39
+   -4       140        1.000000E+00     Mapping mode                   40
+   -4       141        1.000000E+00     Mapping mode                   41
+   -4       142        1.000000E+00     Mapping mode                   42
+   -4       143        1.000000E+00     Mapping mode                   43
+   -4       144        1.000000E+00     Mapping mode                   44
+   -4       145        1.000000E+00     Mapping mode                   45
+   -4       146        1.000000E+00     Mapping mode                   46
+   -4       147        1.000000E+00     Mapping mode                   47
+   -4       148        1.000000E+00     Mapping mode                   48
+   -4       149        1.000000E+00     Mapping mode                   49
+   -4       150        1.000000E+00     Mapping mode                   50
+   -4       151        1.000000E+00     Mapping mode                   51
+   -4       152        1.000000E+00     Mapping mode                   52
+   -4       153        1.000000E+00     Mapping mode                   53
+   -4       154        1.000000E+00     Mapping mode                   54
+   -4       155        1.000000E+00     Mapping mode                   55
+   -4       156        1.000000E+00     Mapping mode                   56
+   -4       157        1.000000E+00     Mapping mode                   57
+   -3         1        1.650120E+01     Scale Factor for filter         1
+   -3         2        1.653380E+01     Scale Factor for filter         2
+   -3         3        1.653380E+01     Scale Factor for filter         3
+   -3         4        1.653380E+01     Scale Factor for filter         4
+   -3         5        1.653380E+01     Scale Factor for filter         5
+   -3         6        1.650304E+01     Scale Factor for filter         6
+   -3         7        1.650304E+01     Scale Factor for filter         7
+   -3         8        1.650304E+01     Scale Factor for filter         8
+   -3         9        1.650304E+01     Scale Factor for filter         9
+   -3        10        1.650304E+01     Scale Factor for filter        10
+   -3        11        1.650304E+01     Scale Factor for filter        11
+   -3        12        1.650304E+01     Scale Factor for filter        12
+   -3        13        1.650304E+01     Scale Factor for filter        13
+   -3        14        1.650304E+01     Scale Factor for filter        14
+   -3        15        1.650304E+01     Scale Factor for filter        15
+   -3        16        1.650304E+01     Scale Factor for filter        16
+   -3        17        1.650304E+01     Scale Factor for filter        17
+   -3        18        1.650304E+01     Scale Factor for filter        18
+   -3        19        1.650304E+01     Scale Factor for filter        19
+   -3        20        1.650304E+01     Scale Factor for filter        20
+   -3        21        1.650304E+01     Scale Factor for filter        21
+   -3        22        1.650304E+01     Scale Factor for filter        22
+   -3        23        1.650304E+01     Scale Factor for filter        23
+   -3        24        1.650304E+01     Scale Factor for filter        24
+   -3        25        1.650304E+01     Scale Factor for filter        25
+   -3        26        1.650304E+01     Scale Factor for filter        26
+   -3        27        1.650304E+01     Scale Factor for filter        27
+   -3        28        1.650304E+01     Scale Factor for filter        28
+   -3        29        1.650304E+01     Scale Factor for filter        29
+   -3        30        1.650304E+01     Scale Factor for filter        30
+   -3        31        1.650304E+01     Scale Factor for filter        31
+   -3        32        1.650304E+01     Scale Factor for filter        32
+   -3        33        1.650304E+01     Scale Factor for filter        33
+   -3        34        1.650304E+01     Scale Factor for filter        34
+   -3        35        1.650304E+01     Scale Factor for filter        35
+   -3        36        1.650304E+01     Scale Factor for filter        36
+   -3        37        1.650304E+01     Scale Factor for filter        37
+   -3        38        1.650304E+01     Scale Factor for filter        38
+   -3        39        1.650304E+01     Scale Factor for filter        39
+   -3        40        1.650304E+01     Scale Factor for filter        40
+   -3        41        1.650304E+01     Scale Factor for filter        41
+   -3        42        1.650304E+01     Scale Factor for filter        42
+   -3        43        1.650304E+01     Scale Factor for filter        43
+   -3        44        1.650304E+01     Scale Factor for filter        44
+   -3        45        1.650304E+01     Scale Factor for filter        45
+   -3        46        1.650304E+01     Scale Factor for filter        46
+   -3        47        1.650304E+01     Scale Factor for filter        47
+   -3        48        1.650304E+01     Scale Factor for filter        48
+   -3        49        1.650304E+01     Scale Factor for filter        49
+   -3        50        1.650304E+01     Scale Factor for filter        50
+   -3        51        1.650304E+01     Scale Factor for filter        51
+   -3        52        1.650304E+01     Scale Factor for filter        52
+   -3        53        1.650304E+01     Scale Factor for filter        53
+   -3        54        1.650304E+01     Scale Factor for filter        54
+   -3        55        1.650304E+01     Scale Factor for filter        55
+   -3        56        1.650304E+01     Scale Factor for filter        56
+   -3        57        1.650304E+01     Scale Factor for filter        57
+   -3       101        3.900000E-01     Wavelength for filter           1
+   -3       102        9.231000E-01     Wavelength for filter           2
+   -3       103        6.000000E-01     Wavelength for filter           3
+   -3       104        7.709000E-01     Wavelength for filter           4
+   -3       105        2.964394-323     Wavelength for filter           5
+   -3       106        4.806000E-01     Wavelength for filter           6
+   -3       107        9.231000E-01     Wavelength for filter           7
+   -3       108        3.519000E-01     Wavelength for filter           8
+   -3       109        7.709000E-01     Wavelength for filter           9
+   -3       110        6.314000E-01     Wavelength for filter          10
+   -3       111        4.806000E-01     Wavelength for filter          11
+   -3       112        9.231000E-01     Wavelength for filter          12
+   -3       113        3.519000E-01     Wavelength for filter          13
+   -3       114        7.709000E-01     Wavelength for filter          14
+   -3       115        6.314000E-01     Wavelength for filter          15
+   -3       116        4.806000E-01     Wavelength for filter          16
+   -3       117        9.231000E-01     Wavelength for filter          17
+   -3       118        3.519000E-01     Wavelength for filter          18
+   -3       119        7.709000E-01     Wavelength for filter          19
+   -3       120        6.314000E-01     Wavelength for filter          20
+   -3       121        4.806000E-01     Wavelength for filter          21
+   -3       122        9.231000E-01     Wavelength for filter          22
+   -3       123        3.519000E-01     Wavelength for filter          23
+   -3       124        7.709000E-01     Wavelength for filter          24
+   -3       125        6.314000E-01     Wavelength for filter          25
+   -3       126        4.806000E-01     Wavelength for filter          26
+   -3       127        9.231000E-01     Wavelength for filter          27
+   -3       128        3.519000E-01     Wavelength for filter          28
+   -3       129        7.709000E-01     Wavelength for filter          29
+   -3       130        6.314000E-01     Wavelength for filter          30
+   -3       131        4.806000E-01     Wavelength for filter          31
+   -3       132        7.709000E-01     Wavelength for filter          32
+   -3       133        3.519000E-01     Wavelength for filter          33
+   -3       134        9.231000E-01     Wavelength for filter          34
+   -3       135        6.314000E-01     Wavelength for filter          35
+   -3       136        6.314000E-01     Wavelength for filter          36
+   -3       137        6.314000E-01     Wavelength for filter          37
+   -3       138        6.314000E-01     Wavelength for filter          38
+   -3       139        6.314000E-01     Wavelength for filter          39
+   -3       140        6.314000E-01     Wavelength for filter          40
+   -3       141        6.314000E-01     Wavelength for filter          41
+   -3       142        6.314000E-01     Wavelength for filter          42
+   -3       143        6.314000E-01     Wavelength for filter          43
+   -3       144        6.314000E-01     Wavelength for filter          44
+   -3       145        6.314000E-01     Wavelength for filter          45
+   -3       146        6.314000E-01     Wavelength for filter          46
+   -3       147        6.314000E-01     Wavelength for filter          47
+   -3       148        6.314000E-01     Wavelength for filter          48
+   -3       149        6.314000E-01     Wavelength for filter          49
+   -3       150        6.314000E-01     Wavelength for filter          50
+   -3       151        6.314000E-01     Wavelength for filter          51
+   -3       152        6.314000E-01     Wavelength for filter          52
+   -3       153        6.314000E-01     Wavelength for filter          53
+   -3       154        6.314000E-01     Wavelength for filter          54
+   -3       155        6.314000E-01     Wavelength for filter          55
+   -3       156        6.314000E-01     Wavelength for filter          56
+   -3       157        6.314000E-01     Wavelength for filter          57
+   -2         6       -6.292752E+01     X Offset for filter             6
+   -2         7       -6.292303E+01     X Offset for filter             7
+   -2         8       -6.293270E+01     X Offset for filter             8
+   -2         9       -6.292465E+01     X Offset for filter             9
+   -2        10       -6.292594E+01     X Offset for filter            10
+   -2        11       -3.775435E+01     X Offset for filter            11
+   -2        12       -3.774967E+01     X Offset for filter            12
+   -2        13       -3.775949E+01     X Offset for filter            13
+   -2        14       -3.775069E+01     X Offset for filter            14
+   -2        15       -3.775235E+01     X Offset for filter            15
+   -2        16       -1.258446E+01     X Offset for filter            16
+   -2        17       -1.258317E+01     X Offset for filter            17
+   -2        18       -1.258746E+01     X Offset for filter            18
+   -2        19       -1.258361E+01     X Offset for filter            19
+   -2        20       -1.258360E+01     X Offset for filter            20
+   -2        21        1.258444E+01     X Offset for filter            21
+   -2        22        1.258315E+01     X Offset for filter            22
+   -2        23        1.258746E+01     X Offset for filter            23
+   -2        24        1.258358E+01     X Offset for filter            24
+   -2        25        1.258357E+01     X Offset for filter            25
+   -2        26        3.775434E+01     X Offset for filter            26
+   -2        27        3.774971E+01     X Offset for filter            27
+   -2        28        3.775944E+01     X Offset for filter            28
+   -2        29        3.775072E+01     X Offset for filter            29
+   -2        30        3.775233E+01     X Offset for filter            30
+   -2        31        6.292751E+01     X Offset for filter            31
+   -2        32        6.292413E+01     X Offset for filter            32
+   -2        33        6.293256E+01     X Offset for filter            33
+   -2        34        6.292371E+01     X Offset for filter            34
+   -2        35        6.292598E+01     X Offset for filter            35
+   -2        36       -5.033853E+01     X Offset for filter            36
+   -2        37       -2.516906E+01     X Offset for filter            37
+   -2        38       -2.772869E-05     X Offset for filter            38
+   -2        39        2.516900E+01     X Offset for filter            39
+   -2        40        5.033812E+01     X Offset for filter            40
+   -2        41       -5.033862E+01     X Offset for filter            41
+   -2        42       -2.516913E+01     X Offset for filter            42
+   -2        43       -2.773937E-05     X Offset for filter            43
+   -2        44        2.516898E+01     X Offset for filter            44
+   -2        45        5.033652E+01     X Offset for filter            45
+   -2        46       -6.292233E+01     X Offset for filter            46
+   -2        47       -3.775417E+01     X Offset for filter            47
+   -2        48       -1.258433E+01     X Offset for filter            48
+   -2        49        1.258427E+01     X Offset for filter            49
+   -2        50        3.775415E+01     X Offset for filter            50
+   -2        51        6.292263E+01     X Offset for filter            51
+   -2        52       -6.292226E+01     X Offset for filter            52
+   -2        53       -3.775405E+01     X Offset for filter            53
+   -2        54       -1.258430E+01     X Offset for filter            54
+   -2        55        1.258425E+01     X Offset for filter            55
+   -2        56        3.775419E+01     X Offset for filter            56
+   -2        57        6.292557E+01     X Offset for filter            57
+   -2       101       -2.181660E+02     X half-width filter             1
+   -2       102       -2.181660E+02     X half-width filter             2
+   -2       103       -2.181660E+02     X half-width filter             3
+   -2       104       -2.181660E+02     X half-width filter             4
+   -2       105       -2.181660E+02     X half-width filter             5
+   -2       106       -2.460000E+01     X half-width filter             6
+   -2       107       -2.460000E+01     X half-width filter             7
+   -2       108       -2.460000E+01     X half-width filter             8
+   -2       109       -2.460000E+01     X half-width filter             9
+   -2       110       -2.460000E+01     X half-width filter            10
+   -2       111       -2.460000E+01     X half-width filter            11
+   -2       112       -2.460000E+01     X half-width filter            12
+   -2       113       -2.460000E+01     X half-width filter            13
+   -2       114       -2.460000E+01     X half-width filter            14
+   -2       115       -2.460000E+01     X half-width filter            15
+   -2       116       -2.460000E+01     X half-width filter            16
+   -2       117       -2.460000E+01     X half-width filter            17
+   -2       118       -2.460000E+01     X half-width filter            18
+   -2       119       -2.460000E+01     X half-width filter            19
+   -2       120       -2.460000E+01     X half-width filter            20
+   -2       121       -2.460000E+01     X half-width filter            21
+   -2       122       -2.460000E+01     X half-width filter            22
+   -2       123       -2.460000E+01     X half-width filter            23
+   -2       124       -2.460000E+01     X half-width filter            24
+   -2       125       -2.460000E+01     X half-width filter            25
+   -2       126       -2.460000E+01     X half-width filter            26
+   -2       127       -2.460000E+01     X half-width filter            27
+   -2       128       -2.460000E+01     X half-width filter            28
+   -2       129       -2.460000E+01     X half-width filter            29
+   -2       130       -2.460000E+01     X half-width filter            30
+   -2       131       -2.460000E+01     X half-width filter            31
+   -2       132       -2.460000E+01     X half-width filter            32
+   -2       133       -2.460000E+01     X half-width filter            33
+   -2       134       -2.460000E+01     X half-width filter            34
+   -2       135       -2.460000E+01     X half-width filter            35
+   -2       136       -2.460000E+01     X half-width filter            36
+   -2       137       -2.460000E+01     X half-width filter            37
+   -2       138       -2.460000E+01     X half-width filter            38
+   -2       139       -2.460000E+01     X half-width filter            39
+   -2       140       -2.460000E+01     X half-width filter            40
+   -2       141       -2.460000E+01     X half-width filter            41
+   -2       142       -2.460000E+01     X half-width filter            42
+   -2       143       -2.460000E+01     X half-width filter            43
+   -2       144       -2.460000E+01     X half-width filter            44
+   -2       145       -2.460000E+01     X half-width filter            45
+   -2       146       -2.460000E+01     X half-width filter            46
+   -2       147       -2.460000E+01     X half-width filter            47
+   -2       148       -2.460000E+01     X half-width filter            48
+   -2       149       -2.460000E+01     X half-width filter            49
+   -2       150       -2.460000E+01     X half-width filter            50
+   -2       151       -2.460000E+01     X half-width filter            51
+   -2       152       -2.460000E+01     X half-width filter            52
+   -2       153       -2.460000E+01     X half-width filter            53
+   -2       154       -2.460000E+01     X half-width filter            54
+   -2       155       -2.460000E+01     X half-width filter            55
+   -2       156       -2.460000E+01     X half-width filter            56
+   -2       157       -2.460000E+01     X half-width filter            57
+   -1         6       -3.596328E+01     Y Offset for filter             6
+   -1         7       -1.798008E+01     Y Offset for filter             7
+   -1         8        9.355951E-07     Y Offset for filter             8
+   -1         9        1.798056E+01     Y Offset for filter             9
+   -1        10        3.596235E+01     Y Offset for filter            10
+   -1        11       -3.595863E+01     Y Offset for filter            11
+   -1        12       -1.797679E+01     Y Offset for filter            12
+   -1        13        6.129108E-06     Y Offset for filter            13
+   -1        14        1.797732E+01     Y Offset for filter            14
+   -1        15        3.595668E+01     Y Offset for filter            15
+   -1        16       -3.595640E+01     Y Offset for filter            16
+   -1        17       -1.797608E+01     Y Offset for filter            17
+   -1        18        2.544904E-06     Y Offset for filter            18
+   -1        19        1.797672E+01     Y Offset for filter            19
+   -1        20        3.595391E+01     Y Offset for filter            20
+   -1        21       -3.595642E+01     Y Offset for filter            21
+   -1        22       -1.797611E+01     Y Offset for filter            22
+   -1        23        2.434208E-06     Y Offset for filter            23
+   -1        24        1.797674E+01     Y Offset for filter            24
+   -1        25        3.595394E+01     Y Offset for filter            25
+   -1        26       -3.595867E+01     Y Offset for filter            26
+   -1        27       -1.797688E+01     Y Offset for filter            27
+   -1        28        8.734470E-06     Y Offset for filter            28
+   -1        29        1.797738E+01     Y Offset for filter            29
+   -1        30        3.595676E+01     Y Offset for filter            30
+   -1        31       -3.596332E+01     Y Offset for filter            31
+   -1        32       -1.798047E+01     Y Offset for filter            32
+   -1        33        1.256492E-05     Y Offset for filter            33
+   -1        34        1.798035E+01     Y Offset for filter            34
+   -1        35        3.596247E+01     Y Offset for filter            35
+   -1        36       -6.085526E+01     Y Offset for filter            36
+   -1        37       -6.085194E+01     Y Offset for filter            37
+   -1        38       -6.084986E+01     Y Offset for filter            38
+   -1        39       -6.085194E+01     Y Offset for filter            39
+   -1        40       -6.085487E+01     Y Offset for filter            40
+   -1        41        6.085517E+01     Y Offset for filter            41
+   -1        42        6.085197E+01     Y Offset for filter            42
+   -1        43        6.085002E+01     Y Offset for filter            43
+   -1        44        6.085172E+01     Y Offset for filter            44
+   -1        45        6.085263E+01     Y Offset for filter            45
+   -1        46       -5.656804E+01     Y Offset for filter            46
+   -1        47       -5.656625E+01     Y Offset for filter            47
+   -1        48       -5.656253E+01     Y Offset for filter            48
+   -1        49       -5.656257E+01     Y Offset for filter            49
+   -1        50       -5.656640E+01     Y Offset for filter            50
+   -1        51       -5.656846E+01     Y Offset for filter            51
+   -1        52        5.656809E+01     Y Offset for filter            52
+   -1        53        5.656612E+01     Y Offset for filter            53
+   -1        54        5.656244E+01     Y Offset for filter            54
+   -1        55        5.656250E+01     Y Offset for filter            55
+   -1        56        5.656652E+01     Y Offset for filter            56
+   -1        57        5.657107E+01     Y Offset for filter            57
+   -1       101       -2.181660E+02     Y half-width filter             1
+   -1       102       -2.181660E+02     Y half-width filter             2
+   -1       103       -2.181660E+02     Y half-width filter             3
+   -1       104       -2.181660E+02     Y half-width filter             4
+   -1       105       -2.181660E+02     Y half-width filter             5
+   -1       106       -2.460000E+01     Y half-width filter             6
+   -1       107       -2.460000E+01     Y half-width filter             7
+   -1       108       -2.460000E+01     Y half-width filter             8
+   -1       109       -2.460000E+01     Y half-width filter             9
+   -1       110       -2.460000E+01     Y half-width filter            10
+   -1       111       -2.460000E+01     Y half-width filter            11
+   -1       112       -2.460000E+01     Y half-width filter            12
+   -1       113       -2.460000E+01     Y half-width filter            13
+   -1       114       -2.460000E+01     Y half-width filter            14
+   -1       115       -2.460000E+01     Y half-width filter            15
+   -1       116       -2.460000E+01     Y half-width filter            16
+   -1       117       -2.460000E+01     Y half-width filter            17
+   -1       118       -2.460000E+01     Y half-width filter            18
+   -1       119       -2.460000E+01     Y half-width filter            19
+   -1       120       -2.460000E+01     Y half-width filter            20
+   -1       121       -2.460000E+01     Y half-width filter            21
+   -1       122       -2.460000E+01     Y half-width filter            22
+   -1       123       -2.460000E+01     Y half-width filter            23
+   -1       124       -2.460000E+01     Y half-width filter            24
+   -1       125       -2.460000E+01     Y half-width filter            25
+   -1       126       -2.460000E+01     Y half-width filter            26
+   -1       127       -2.460000E+01     Y half-width filter            27
+   -1       128       -2.460000E+01     Y half-width filter            28
+   -1       129       -2.460000E+01     Y half-width filter            29
+   -1       130       -2.460000E+01     Y half-width filter            30
+   -1       131       -2.460000E+01     Y half-width filter            31
+   -1       132       -2.460000E+01     Y half-width filter            32
+   -1       133       -2.460000E+01     Y half-width filter            33
+   -1       134       -2.460000E+01     Y half-width filter            34
+   -1       135       -2.460000E+01     Y half-width filter            35
+   -1       136       -6.150000E+00     Y half-width filter            36
+   -1       137       -6.150000E+00     Y half-width filter            37
+   -1       138       -6.150000E+00     Y half-width filter            38
+   -1       139       -6.150000E+00     Y half-width filter            39
+   -1       140       -6.150000E+00     Y half-width filter            40
+   -1       141       -6.150000E+00     Y half-width filter            41
+   -1       142       -6.150000E+00     Y half-width filter            42
+   -1       143       -6.150000E+00     Y half-width filter            43
+   -1       144       -6.150000E+00     Y half-width filter            44
+   -1       145       -6.150000E+00     Y half-width filter            45
+   -1       146       -6.150000E+00     Y half-width filter            46
+   -1       147       -6.150000E+00     Y half-width filter            47
+   -1       148       -6.150000E+00     Y half-width filter            48
+   -1       149       -6.150000E+00     Y half-width filter            49
+   -1       150       -6.150000E+00     Y half-width filter            50
+   -1       151       -6.150000E+00     Y half-width filter            51
+   -1       152       -6.150000E+00     Y half-width filter            52
+   -1       153       -6.150000E+00     Y half-width filter            53
+   -1       154       -6.150000E+00     Y half-width filter            54
+   -1       155       -6.150000E+00     Y half-width filter            55
+   -1       156       -6.150000E+00     Y half-width filter            56
+   -1       157       -6.150000E+00     Y half-width filter            57
+  0           5       -1.000000E+14     Z Position          
+  0         101        1.000280E+00     Refraction Index for filter  1
+  0         102        1.000000E+00     Refraction Index for filter  2
+  0         103        1.000000E+00     Refraction Index for filter  3
+  0         104        1.000000E+00     Refraction Index for filter  4
+  0         105        1.000000E+00     Refraction Index for filter  5
+  0         106        1.000000E+00     Refraction Index for filter  6
+  0         107        1.000000E+00     Refraction Index for filter  7
+  0         108        1.000000E+00     Refraction Index for filter  8
+  0         109        1.000000E+00     Refraction Index for filter  9
+  0         110        1.000000E+00     Refraction Index for filter 10
+  0         111        1.000000E+00     Refraction Index for filter 11
+  0         112        1.000000E+00     Refraction Index for filter 12
+  0         113        1.000000E+00     Refraction Index for filter 13
+  0         114        1.000000E+00     Refraction Index for filter 14
+  0         115        1.000000E+00     Refraction Index for filter 15
+  0         116        1.000000E+00     Refraction Index for filter 16
+  0         117        1.000000E+00     Refraction Index for filter 17
+  0         118        1.000000E+00     Refraction Index for filter 18
+  0         119        1.000000E+00     Refraction Index for filter 19
+  0         120        1.000000E+00     Refraction Index for filter 20
+  0         121        1.000000E+00     Refraction Index for filter 21
+  0         122        1.000000E+00     Refraction Index for filter 22
+  0         123        1.000000E+00     Refraction Index for filter 23
+  0         124        1.000000E+00     Refraction Index for filter 24
+  0         125        1.000000E+00     Refraction Index for filter 25
+  0         126        1.000000E+00     Refraction Index for filter 26
+  0         127        1.000000E+00     Refraction Index for filter 27
+  0         128        1.000000E+00     Refraction Index for filter 28
+  0         129        1.000000E+00     Refraction Index for filter 29
+  0         130        1.000000E+00     Refraction Index for filter 30
+  0         131        1.000000E+00     Refraction Index for filter 31
+  0         132        1.000000E+00     Refraction Index for filter 32
+  0         133        1.000000E+00     Refraction Index for filter 33
+  0         134        1.000000E+00     Refraction Index for filter 34
+  0         135        1.000000E+00     Refraction Index for filter 35
+  0         136        1.000000E+00     Refraction Index for filter 36
+  0         137        1.000000E+00     Refraction Index for filter 37
+  0         138        1.000000E+00     Refraction Index for filter 38
+  0         139        1.000000E+00     Refraction Index for filter 39
+  0         140        1.000000E+00     Refraction Index for filter 40
+  0         141        1.000000E+00     Refraction Index for filter 41
+  0         142        1.000000E+00     Refraction Index for filter 42
+  0         143        1.000000E+00     Refraction Index for filter 43
+  0         144        1.000000E+00     Refraction Index for filter 44
+  0         145        1.000000E+00     Refraction Index for filter 45
+  0         146        1.000000E+00     Refraction Index for filter 46
+  0         147        1.000000E+00     Refraction Index for filter 47
+  0         148        1.000000E+00     Refraction Index for filter 48
+  0         149        1.000000E+00     Refraction Index for filter 49
+  0         150        1.000000E+00     Refraction Index for filter 50
+  0         151        1.000000E+00     Refraction Index for filter 51
+  0         152        1.000000E+00     Refraction Index for filter 52
+  0         153        1.000000E+00     Refraction Index for filter 53
+  0         154        1.000000E+00     Refraction Index for filter 54
+  0         155        1.000000E+00     Refraction Index for filter 55
+  0         156        1.000000E+00     Refraction Index for filter 56
+  0         157        1.000000E+00     Refraction Index for filter 57
+  1           1       -8.888900E-05     Curvature           
+  1           2       -1.285252E+00     Conic Constant      
+  1          10        3.813947E-22     A6                  
+  1          11       -1.517646E-29     A8                  
+  1         101       -1.000280E+00     Refraction Index for filter  1
+  1         102       -1.000000E+00     Refraction Index for filter  2
+  1         103       -1.000000E+00     Refraction Index for filter  3
+  1         104       -1.000000E+00     Refraction Index for filter  4
+  1         105       -1.000000E+00     Refraction Index for filter  5
+  1         106       -1.000000E+00     Refraction Index for filter  6
+  1         107       -1.000000E+00     Refraction Index for filter  7
+  1         108       -1.000000E+00     Refraction Index for filter  8
+  1         109       -1.000000E+00     Refraction Index for filter  9
+  1         110       -1.000000E+00     Refraction Index for filter 10
+  1         111       -1.000000E+00     Refraction Index for filter 11
+  1         112       -1.000000E+00     Refraction Index for filter 12
+  1         113       -1.000000E+00     Refraction Index for filter 13
+  1         114       -1.000000E+00     Refraction Index for filter 14
+  1         115       -1.000000E+00     Refraction Index for filter 15
+  1         116       -1.000000E+00     Refraction Index for filter 16
+  1         117       -1.000000E+00     Refraction Index for filter 17
+  1         118       -1.000000E+00     Refraction Index for filter 18
+  1         119       -1.000000E+00     Refraction Index for filter 19
+  1         120       -1.000000E+00     Refraction Index for filter 20
+  1         121       -1.000000E+00     Refraction Index for filter 21
+  1         122       -1.000000E+00     Refraction Index for filter 22
+  1         123       -1.000000E+00     Refraction Index for filter 23
+  1         124       -1.000000E+00     Refraction Index for filter 24
+  1         125       -1.000000E+00     Refraction Index for filter 25
+  1         126       -1.000000E+00     Refraction Index for filter 26
+  1         127       -1.000000E+00     Refraction Index for filter 27
+  1         128       -1.000000E+00     Refraction Index for filter 28
+  1         129       -1.000000E+00     Refraction Index for filter 29
+  1         130       -1.000000E+00     Refraction Index for filter 30
+  1         131       -1.000000E+00     Refraction Index for filter 31
+  1         132       -1.000000E+00     Refraction Index for filter 32
+  1         133       -1.000000E+00     Refraction Index for filter 33
+  1         134       -1.000000E+00     Refraction Index for filter 34
+  1         135       -1.000000E+00     Refraction Index for filter 35
+  1         136       -1.000000E+00     Refraction Index for filter 36
+  1         137       -1.000000E+00     Refraction Index for filter 37
+  1         138       -1.000000E+00     Refraction Index for filter 38
+  1         139       -1.000000E+00     Refraction Index for filter 39
+  1         140       -1.000000E+00     Refraction Index for filter 40
+  1         141       -1.000000E+00     Refraction Index for filter 41
+  1         142       -1.000000E+00     Refraction Index for filter 42
+  1         143       -1.000000E+00     Refraction Index for filter 43
+  1         144       -1.000000E+00     Refraction Index for filter 44
+  1         145       -1.000000E+00     Refraction Index for filter 45
+  1         146       -1.000000E+00     Refraction Index for filter 46
+  1         147       -1.000000E+00     Refraction Index for filter 47
+  1         148       -1.000000E+00     Refraction Index for filter 48
+  1         149       -1.000000E+00     Refraction Index for filter 49
+  1         150       -1.000000E+00     Refraction Index for filter 50
+  1         151       -1.000000E+00     Refraction Index for filter 51
+  1         152       -1.000000E+00     Refraction Index for filter 52
+  1         153       -1.000000E+00     Refraction Index for filter 53
+  1         154       -1.000000E+00     Refraction Index for filter 54
+  1         155       -1.000000E+00     Refraction Index for filter 55
+  1         156       -1.000000E+00     Refraction Index for filter 56
+  1         157       -1.000000E+00     Refraction Index for filter 57
+  1         402       -1.251824E+03     Outer Stop
+#CCD positions and global scale adj; not done yet                               
+  2           1       -1.390000E-04     Curvature           
+  2           2       -1.196801E+01     Conic Constant      
+  2           5       -3.646140E+03     Z Position          
+  2          10        1.785216E-19     A6                  
+  2         106        1.000000E+00     Refraction Index for filter  6
+  2         107        1.000000E+00     Refraction Index for filter  7
+  2         108        1.000000E+00     Refraction Index for filter  8
+  2         109        1.000000E+00     Refraction Index for filter  9
+  2         110        1.000000E+00     Refraction Index for filter 10
+  2         111        1.000000E+00     Refraction Index for filter 11
+  2         112        1.000000E+00     Refraction Index for filter 12
+  2         113        1.000000E+00     Refraction Index for filter 13
+  2         114        1.000000E+00     Refraction Index for filter 14
+  2         115        1.000000E+00     Refraction Index for filter 15
+  2         116        1.000000E+00     Refraction Index for filter 16
+  2         117        1.000000E+00     Refraction Index for filter 17
+  2         118        1.000000E+00     Refraction Index for filter 18
+  2         119        1.000000E+00     Refraction Index for filter 19
+  2         120        1.000000E+00     Refraction Index for filter 20
+  2         121        1.000000E+00     Refraction Index for filter 21
+  2         122        1.000000E+00     Refraction Index for filter 22
+  2         123        1.000000E+00     Refraction Index for filter 23
+  2         124        1.000000E+00     Refraction Index for filter 24
+  2         125        1.000000E+00     Refraction Index for filter 25
+  2         126        1.000000E+00     Refraction Index for filter 26
+  2         127        1.000000E+00     Refraction Index for filter 27
+  2         128        1.000000E+00     Refraction Index for filter 28
+  2         129        1.000000E+00     Refraction Index for filter 29
+  2         130        1.000000E+00     Refraction Index for filter 30
+  2         131        1.000000E+00     Refraction Index for filter 31
+  2         132        1.000000E+00     Refraction Index for filter 32
+  2         133        1.000000E+00     Refraction Index for filter 33
+  2         134        1.000000E+00     Refraction Index for filter 34
+  2         135        1.000000E+00     Refraction Index for filter 35
+  2         136        1.000000E+00     Refraction Index for filter 36
+  2         137        1.000000E+00     Refraction Index for filter 37
+  2         138        1.000000E+00     Refraction Index for filter 38
+  2         139        1.000000E+00     Refraction Index for filter 39
+  2         140        1.000000E+00     Refraction Index for filter 40
+  2         141        1.000000E+00     Refraction Index for filter 41
+  2         142        1.000000E+00     Refraction Index for filter 42
+  2         143        1.000000E+00     Refraction Index for filter 43
+  2         144        1.000000E+00     Refraction Index for filter 44
+  2         145        1.000000E+00     Refraction Index for filter 45
+  2         146        1.000000E+00     Refraction Index for filter 46
+  2         147        1.000000E+00     Refraction Index for filter 47
+  2         148        1.000000E+00     Refraction Index for filter 48
+  2         149        1.000000E+00     Refraction Index for filter 49
+  2         150        1.000000E+00     Refraction Index for filter 50
+  2         151        1.000000E+00     Refraction Index for filter 51
+  2         152        1.000000E+00     Refraction Index for filter 52
+  2         153        1.000000E+00     Refraction Index for filter 53
+  2         154        1.000000E+00     Refraction Index for filter 54
+  2         155        1.000000E+00     Refraction Index for filter 55
+  2         156        1.000000E+00     Refraction Index for filter 56
+  2         157        1.000000E+00     Refraction Index for filter 57
+  2         402       -5.399491E+02     Outer Stop
+  3           1       -1.390000E-04     Curvature           
+  3           2       -1.196801E+01     Conic Constant      
+  3           5       -3.644900E+03     Z Position          
+  3          10        1.785216E-19     A6                  
+  3         101        1.000280E+00     Refraction Index for filter  1
+  3         102        1.000000E+00     Refraction Index for filter  2
+  3         103        1.000000E+00     Refraction Index for filter  3
+  3         104        1.000000E+00     Refraction Index for filter  4
+  3         105        1.000000E+00     Refraction Index for filter  5
+  3         402       -5.346900E+02     Outer Stop
+  4           5       -2.455000E+01     Z Position          
+  4           8        2.320600E-05     A2                  
+  4           9       -1.173100E-10     A4                  
+  4          10       -7.873000E-17     A6                  
+  4          11        1.591900E-22     A8                  
+  4         101        1.471323E+00     Refraction Index for filter  1
+  4         102        1.451347E+00     Refraction Index for filter  2
+  4         103        1.458665E+00     Refraction Index for filter  3
+  4         104        1.453906E+00     Refraction Index for filter  4
+  4         105        1.522470E+00     Refraction Index for filter  5
+  4         106        1.463652E+00     Refraction Index for filter  6
+  4         107        1.451347E+00     Refraction Index for filter  7
+  4         108        1.476319E+00     Refraction Index for filter  8
+  4         109        1.453906E+00     Refraction Index for filter  9
+  4         110        1.457569E+00     Refraction Index for filter 10
+  4         111        1.463652E+00     Refraction Index for filter 11
+  4         112        1.451347E+00     Refraction Index for filter 12
+  4         113        1.476319E+00     Refraction Index for filter 13
+  4         114        1.453906E+00     Refraction Index for filter 14
+  4         115        1.457569E+00     Refraction Index for filter 15
+  4         116        1.463652E+00     Refraction Index for filter 16
+  4         117        1.451347E+00     Refraction Index for filter 17
+  4         118        1.476319E+00     Refraction Index for filter 18
+  4         119        1.453906E+00     Refraction Index for filter 19
+  4         120        1.457569E+00     Refraction Index for filter 20
+  4         121        1.463652E+00     Refraction Index for filter 21
+  4         122        1.451347E+00     Refraction Index for filter 22
+  4         123        1.476319E+00     Refraction Index for filter 23
+  4         124        1.453906E+00     Refraction Index for filter 24
+  4         125        1.457569E+00     Refraction Index for filter 25
+  4         126        1.463652E+00     Refraction Index for filter 26
+  4         127        1.451347E+00     Refraction Index for filter 27
+  4         128        1.476319E+00     Refraction Index for filter 28
+  4         129        1.453906E+00     Refraction Index for filter 29
+  4         130        1.457569E+00     Refraction Index for filter 30
+  4         131        1.463652E+00     Refraction Index for filter 31
+  4         132        1.453906E+00     Refraction Index for filter 32
+  4         133        1.476319E+00     Refraction Index for filter 33
+  4         134        1.451347E+00     Refraction Index for filter 34
+  4         135        1.457569E+00     Refraction Index for filter 35
+  4         136        1.457569E+00     Refraction Index for filter 36
+  4         137        1.457569E+00     Refraction Index for filter 37
+  4         138        1.457569E+00     Refraction Index for filter 38
+  4         139        1.457569E+00     Refraction Index for filter 39
+  4         140        1.457569E+00     Refraction Index for filter 40
+  4         141        1.457569E+00     Refraction Index for filter 41
+  4         142        1.457569E+00     Refraction Index for filter 42
+  4         143        1.457569E+00     Refraction Index for filter 43
+  4         144        1.457569E+00     Refraction Index for filter 44
+  4         145        1.457569E+00     Refraction Index for filter 45
+  4         146        1.457569E+00     Refraction Index for filter 46
+  4         147        1.457569E+00     Refraction Index for filter 47
+  4         148        1.457569E+00     Refraction Index for filter 48
+  4         149        1.457569E+00     Refraction Index for filter 49
+  4         150        1.457569E+00     Refraction Index for filter 50
+  4         151        1.457569E+00     Refraction Index for filter 51
+  4         152        1.457569E+00     Refraction Index for filter 52
+  4         153        1.457569E+00     Refraction Index for filter 53
+  4         154        1.457569E+00     Refraction Index for filter 54
+  4         155        1.457569E+00     Refraction Index for filter 55
+  4         156        1.457569E+00     Refraction Index for filter 56
+  4         157        1.457569E+00     Refraction Index for filter 57
+  4         402       -3.610449E+02     Outer Stop
+  5           5       -1.255000E+01     Z Position          
+  5         101        1.000280E+00     Refraction Index for filter  1
+  5         102        1.000000E+00     Refraction Index for filter  2
+  5         103        1.000000E+00     Refraction Index for filter  3
+  5         104        1.000000E+00     Refraction Index for filter  4
+  5         105        1.000000E+00     Refraction Index for filter  5
+  5         106        1.000000E+00     Refraction Index for filter  6
+  5         107        1.000000E+00     Refraction Index for filter  7
+  5         108        1.000000E+00     Refraction Index for filter  8
+  5         109        1.000000E+00     Refraction Index for filter  9
+  5         110        1.000000E+00     Refraction Index for filter 10
+  5         111        1.000000E+00     Refraction Index for filter 11
+  5         112        1.000000E+00     Refraction Index for filter 12
+  5         113        1.000000E+00     Refraction Index for filter 13
+  5         114        1.000000E+00     Refraction Index for filter 14
+  5         115        1.000000E+00     Refraction Index for filter 15
+  5         116        1.000000E+00     Refraction Index for filter 16
+  5         117        1.000000E+00     Refraction Index for filter 17
+  5         118        1.000000E+00     Refraction Index for filter 18
+  5         119        1.000000E+00     Refraction Index for filter 19
+  5         120        1.000000E+00     Refraction Index for filter 20
+  5         121        1.000000E+00     Refraction Index for filter 21
+  5         122        1.000000E+00     Refraction Index for filter 22
+  5         123        1.000000E+00     Refraction Index for filter 23
+  5         124        1.000000E+00     Refraction Index for filter 24
+  5         125        1.000000E+00     Refraction Index for filter 25
+  5         126        1.000000E+00     Refraction Index for filter 26
+  5         127        1.000000E+00     Refraction Index for filter 27
+  5         128        1.000000E+00     Refraction Index for filter 28
+  5         129        1.000000E+00     Refraction Index for filter 29
+  5         130        1.000000E+00     Refraction Index for filter 30
+  5         131        1.000000E+00     Refraction Index for filter 31
+  5         132        1.000000E+00     Refraction Index for filter 32
+  5         133        1.000000E+00     Refraction Index for filter 33
+  5         134        1.000000E+00     Refraction Index for filter 34
+  5         135        1.000000E+00     Refraction Index for filter 35
+  5         136        1.000000E+00     Refraction Index for filter 36
+  5         137        1.000000E+00     Refraction Index for filter 37
+  5         138        1.000000E+00     Refraction Index for filter 38
+  5         139        1.000000E+00     Refraction Index for filter 39
+  5         140        1.000000E+00     Refraction Index for filter 40
+  5         141        1.000000E+00     Refraction Index for filter 41
+  5         142        1.000000E+00     Refraction Index for filter 42
+  5         143        1.000000E+00     Refraction Index for filter 43
+  5         144        1.000000E+00     Refraction Index for filter 44
+  5         145        1.000000E+00     Refraction Index for filter 45
+  5         146        1.000000E+00     Refraction Index for filter 46
+  5         147        1.000000E+00     Refraction Index for filter 47
+  5         148        1.000000E+00     Refraction Index for filter 48
+  5         149        1.000000E+00     Refraction Index for filter 49
+  5         150        1.000000E+00     Refraction Index for filter 50
+  5         151        1.000000E+00     Refraction Index for filter 51
+  5         152        1.000000E+00     Refraction Index for filter 52
+  5         153        1.000000E+00     Refraction Index for filter 53
+  5         154        1.000000E+00     Refraction Index for filter 54
+  5         155        1.000000E+00     Refraction Index for filter 55
+  5         156        1.000000E+00     Refraction Index for filter 56
+  5         157        1.000000E+00     Refraction Index for filter 57
+  5         402       -3.606898E+02     Outer Stop
+  6           5        7.014500E+02     Z Position          
+  6           8       -2.732400E-04     A2                  
+  6           9        2.056200E-09     A4                  
+  6          10       -5.809000E-15     A6                  
+  6          11        1.746400E-20     A8                  
+  6         106        1.463652E+00     Refraction Index for filter  6
+  6         107        1.451347E+00     Refraction Index for filter  7
+  6         108        1.476319E+00     Refraction Index for filter  8
+  6         109        1.453906E+00     Refraction Index for filter  9
+  6         110        1.457569E+00     Refraction Index for filter 10
+  6         111        1.463652E+00     Refraction Index for filter 11
+  6         112        1.451347E+00     Refraction Index for filter 12
+  6         113        1.476319E+00     Refraction Index for filter 13
+  6         114        1.453906E+00     Refraction Index for filter 14
+  6         115        1.457569E+00     Refraction Index for filter 15
+  6         116        1.463652E+00     Refraction Index for filter 16
+  6         117        1.451347E+00     Refraction Index for filter 17
+  6         118        1.476319E+00     Refraction Index for filter 18
+  6         119        1.453906E+00     Refraction Index for filter 19
+  6         120        1.457569E+00     Refraction Index for filter 20
+  6         121        1.463652E+00     Refraction Index for filter 21
+  6         122        1.451347E+00     Refraction Index for filter 22
+  6         123        1.476319E+00     Refraction Index for filter 23
+  6         124        1.453906E+00     Refraction Index for filter 24
+  6         125        1.457569E+00     Refraction Index for filter 25
+  6         126        1.463652E+00     Refraction Index for filter 26
+  6         127        1.451347E+00     Refraction Index for filter 27
+  6         128        1.476319E+00     Refraction Index for filter 28
+  6         129        1.453906E+00     Refraction Index for filter 29
+  6         130        1.457569E+00     Refraction Index for filter 30
+  6         131        1.463652E+00     Refraction Index for filter 31
+  6         132        1.453906E+00     Refraction Index for filter 32
+  6         133        1.476319E+00     Refraction Index for filter 33
+  6         134        1.451347E+00     Refraction Index for filter 34
+  6         135        1.457569E+00     Refraction Index for filter 35
+  6         136        1.457569E+00     Refraction Index for filter 36
+  6         137        1.457569E+00     Refraction Index for filter 37
+  6         138        1.457569E+00     Refraction Index for filter 38
+  6         139        1.457569E+00     Refraction Index for filter 39
+  6         140        1.457569E+00     Refraction Index for filter 40
+  6         141        1.457569E+00     Refraction Index for filter 41
+  6         142        1.457569E+00     Refraction Index for filter 42
+  6         143        1.457569E+00     Refraction Index for filter 43
+  6         144        1.457569E+00     Refraction Index for filter 44
+  6         145        1.457569E+00     Refraction Index for filter 45
+  6         146        1.457569E+00     Refraction Index for filter 46
+  6         147        1.457569E+00     Refraction Index for filter 47
+  6         148        1.457569E+00     Refraction Index for filter 48
+  6         149        1.457569E+00     Refraction Index for filter 49
+  6         150        1.457569E+00     Refraction Index for filter 50
+  6         151        1.457569E+00     Refraction Index for filter 51
+  6         152        1.457569E+00     Refraction Index for filter 52
+  6         153        1.457569E+00     Refraction Index for filter 53
+  6         154        1.457569E+00     Refraction Index for filter 54
+  6         155        1.457569E+00     Refraction Index for filter 55
+  6         156        1.457569E+00     Refraction Index for filter 56
+  6         157        1.457569E+00     Refraction Index for filter 57
+  6         402       -3.295910E+02     Outer Stop
+  7           5        7.464500E+02     Z Position          
+  7         106        1.522374E+00     Refraction Index for filter  6
+  7         107        1.508262E+00     Refraction Index for filter  7
+  7         108        1.537757E+00     Refraction Index for filter  8
+  7         109        1.511068E+00     Refraction Index for filter  9
+  7         110        1.514748E+00     Refraction Index for filter 10
+  7         111        1.522374E+00     Refraction Index for filter 11
+  7         112        1.508262E+00     Refraction Index for filter 12
+  7         113        1.537757E+00     Refraction Index for filter 13
+  7         114        1.511068E+00     Refraction Index for filter 14
+  7         115        1.514748E+00     Refraction Index for filter 15
+  7         116        1.522374E+00     Refraction Index for filter 16
+  7         117        1.508262E+00     Refraction Index for filter 17
+  7         118        1.537757E+00     Refraction Index for filter 18
+  7         119        1.511068E+00     Refraction Index for filter 19
+  7         120        1.514748E+00     Refraction Index for filter 20
+  7         121        1.522374E+00     Refraction Index for filter 21
+  7         122        1.508262E+00     Refraction Index for filter 22
+  7         123        1.537757E+00     Refraction Index for filter 23
+  7         124        1.511068E+00     Refraction Index for filter 24
+  7         125        1.514748E+00     Refraction Index for filter 25
+  7         126        1.522374E+00     Refraction Index for filter 26
+  7         127        1.508262E+00     Refraction Index for filter 27
+  7         128        1.537757E+00     Refraction Index for filter 28
+  7         129        1.511068E+00     Refraction Index for filter 29
+  7         130        1.514748E+00     Refraction Index for filter 30
+  7         131        1.522374E+00     Refraction Index for filter 31
+  7         132        1.511068E+00     Refraction Index for filter 32
+  7         133        1.537757E+00     Refraction Index for filter 33
+  7         134        1.508262E+00     Refraction Index for filter 34
+  7         135        1.514748E+00     Refraction Index for filter 35
+  7         136        1.514748E+00     Refraction Index for filter 36
+  7         137        1.514748E+00     Refraction Index for filter 37
+  7         138        1.514748E+00     Refraction Index for filter 38
+  7         139        1.514748E+00     Refraction Index for filter 39
+  7         140        1.514748E+00     Refraction Index for filter 40
+  7         141        1.514748E+00     Refraction Index for filter 41
+  7         142        1.514748E+00     Refraction Index for filter 42
+  7         143        1.514748E+00     Refraction Index for filter 43
+  7         144        1.514748E+00     Refraction Index for filter 44
+  7         145        1.514748E+00     Refraction Index for filter 45
+  7         146        1.514748E+00     Refraction Index for filter 46
+  7         147        1.514748E+00     Refraction Index for filter 47
+  7         148        1.514748E+00     Refraction Index for filter 48
+  7         149        1.514748E+00     Refraction Index for filter 49
+  7         150        1.514748E+00     Refraction Index for filter 50
+  7         151        1.514748E+00     Refraction Index for filter 51
+  7         152        1.514748E+00     Refraction Index for filter 52
+  7         153        1.514748E+00     Refraction Index for filter 53
+  7         154        1.514748E+00     Refraction Index for filter 54
+  7         155        1.514748E+00     Refraction Index for filter 55
+  7         156        1.514748E+00     Refraction Index for filter 56
+  7         157        1.514748E+00     Refraction Index for filter 57
+  7         402       -3.271345E+02     Outer Stop
+  8           5        6.744500E+02     Z Position          
+  8           8       -4.154778E-04     A2                  
+  8           9        1.131689E-09     A4                  
+  8          10       -2.576451E-15     A6                  
+  8         101        1.458490E+00     Refraction Index for filter  1
+  8         102        1.472737E+00     Refraction Index for filter  2
+  8         103        1.466232E+00     Refraction Index for filter  3
+  8         104        1.458221E+00     Refraction Index for filter  4
+  8         105        1.454343E+00     Refraction Index for filter  5
+  8         402       -3.118711E+02     Outer Stop
+  9           1       -5.114629E-04     Curvature           
+  9           5        6.844500E+02     Z Position          
+  9         101        1.000280E+00     Refraction Index for filter  1
+  9         102        1.000000E+00     Refraction Index for filter  2
+  9         103        1.000000E+00     Refraction Index for filter  3
+  9         104        1.000000E+00     Refraction Index for filter  4
+  9         105        1.000000E+00     Refraction Index for filter  5
+  9         402       -3.109335E+02     Outer Stop
+ 10           1        9.014655E-07     Curvature           
+ 10           5        7.542566E+02     Z Position          
+ 10           9       -4.360196E-10     A4                  
+ 10          10        1.798476E-15     A6                  
+ 10          11       -2.291284E-21     A8                  
+ 10         101        1.000280E+00     Refraction Index for filter  1
+ 10         102        1.000000E+00     Refraction Index for filter  2
+ 10         103        1.000000E+00     Refraction Index for filter  3
+ 10         104        1.000000E+00     Refraction Index for filter  4
+ 10         105        1.000000E+00     Refraction Index for filter  5
+ 10         402       -3.084839E+02     Outer Stop
+ 11.06        3       -2.275000E+02     X Position          
+ 11.06        4       -1.300000E+02     Y Position          
+ 11.06        5        7.464500E+02     Z Position          
+ 11.06      106        1.522374E+00     Refraction Index for filter  6
+ 11.06      402       -3.728440E+01     Outer Stop
+ 12.06        3       -2.275000E+02     X Position          
+ 12.06        4       -1.300000E+02     Y Position          
+ 12.06        5        7.494500E+02     Z Position          
+ 12.06      106        1.522374E+00     Refraction Index for filter  6
+ 12.06      402       -3.698310E+01     Outer Stop
+ 13.06        1        1.398601E-03     Curvature           
+ 13.06        3       -2.275000E+02     X Position          
+ 13.06        4       -1.300000E+02     Y Position          
+ 13.06        5        7.514500E+02     Z Position          
+ 13.06      106        9.997200E-01     Refraction Index for filter  6
+ 13.06      402       -3.668767E+01     Outer Stop
+ 14.06        1        4.300000E-04     Curvature           
+ 14.06        3       -2.275000E+02     X Position          
+ 14.06        4       -1.300000E+02     Y Position          
+ 14.06        5        7.592733E+02     Z Position          
+ 14.06        6       -2.622447E+00     Tilt: Phi           
+ 14.06        7        1.851494E-02     Tilt: Theta         
+ 14.06      106        9.997200E-01     Refraction Index for filter  6
+ 14.06      402       -3.651785E+01     Outer Stop
+ 11.07        3       -2.275000E+02     X Position          
+ 11.07        4       -6.500000E+01     Y Position          
+ 11.07        5        7.464500E+02     Z Position          
+ 11.07      107        1.508262E+00     Refraction Index for filter  7
+ 11.07      402       -3.701221E+01     Outer Stop
+ 12.07        3       -2.275000E+02     X Position          
+ 12.07        4       -6.500000E+01     Y Position          
+ 12.07        5        7.494500E+02     Z Position          
+ 12.07      107        1.508262E+00     Refraction Index for filter  7
+ 12.07      402       -3.672231E+01     Outer Stop
+ 13.07        1        1.398601E-03     Curvature           
+ 13.07        3       -2.275000E+02     X Position          
+ 13.07        4       -6.500000E+01     Y Position          
+ 13.07        5        7.514500E+02     Z Position          
+ 13.07      107        9.997244E-01     Refraction Index for filter  7
+ 13.07      402       -3.643936E+01     Outer Stop
+ 14.07        1        4.300000E-04     Curvature           
+ 14.07        3       -2.275000E+02     X Position          
+ 14.07        4       -6.500000E+01     Y Position          
+ 14.07        5        7.592403E+02     Z Position          
+ 14.07        6       -2.863293E+00     Tilt: Phi           
+ 14.07        7        1.097452E-02     Tilt: Theta         
+ 14.07      107        9.997244E-01     Refraction Index for filter  7
+ 14.07      402       -3.627683E+01     Outer Stop
+ 11.08        3       -2.275000E+02     X Position          
+ 11.08        5        7.464500E+02     Z Position          
+ 11.08      108        1.537757E+00     Refraction Index for filter  8
+ 11.08      402       -3.680677E+01     Outer Stop
+ 12.08        3       -2.275000E+02     X Position          
+ 12.08        5        7.494500E+02     Z Position          
+ 12.08      108        1.537757E+00     Refraction Index for filter  8
+ 12.08      402       -3.654223E+01     Outer Stop
+ 13.08        1        1.298701E-03     Curvature           
+ 13.08        3       -2.275000E+02     X Position          
+ 13.08        5        7.514500E+02     Z Position          
+ 13.08      108        9.997200E-01     Refraction Index for filter  8
+ 13.08      402       -3.629060E+01     Outer Stop
+ 14.08        1        4.300000E-04     Curvature           
+ 14.08        3       -2.275000E+02     X Position          
+ 14.08        5        7.600965E+02     Z Position          
+ 14.08        6        3.141593E+00     Tilt: Phi           
+ 14.08        7        8.281300E-03     Tilt: Theta         
+ 14.08      108        9.997200E-01     Refraction Index for filter  8
+ 14.08      402       -3.613352E+01     Outer Stop
+ 11.09        3       -2.275000E+02     X Position          
+ 11.09        4        6.500000E+01     Y Position          
+ 11.09        5        7.464500E+02     Z Position          
+ 11.09      109        1.511068E+00     Refraction Index for filter  9
+ 11.09      402       -3.668575E+01     Outer Stop
+ 12.09        3       -2.275000E+02     X Position          
+ 12.09        4        6.500000E+01     Y Position          
+ 12.09        5        7.494500E+02     Z Position          
+ 12.09      109        1.511068E+00     Refraction Index for filter  9
+ 12.09      402       -3.644764E+01     Outer Stop
+ 13.09        1        1.492537E-03     Curvature           
+ 13.09        3       -2.275000E+02     X Position          
+ 13.09        4        6.500000E+01     Y Position          
+ 13.09        5        7.514500E+02     Z Position          
+ 13.09      109        9.997300E-01     Refraction Index for filter  9
+ 13.09      402       -3.621218E+01     Outer Stop
+ 14.09        1        4.300000E-04     Curvature           
+ 14.09        3       -2.275000E+02     X Position          
+ 14.09        4        6.500000E+01     Y Position          
+ 14.09        5        7.593107E+02     Z Position          
+ 14.09        6        2.863293E+00     Tilt: Phi           
+ 14.09        7        1.386866E-02     Tilt: Theta         
+ 14.09      109        9.997300E-01     Refraction Index for filter  9
+ 14.09      402       -3.609327E+01     Outer Stop
+ 11.10        3       -2.275000E+02     X Position          
+ 11.10        4        1.300000E+02     Y Position          
+ 11.10        5        7.464500E+02     Z Position          
+ 11.10      110        1.514748E+00     Refraction Index for filter 10
+ 11.10      402       -3.690682E+01     Outer Stop
+ 12.10        3       -2.275000E+02     X Position          
+ 12.10        4        1.300000E+02     Y Position          
+ 12.10        5        7.494500E+02     Z Position          
+ 12.10      110        1.514748E+00     Refraction Index for filter 10
+ 12.10      402       -3.665821E+01     Outer Stop
+ 13.10        1        1.492537E-03     Curvature           
+ 13.10        3       -2.275000E+02     X Position          
+ 13.10        4        1.300000E+02     Y Position          
+ 13.10        5        7.514500E+02     Z Position          
+ 13.10      110        9.997200E-01     Refraction Index for filter 10
+ 13.10      402       -3.641117E+01     Outer Stop
+ 14.10        1        4.300000E-04     Curvature           
+ 14.10        3       -2.275000E+02     X Position          
+ 14.10        4        1.300000E+02     Y Position          
+ 14.10        5        7.590389E+02     Z Position          
+ 14.10        6        2.622447E+00     Tilt: Phi           
+ 14.10        7        2.044777E-02     Tilt: Theta         
+ 14.10      110        9.997200E-01     Refraction Index for filter 10
+ 14.10      402       -3.628581E+01     Outer Stop
+ 11.11        3       -1.365000E+02     X Position          
+ 11.11        4       -1.300000E+02     Y Position          
+ 11.11        5        7.464500E+02     Z Position          
+ 11.11      111        1.522374E+00     Refraction Index for filter 11
+ 11.11      402       -3.703378E+01     Outer Stop
+ 12.11        3       -1.365000E+02     X Position          
+ 12.11        4       -1.300000E+02     Y Position          
+ 12.11        5        7.494500E+02     Z Position          
+ 12.11      111        1.522374E+00     Refraction Index for filter 11
+ 12.11      402       -3.673966E+01     Outer Stop
+ 13.11        1        1.298701E-03     Curvature           
+ 13.11        3       -1.365000E+02     X Position          
+ 13.11        4       -1.300000E+02     Y Position          
+ 13.11        5        7.514500E+02     Z Position          
+ 13.11      111        9.997200E-01     Refraction Index for filter 11
+ 13.11      402       -3.645890E+01     Outer Stop
+ 14.11        1        4.300000E-04     Curvature           
+ 14.11        3       -1.365000E+02     X Position          
+ 14.11        4       -1.300000E+02     Y Position          
+ 14.11        5        7.599295E+02     Z Position          
+ 14.11        6       -2.380580E+00     Tilt: Phi           
+ 14.11        7        1.484169E-03     Tilt: Theta         
+ 14.11      111        9.997200E-01     Refraction Index for filter 11
+ 14.11      402       -3.628185E+01     Outer Stop
+ 11.12        3       -1.365000E+02     X Position          
+ 11.12        4       -6.500000E+01     Y Position          
+ 11.12        5        7.464500E+02     Z Position          
+ 11.12      112        1.508262E+00     Refraction Index for filter 12
+ 11.12      402       -3.669637E+01     Outer Stop
+ 12.12        3       -1.365000E+02     X Position          
+ 12.12        4       -6.500000E+01     Y Position          
+ 12.12        5        7.494500E+02     Z Position          
+ 12.12      112        1.508262E+00     Refraction Index for filter 12
+ 12.12      402       -3.642321E+01     Outer Stop
+ 13.12        1        1.398601E-03     Curvature           
+ 13.12        3       -1.365000E+02     X Position          
+ 13.12        4       -6.500000E+01     Y Position          
+ 13.12        5        7.514500E+02     Z Position          
+ 13.12      112        9.997244E-01     Refraction Index for filter 12
+ 13.12      402       -3.615785E+01     Outer Stop
+ 14.12        1        4.300000E-04     Curvature           
+ 14.12        3       -1.365000E+02     X Position          
+ 14.12        4       -6.500000E+01     Y Position          
+ 14.12        5        7.597315E+02     Z Position          
+ 14.12        6       -2.697173E+00     Tilt: Phi           
+ 14.12        7        1.786372E-03     Tilt: Theta         
+ 14.12      112        9.997244E-01     Refraction Index for filter 12
+ 14.12      402       -3.600535E+01     Outer Stop
+ 11.13        3       -1.365000E+02     X Position          
+ 11.13        5        7.464500E+02     Z Position          
+ 11.13      113        1.537757E+00     Refraction Index for filter 13
+ 11.13      402       -3.641642E+01     Outer Stop
+ 12.13        3       -1.365000E+02     X Position          
+ 12.13        5        7.494500E+02     Z Position          
+ 12.13      113        1.537757E+00     Refraction Index for filter 13
+ 12.13      402       -3.617633E+01     Outer Stop
+ 13.13        1        1.298701E-03     Curvature           
+ 13.13        3       -1.365000E+02     X Position          
+ 13.13        5        7.514500E+02     Z Position          
+ 13.13      113        9.997200E-01     Refraction Index for filter 13
+ 13.13      402       -3.594921E+01     Outer Stop
+ 14.13        1        4.300000E-04     Curvature           
+ 14.13        3       -1.365000E+02     X Position          
+ 14.13        5        7.600758E+02     Z Position          
+ 14.13        6        3.141593E+00     Tilt: Phi           
+ 14.13        7       -1.316034E-03     Tilt: Theta         
+ 14.13      113        9.997200E-01     Refraction Index for filter 13
+ 14.13      402       -3.580860E+01     Outer Stop
+ 11.14        3       -1.365000E+02     X Position          
+ 11.14        4        6.500000E+01     Y Position          
+ 11.14        5        7.464500E+02     Z Position          
+ 11.14      114        1.511068E+00     Refraction Index for filter 14
+ 11.14      402       -3.636697E+01     Outer Stop
+ 12.14        3       -1.365000E+02     X Position          
+ 12.14        4        6.500000E+01     Y Position          
+ 12.14        5        7.494500E+02     Z Position          
+ 12.14      114        1.511068E+00     Refraction Index for filter 14
+ 12.14      402       -3.614733E+01     Outer Stop
+ 13.14        1        1.398601E-03     Curvature           
+ 13.14        3       -1.365000E+02     X Position          
+ 13.14        4        6.500000E+01     Y Position          
+ 13.14        5        7.514500E+02     Z Position          
+ 13.14      114        9.997300E-01     Refraction Index for filter 14
+ 13.14      402       -3.593550E+01     Outer Stop
+ 14.14        1        4.300000E-04     Curvature           
+ 14.14        3       -1.365000E+02     X Position          
+ 14.14        4        6.500000E+01     Y Position          
+ 14.14        5        7.597708E+02     Z Position          
+ 14.14        6        2.697173E+00     Tilt: Phi           
+ 14.14        7        1.856276E-03     Tilt: Theta         
+ 14.14      114        9.997300E-01     Refraction Index for filter 14
+ 14.14      402       -3.581993E+01     Outer Stop
+ 11.15        3       -1.365000E+02     X Position          
+ 11.15        4        1.300000E+02     Y Position          
+ 11.15        5        7.464500E+02     Z Position          
+ 11.15      115        1.514748E+00     Refraction Index for filter 15
+ 11.15      402       -3.665761E+01     Outer Stop
+ 12.15        3       -1.365000E+02     X Position          
+ 12.15        4        1.300000E+02     Y Position          
+ 12.15        5        7.494500E+02     Z Position          
+ 12.15      115        1.514748E+00     Refraction Index for filter 15
+ 12.15      402       -3.641826E+01     Outer Stop
+ 13.15        1        1.298701E-03     Curvature           
+ 13.15        3       -1.365000E+02     X Position          
+ 13.15        4        1.300000E+02     Y Position          
+ 13.15        5        7.514500E+02     Z Position          
+ 13.15      115        9.997200E-01     Refraction Index for filter 15
+ 13.15      402       -3.619129E+01     Outer Stop
+ 14.15        1        4.300000E-04     Curvature           
+ 14.15        3       -1.365000E+02     X Position          
+ 14.15        4        1.300000E+02     Y Position          
+ 14.15        5        7.597970E+02     Z Position          
+ 14.15        6        2.380580E+00     Tilt: Phi           
+ 14.15        7        1.094162E-03     Tilt: Theta         
+ 14.15      115        9.997200E-01     Refraction Index for filter 15
+ 14.15      402       -3.605373E+01     Outer Stop
+ 11.16        3       -4.550000E+01     X Position          
+ 11.16        4       -1.300000E+02     Y Position          
+ 11.16        5        7.464500E+02     Z Position          
+ 11.16      116        1.522374E+00     Refraction Index for filter 16
+ 11.16      402       -3.659427E+01     Outer Stop
+ 12.16        3       -4.550000E+01     X Position          
+ 12.16        4       -1.300000E+02     Y Position          
+ 12.16        5        7.494500E+02     Z Position          
+ 12.16      116        1.522374E+00     Refraction Index for filter 16
+ 12.16      402       -3.633331E+01     Outer Stop
+ 13.16        1        1.298701E-03     Curvature           
+ 13.16        3       -4.550000E+01     X Position          
+ 13.16        4       -1.300000E+02     Y Position          
+ 13.16        5        7.514500E+02     Z Position          
+ 13.16      116        9.997200E-01     Refraction Index for filter 16
+ 13.16      402       -3.608582E+01     Outer Stop
+ 14.16        1        4.300000E-04     Curvature           
+ 14.16        3       -4.550000E+01     X Position          
+ 14.16        4       -1.300000E+02     Y Position          
+ 14.16        5        7.599107E+02     Z Position          
+ 14.16        6       -1.907471E+00     Tilt: Phi           
+ 14.16        7       -1.620778E-03     Tilt: Theta         
+ 14.16      116        9.997200E-01     Refraction Index for filter 16
+ 14.16      402       -3.593121E+01     Outer Stop
+ 11.17        3       -4.550000E+01     X Position          
+ 11.17        4       -6.500000E+01     Y Position          
+ 11.17        5        7.464500E+02     Z Position          
+ 11.17      117        1.508262E+00     Refraction Index for filter 17
+ 11.17      402       -3.622845E+01     Outer Stop
+ 12.17        3       -4.550000E+01     X Position          
+ 12.17        4       -6.500000E+01     Y Position          
+ 12.17        5        7.494500E+02     Z Position          
+ 12.17      117        1.508262E+00     Refraction Index for filter 17
+ 12.17      402       -3.599606E+01     Outer Stop
+ 13.17        1        1.398601E-03     Curvature           
+ 13.17        3       -4.550000E+01     X Position          
+ 13.17        4       -6.500000E+01     Y Position          
+ 13.17        5        7.514500E+02     Z Position          
+ 13.17      117        9.997244E-01     Refraction Index for filter 17
+ 13.17      402       -3.577176E+01     Outer Stop
+ 14.17        1        4.300000E-04     Curvature           
+ 14.17        3       -4.550000E+01     X Position          
+ 14.17        4       -6.500000E+01     Y Position          
+ 14.17        5        7.596240E+02     Z Position          
+ 14.17        6       -2.181522E+00     Tilt: Phi           
+ 14.17        7       -1.893689E-04     Tilt: Theta         
+ 14.17      117        9.997244E-01     Refraction Index for filter 17
+ 14.17      402       -3.564567E+01     Outer Stop
+ 11.18        3       -4.550000E+01     X Position          
+ 11.18        5        7.464500E+02     Z Position          
+ 11.18      118        1.537757E+00     Refraction Index for filter 18
+ 11.18      402       -3.590493E+01     Outer Stop
+ 12.18        3       -4.550000E+01     X Position          
+ 12.18        5        7.494500E+02     Z Position          
+ 12.18      118        1.537757E+00     Refraction Index for filter 18
+ 12.18      402       -3.571078E+01     Outer Stop
+ 13.18        1        1.298701E-03     Curvature           
+ 13.18        3       -4.550000E+01     X Position          
+ 13.18        5        7.514500E+02     Z Position          
+ 13.18      118        9.997200E-01     Refraction Index for filter 18
+ 13.18      402       -3.552830E+01     Outer Stop
+ 14.18        1        4.300000E-04     Curvature           
+ 14.18        3       -4.550000E+01     X Position          
+ 14.18        5        7.597091E+02     Z Position          
+ 14.18        6        3.141593E+00     Tilt: Phi           
+ 14.18        7       -4.084923E-03     Tilt: Theta         
+ 14.18      118        9.997200E-01     Refraction Index for filter 18
+ 14.18      402       -3.542003E+01     Outer Stop
+ 11.19        3       -4.550000E+01     X Position          
+ 11.19        4        6.500000E+01     Y Position          
+ 11.19        5        7.464500E+02     Z Position          
+ 11.19      119        1.511068E+00     Refraction Index for filter 19
+ 11.19      402       -3.590219E+01     Outer Stop
+ 12.19        3       -4.550000E+01     X Position          
+ 12.19        4        6.500000E+01     Y Position          
+ 12.19        5        7.494500E+02     Z Position          
+ 12.19      119        1.511068E+00     Refraction Index for filter 19
+ 12.19      402       -3.572568E+01     Outer Stop
+ 13.19        1        1.398601E-03     Curvature           
+ 13.19        3       -4.550000E+01     X Position          
+ 13.19        4        6.500000E+01     Y Position          
+ 13.19        5        7.514500E+02     Z Position          
+ 13.19      119        9.997300E-01     Refraction Index for filter 19
+ 13.19      402       -3.555639E+01     Outer Stop
+ 14.19        1        4.300000E-04     Curvature           
+ 14.19        3       -4.550000E+01     X Position          
+ 14.19        4        6.500000E+01     Y Position          
+ 14.19        5        7.596427E+02     Z Position          
+ 14.19        6        2.181522E+00     Tilt: Phi           
+ 14.19        7       -2.289398E-04     Tilt: Theta         
+ 14.19      119        9.997300E-01     Refraction Index for filter 19
+ 14.19      402       -3.546903E+01     Outer Stop
+ 11.20        3       -4.550000E+01     X Position          
+ 11.20        4        1.300000E+02     Y Position          
+ 11.20        5        7.464500E+02     Z Position          
+ 11.20      120        1.514748E+00     Refraction Index for filter 20
+ 11.20      402       -3.623008E+01     Outer Stop
+ 12.20        3       -4.550000E+01     X Position          
+ 12.20        4        1.300000E+02     Y Position          
+ 12.20        5        7.494500E+02     Z Position          
+ 12.20      120        1.514748E+00     Refraction Index for filter 20
+ 12.20      402       -3.602630E+01     Outer Stop
+ 13.20        1        1.298701E-03     Curvature           
+ 13.20        3       -4.550000E+01     X Position          
+ 13.20        4        1.300000E+02     Y Position          
+ 13.20        5        7.514500E+02     Z Position          
+ 13.20      120        9.997200E-01     Refraction Index for filter 20
+ 13.20      402       -3.583403E+01     Outer Stop
+ 14.20        1        4.300000E-04     Curvature           
+ 14.20        3       -4.550000E+01     X Position          
+ 14.20        4        1.300000E+02     Y Position          
+ 14.20        5        7.598281E+02     Z Position          
+ 14.20        6        1.907471E+00     Tilt: Phi           
+ 14.20        7       -1.759397E-03     Tilt: Theta         
+ 14.20      120        9.997200E-01     Refraction Index for filter 20
+ 14.20      402       -3.572066E+01     Outer Stop
+ 11.21        3        4.550000E+01     X Position          
+ 11.21        4       -1.300000E+02     Y Position          
+ 11.21        5        7.464500E+02     Z Position          
+ 11.21      121        1.522374E+00     Refraction Index for filter 21
+ 11.21      402       -3.659611E+01     Outer Stop
+ 12.21        3        4.550000E+01     X Position          
+ 12.21        4       -1.300000E+02     Y Position          
+ 12.21        5        7.494500E+02     Z Position          
+ 12.21      121        1.522374E+00     Refraction Index for filter 21
+ 12.21      402       -3.633484E+01     Outer Stop
+ 13.21        1        1.298701E-03     Curvature           
+ 13.21        3        4.550000E+01     X Position          
+ 13.21        4       -1.300000E+02     Y Position          
+ 13.21        5        7.514500E+02     Z Position          
+ 13.21      121        9.997200E-01     Refraction Index for filter 21
+ 13.21      402       -3.608702E+01     Outer Stop
+ 14.21        1        4.300000E-04     Curvature           
+ 14.21        3        4.550000E+01     X Position          
+ 14.21        4       -1.300000E+02     Y Position          
+ 14.21        5        7.599103E+02     Z Position          
+ 14.21        6       -1.234122E+00     Tilt: Phi           
+ 14.21        7       -1.637410E-03     Tilt: Theta         
+ 14.21      121        9.997200E-01     Refraction Index for filter 21
+ 14.21      402       -3.593216E+01     Outer Stop
+ 11.22        3        4.550000E+01     X Position          
+ 11.22        4       -6.500000E+01     Y Position          
+ 11.22        5        7.464500E+02     Z Position          
+ 11.22      122        1.508262E+00     Refraction Index for filter 22
+ 11.22      402       -3.622974E+01     Outer Stop
+ 12.22        3        4.550000E+01     X Position          
+ 12.22        4       -6.500000E+01     Y Position          
+ 12.22        5        7.494500E+02     Z Position          
+ 12.22      122        1.508262E+00     Refraction Index for filter 22
+ 12.22      402       -3.599711E+01     Outer Stop
+ 13.22        1        1.398601E-03     Curvature           
+ 13.22        3        4.550000E+01     X Position          
+ 13.22        4       -6.500000E+01     Y Position          
+ 13.22        5        7.514500E+02     Z Position          
+ 13.22      122        9.997244E-01     Refraction Index for filter 22
+ 13.22      402       -3.577260E+01     Outer Stop
+ 14.22        1        4.300000E-04     Curvature           
+ 14.22        3        4.550000E+01     X Position          
+ 14.22        4       -6.500000E+01     Y Position          
+ 14.22        5        7.596229E+02     Z Position          
+ 14.22        6       -9.600704E-01     Tilt: Phi           
+ 14.22        7       -2.175285E-04     Tilt: Theta         
+ 14.22      122        9.997244E-01     Refraction Index for filter 22
+ 14.22      402       -3.564636E+01     Outer Stop
+ 11.23        3        4.550000E+01     X Position          
+ 11.23        5        7.464500E+02     Z Position          
+ 11.23      123        1.537757E+00     Refraction Index for filter 23
+ 11.23      402       -3.590568E+01     Outer Stop
+ 12.23        3        4.550000E+01     X Position          
+ 12.23        5        7.494500E+02     Z Position          
+ 12.23      123        1.537757E+00     Refraction Index for filter 23
+ 12.23      402       -3.571148E+01     Outer Stop
+ 13.23        1        1.298701E-03     Curvature           
+ 13.23        3        4.550000E+01     X Position          
+ 13.23        5        7.514500E+02     Z Position          
+ 13.23      123        9.997200E-01     Refraction Index for filter 23
+ 13.23      402       -3.552894E+01     Outer Stop
+ 14.23        1        4.300000E-04     Curvature           
+ 14.23        3        4.550000E+01     X Position          
+ 14.23        5        7.597092E+02     Z Position          
+ 14.23        7       -4.066473E-03     Tilt: Theta         
+ 14.23      123        9.997200E-01     Refraction Index for filter 23
+ 14.23      402       -3.542061E+01     Outer Stop
+ 11.24        3        4.550000E+01     X Position          
+ 11.24        4        6.500000E+01     Y Position          
+ 11.24        5        7.464500E+02     Z Position          
+ 11.24      124        1.511068E+00     Refraction Index for filter 24
+ 11.24      402       -3.585268E+01     Outer Stop
+ 12.24        3        4.550000E+01     X Position          
+ 12.24        4        6.500000E+01     Y Position          
+ 12.24        5        7.494500E+02     Z Position          
+ 12.24      124        1.511068E+00     Refraction Index for filter 24
+ 12.24      402       -3.568484E+01     Outer Stop
+ 13.24        1        1.398601E-03     Curvature           
+ 13.24        3        4.550000E+01     X Position          
+ 13.24        4        6.500000E+01     Y Position          
+ 13.24        5        7.514500E+02     Z Position          
+ 13.24      124        9.997300E-01     Refraction Index for filter 24
+ 13.24      402       -3.552403E+01     Outer Stop
+ 14.24        1        4.300000E-04     Curvature           
+ 14.24        3        4.550000E+01     X Position          
+ 14.24        4        6.500000E+01     Y Position          
+ 14.24        5        7.596419E+02     Z Position          
+ 14.24        6        9.600704E-01     Tilt: Phi           
+ 14.24        7       -2.621113E-04     Tilt: Theta         
+ 14.24      124        9.997300E-01     Refraction Index for filter 24
+ 14.24      402       -3.544269E+01     Outer Stop
+ 11.25        3        4.550000E+01     X Position          
+ 11.25        4        1.300000E+02     Y Position          
+ 11.25        5        7.464500E+02     Z Position          
+ 11.25      125        1.514748E+00     Refraction Index for filter 25
+ 11.25      402       -3.617849E+01     Outer Stop
+ 12.25        3        4.550000E+01     X Position          
+ 12.25        4        1.300000E+02     Y Position          
+ 12.25        5        7.494500E+02     Z Position          
+ 12.25      125        1.514748E+00     Refraction Index for filter 25
+ 12.25      402       -3.598346E+01     Outer Stop
+ 13.25        1        1.298701E-03     Curvature           
+ 13.25        3        4.550000E+01     X Position          
+ 13.25        4        1.300000E+02     Y Position          
+ 13.25        5        7.514500E+02     Z Position          
+ 13.25      125        9.997200E-01     Refraction Index for filter 25
+ 13.25      402       -3.579959E+01     Outer Stop
+ 14.25        1        4.300000E-04     Curvature           
+ 14.25        3        4.550000E+01     X Position          
+ 14.25        4        1.300000E+02     Y Position          
+ 14.25        5        7.598278E+02     Z Position          
+ 14.25        6        1.234122E+00     Tilt: Phi           
+ 14.25        7       -1.788300E-03     Tilt: Theta         
+ 14.25      125        9.997200E-01     Refraction Index for filter 25
+ 14.25      402       -3.569254E+01     Outer Stop
+ 11.26        3        1.365000E+02     X Position          
+ 11.26        4       -1.300000E+02     Y Position          
+ 11.26        5        7.464500E+02     Z Position          
+ 11.26      126        1.522374E+00     Refraction Index for filter 26
+ 11.26      402       -3.703477E+01     Outer Stop
+ 12.26        3        1.365000E+02     X Position          
+ 12.26        4       -1.300000E+02     Y Position          
+ 12.26        5        7.494500E+02     Z Position          
+ 12.26      126        1.522374E+00     Refraction Index for filter 26
+ 12.26      402       -3.674049E+01     Outer Stop
+ 13.26        1        1.298701E-03     Curvature           
+ 13.26        3        1.365000E+02     X Position          
+ 13.26        4       -1.300000E+02     Y Position          
+ 13.26        5        7.514500E+02     Z Position          
+ 13.26      126        9.997200E-01     Refraction Index for filter 26
+ 13.26      402       -3.645957E+01     Outer Stop
+ 14.26        1        4.300000E-04     Curvature           
+ 14.26        3        1.365000E+02     X Position          
+ 14.26        4       -1.300000E+02     Y Position          
+ 14.26        5        7.599294E+02     Z Position          
+ 14.26        6       -7.610128E-01     Tilt: Phi           
+ 14.26        7        1.434411E-03     Tilt: Theta         
+ 14.26      126        9.997200E-01     Refraction Index for filter 26
+ 14.26      402       -3.628240E+01     Outer Stop
+ 11.27        3        1.365000E+02     X Position          
+ 11.27        4       -6.500000E+01     Y Position          
+ 11.27        5        7.464500E+02     Z Position          
+ 11.27      127        1.508262E+00     Refraction Index for filter 27
+ 11.27      402       -3.669622E+01     Outer Stop
+ 12.27        3        1.365000E+02     X Position          
+ 12.27        4       -6.500000E+01     Y Position          
+ 12.27        5        7.494500E+02     Z Position          
+ 12.27      127        1.508262E+00     Refraction Index for filter 27
+ 12.27      402       -3.642307E+01     Outer Stop
+ 13.27        1        1.398601E-03     Curvature           
+ 13.27        3        1.365000E+02     X Position          
+ 13.27        4       -6.500000E+01     Y Position          
+ 13.27        5        7.514500E+02     Z Position          
+ 13.27      127        9.997244E-01     Refraction Index for filter 27
+ 13.27      402       -3.615769E+01     Outer Stop
+ 14.27        1        4.300000E-04     Curvature           
+ 14.27        3        1.365000E+02     X Position          
+ 14.27        4       -6.500000E+01     Y Position          
+ 14.27        5        7.597291E+02     Z Position          
+ 14.27        6       -4.444192E-01     Tilt: Phi           
+ 14.27        7        1.721194E-03     Tilt: Theta         
+ 14.27      127        9.997244E-01     Refraction Index for filter 27
+ 14.27      402       -3.600516E+01     Outer Stop
+ 11.28        3        1.365000E+02     X Position          
+ 11.28        5        7.464500E+02     Z Position          
+ 11.28      128        1.537757E+00     Refraction Index for filter 28
+ 11.28      402       -3.641566E+01     Outer Stop
+ 12.28        3        1.365000E+02     X Position          
+ 12.28        5        7.494500E+02     Z Position          
+ 12.28      128        1.537757E+00     Refraction Index for filter 28
+ 12.28      402       -3.617577E+01     Outer Stop
+ 13.28        1        1.298701E-03     Curvature           
+ 13.28        3        1.365000E+02     X Position          
+ 13.28        5        7.514500E+02     Z Position          
+ 13.28      128        9.997200E-01     Refraction Index for filter 28
+ 13.28      402       -3.594878E+01     Outer Stop
+ 14.28        1        4.300000E-04     Curvature           
+ 14.28        3        1.365000E+02     X Position          
+ 14.28        5        7.600758E+02     Z Position          
+ 14.28        7       -1.316113E-03     Tilt: Theta         
+ 14.28      128        9.997200E-01     Refraction Index for filter 28
+ 14.28      402       -3.580826E+01     Outer Stop
+ 11.29        3        1.365000E+02     X Position          
+ 11.29        4        6.500000E+01     Y Position          
+ 11.29        5        7.464500E+02     Z Position          
+ 11.29      129        1.511068E+00     Refraction Index for filter 29
+ 11.29      402       -3.631625E+01     Outer Stop
+ 12.29        3        1.365000E+02     X Position          
+ 12.29        4        6.500000E+01     Y Position          
+ 12.29        5        7.494500E+02     Z Position          
+ 12.29      129        1.511068E+00     Refraction Index for filter 29
+ 12.29      402       -3.610512E+01     Outer Stop
+ 13.29        1        1.398601E-03     Curvature           
+ 13.29        3        1.365000E+02     X Position          
+ 13.29        4        6.500000E+01     Y Position          
+ 13.29        5        7.514500E+02     Z Position          
+ 13.29      129        9.997300E-01     Refraction Index for filter 29
+ 13.29      402       -3.590174E+01     Outer Stop
+ 14.29        1        4.300000E-04     Curvature           
+ 14.29        3        1.365000E+02     X Position          
+ 14.29        4        6.500000E+01     Y Position          
+ 14.29        5        7.597693E+02     Z Position          
+ 14.29        6        4.444192E-01     Tilt: Phi           
+ 14.29        7        1.790328E-03     Tilt: Theta         
+ 14.29      129        9.997300E-01     Refraction Index for filter 29
+ 14.29      402       -3.579203E+01     Outer Stop
+ 11.30        3        1.365000E+02     X Position          
+ 11.30        4        1.300000E+02     Y Position          
+ 11.30        5        7.464500E+02     Z Position          
+ 11.30      130        1.514748E+00     Refraction Index for filter 30
+ 11.30      402       -3.660495E+01     Outer Stop
+ 12.30        3        1.365000E+02     X Position          
+ 12.30        4        1.300000E+02     Y Position          
+ 12.30        5        7.494500E+02     Z Position          
+ 12.30      130        1.514748E+00     Refraction Index for filter 30
+ 12.30      402       -3.637420E+01     Outer Stop
+ 13.30        1        1.298701E-03     Curvature           
+ 13.30        3        1.365000E+02     X Position          
+ 13.30        4        1.300000E+02     Y Position          
+ 13.30        5        7.514500E+02     Z Position          
+ 13.30      130        9.997200E-01     Refraction Index for filter 30
+ 13.30      402       -3.615560E+01     Outer Stop
+ 14.30        1        4.300000E-04     Curvature           
+ 14.30        3        1.365000E+02     X Position          
+ 14.30        4        1.300000E+02     Y Position          
+ 14.30        5        7.597973E+02     Z Position          
+ 14.30        6        7.610128E-01     Tilt: Phi           
+ 14.30        7        1.014132E-03     Tilt: Theta         
+ 14.30      130        9.997200E-01     Refraction Index for filter 30
+ 14.30      402       -3.602421E+01     Outer Stop
+ 11.31        3        2.275000E+02     X Position          
+ 11.31        4       -1.300000E+02     Y Position          
+ 11.31        5        7.464500E+02     Z Position          
+ 11.31      131        1.522374E+00     Refraction Index for filter 31
+ 11.31      402       -3.728324E+01     Outer Stop
+ 12.31        3        2.275000E+02     X Position          
+ 12.31        4       -1.300000E+02     Y Position          
+ 12.31        5        7.494500E+02     Z Position          
+ 12.31      131        1.522374E+00     Refraction Index for filter 31
+ 12.31      402       -3.698195E+01     Outer Stop
+ 13.31        1        1.398601E-03     Curvature           
+ 13.31        3        2.275000E+02     X Position          
+ 13.31        4       -1.300000E+02     Y Position          
+ 13.31        5        7.514500E+02     Z Position          
+ 13.31      131        9.997200E-01     Refraction Index for filter 31
+ 13.31      402       -3.668652E+01     Outer Stop
+ 14.31        1        4.300000E-04     Curvature           
+ 14.31        3        2.275000E+02     X Position          
+ 14.31        4       -1.300000E+02     Y Position          
+ 14.31        5        7.592737E+02     Z Position          
+ 14.31        6       -5.191461E-01     Tilt: Phi           
+ 14.31        7        1.845617E-02     Tilt: Theta         
+ 14.31      131        9.997200E-01     Refraction Index for filter 31
+ 14.31      402       -3.651668E+01     Outer Stop
+ 11.32        3        2.275000E+02     X Position          
+ 11.32        4       -6.500000E+01     Y Position          
+ 11.32        5        7.464500E+02     Z Position          
+ 11.32      132        1.511068E+00     Refraction Index for filter 32
+ 11.32      402       -3.701034E+01     Outer Stop
+ 12.32        3        2.275000E+02     X Position          
+ 12.32        4       -6.500000E+01     Y Position          
+ 12.32        5        7.494500E+02     Z Position          
+ 12.32      132        1.511068E+00     Refraction Index for filter 32
+ 12.32      402       -3.672060E+01     Outer Stop
+ 13.32        1        1.398601E-03     Curvature           
+ 13.32        3        2.275000E+02     X Position          
+ 13.32        4       -6.500000E+01     Y Position          
+ 13.32        5        7.514500E+02     Z Position          
+ 13.32      132        9.997244E-01     Refraction Index for filter 32
+ 13.32      402       -3.643796E+01     Outer Stop
+ 14.32        1        4.300000E-04     Curvature           
+ 14.32        3        2.275000E+02     X Position          
+ 14.32        4       -6.500000E+01     Y Position          
+ 14.32        5        7.593200E+02     Z Position          
+ 14.32        6       -2.782997E-01     Tilt: Phi           
+ 14.32        7        1.111687E-02     Tilt: Theta         
+ 14.32      132        9.997244E-01     Refraction Index for filter 32
+ 14.32      402       -3.627585E+01     Outer Stop
+ 11.33        3        2.275000E+02     X Position          
+ 11.33        5        7.464500E+02     Z Position          
+ 11.33      133        1.537757E+00     Refraction Index for filter 33
+ 11.33      402       -3.680529E+01     Outer Stop
+ 12.33        3        2.275000E+02     X Position          
+ 12.33        5        7.494500E+02     Z Position          
+ 12.33      133        1.537757E+00     Refraction Index for filter 33
+ 12.33      402       -3.654112E+01     Outer Stop
+ 13.33        1        1.298701E-03     Curvature           
+ 13.33        3        2.275000E+02     X Position          
+ 13.33        5        7.514500E+02     Z Position          
+ 13.33      133        9.997200E-01     Refraction Index for filter 33
+ 13.33      402       -3.628991E+01     Outer Stop
+ 14.33        1        4.300000E-04     Curvature           
+ 14.33        3        2.275000E+02     X Position          
+ 14.33        5        7.600979E+02     Z Position          
+ 14.33        7        8.280685E-03     Tilt: Theta         
+ 14.33      133        9.997200E-01     Refraction Index for filter 33
+ 14.33      402       -3.613317E+01     Outer Stop
+ 11.34        3        2.275000E+02     X Position          
+ 11.34        4        6.500000E+01     Y Position          
+ 11.34        5        7.464500E+02     Z Position          
+ 11.34      134        1.508262E+00     Refraction Index for filter 34
+ 11.34      402       -3.663454E+01     Outer Stop
+ 12.34        3        2.275000E+02     X Position          
+ 12.34        4        6.500000E+01     Y Position          
+ 12.34        5        7.494500E+02     Z Position          
+ 12.34      134        1.508262E+00     Refraction Index for filter 34
+ 12.34      402       -3.640485E+01     Outer Stop
+ 13.34        1        1.492537E-03     Curvature           
+ 13.34        3        2.275000E+02     X Position          
+ 13.34        4        6.500000E+01     Y Position          
+ 13.34        5        7.514500E+02     Z Position          
+ 13.34      134        9.997300E-01     Refraction Index for filter 34
+ 13.34      402       -3.617797E+01     Outer Stop
+ 14.34        1        4.300000E-04     Curvature           
+ 14.34        3        2.275000E+02     X Position          
+ 14.34        4        6.500000E+01     Y Position          
+ 14.34        5        7.592294E+02     Z Position          
+ 14.34        6        2.782997E-01     Tilt: Phi           
+ 14.34        7        1.353780E-02     Tilt: Theta         
+ 14.34      134        9.997300E-01     Refraction Index for filter 34
+ 14.34      402       -3.606455E+01     Outer Stop
+ 11.35        3        2.275000E+02     X Position          
+ 11.35        4        1.300000E+02     Y Position          
+ 11.35        5        7.464500E+02     Z Position          
+ 11.35      135        1.514748E+00     Refraction Index for filter 35
+ 11.35      402       -3.685450E+01     Outer Stop
+ 12.35        3        2.275000E+02     X Position          
+ 12.35        4        1.300000E+02     Y Position          
+ 12.35        5        7.494500E+02     Z Position          
+ 12.35      135        1.514748E+00     Refraction Index for filter 35
+ 12.35      402       -3.661438E+01     Outer Stop
+ 13.35        1        1.492537E-03     Curvature           
+ 13.35        3        2.275000E+02     X Position          
+ 13.35        4        1.300000E+02     Y Position          
+ 13.35        5        7.514500E+02     Z Position          
+ 13.35      135        9.997200E-01     Refraction Index for filter 35
+ 13.35      402       -3.637604E+01     Outer Stop
+ 14.35        1        4.300000E-04     Curvature           
+ 14.35        3        2.275000E+02     X Position          
+ 14.35        4        1.300000E+02     Y Position          
+ 14.35        5        7.590386E+02     Z Position          
+ 14.35        6        5.191461E-01     Tilt: Phi           
+ 14.35        7        2.035068E-02     Tilt: Theta         
+ 14.35      135        9.997200E-01     Refraction Index for filter 35
+ 14.35      402       -3.625616E+01     Outer Stop
+ 11.36        3       -1.820000E+02     X Position          
+ 11.36        4       -2.200000E+02     Y Position          
+ 11.36        5        7.464500E+02     Z Position          
+ 11.36      136        1.514748E+00     Refraction Index for filter 36
+ 11.36      402       -2.754216E+01     Outer Stop
+ 12.36        3       -1.820000E+02     X Position          
+ 12.36        4       -2.200000E+02     Y Position          
+ 12.36        5        7.494500E+02     Z Position          
+ 12.36      136        1.514748E+00     Refraction Index for filter 36
+ 12.36      402       -2.726334E+01     Outer Stop
+ 13.36        1        1.600000E-03     Curvature           
+ 13.36        3       -1.820000E+02     X Position          
+ 13.36        4       -2.200000E+02     Y Position          
+ 13.36        5        7.524500E+02     Z Position          
+ 13.36      136        9.997200E-01     Refraction Index for filter 36
+ 13.36      402       -2.702696E+01     Outer Stop
+ 14.36        1        4.300000E-04     Curvature           
+ 14.36        3       -1.820000E+02     X Position          
+ 14.36        4       -2.200000E+02     Y Position          
+ 14.36        5        7.588806E+02     Z Position          
+ 14.36        6       -2.256236E+00     Tilt: Phi           
+ 14.36        7        2.376721E-02     Tilt: Theta         
+ 14.36      136        9.997200E-01     Refraction Index for filter 36
+ 14.36      402       -2.683369E+01     Outer Stop
+ 11.37        3       -9.100000E+01     X Position          
+ 11.37        4       -2.200000E+02     Y Position          
+ 11.37        5        7.464500E+02     Z Position          
+ 11.37      137        1.514748E+00     Refraction Index for filter 37
+ 11.37      402       -2.721775E+01     Outer Stop
+ 12.37        3       -9.100000E+01     X Position          
+ 12.37        4       -2.200000E+02     Y Position          
+ 12.37        5        7.494500E+02     Z Position          
+ 12.37      137        1.514748E+00     Refraction Index for filter 37
+ 12.37      402       -2.695945E+01     Outer Stop
+ 13.37        1        1.500000E-03     Curvature           
+ 13.37        3       -9.100000E+01     X Position          
+ 13.37        4       -2.200000E+02     Y Position          
+ 13.37        5        7.524500E+02     Z Position          
+ 13.37      137        9.997200E-01     Refraction Index for filter 37
+ 13.37      402       -2.674160E+01     Outer Stop
+ 14.37        1        4.300000E-04     Curvature           
+ 14.37        3       -9.100000E+01     X Position          
+ 14.37        4       -2.200000E+02     Y Position          
+ 14.37        5        7.597821E+02     Z Position          
+ 14.37        6       -1.958908E+00     Tilt: Phi           
+ 14.37        7        1.099352E-02     Tilt: Theta         
+ 14.37      137        9.997200E-01     Refraction Index for filter 37
+ 14.37      402       -2.656409E+01     Outer Stop
+ 11.38        4       -2.200000E+02     Y Position          
+ 11.38        5        7.464500E+02     Z Position          
+ 11.38      138        1.514748E+00     Refraction Index for filter 38
+ 11.38      402       -2.671731E+01     Outer Stop
+ 12.38        4       -2.200000E+02     Y Position          
+ 12.38        5        7.494500E+02     Z Position          
+ 12.38      138        1.514748E+00     Refraction Index for filter 38
+ 12.38      402       -2.649885E+01     Outer Stop
+ 13.38        1        1.500000E-03     Curvature           
+ 13.38        4       -2.200000E+02     Y Position          
+ 13.38        5        7.524500E+02     Z Position          
+ 13.38      138        9.997200E-01     Refraction Index for filter 38
+ 13.38      402       -2.631591E+01     Outer Stop
+ 14.38        1        4.300000E-04     Curvature           
+ 14.38        4       -2.200000E+02     Y Position          
+ 14.38        5        7.599669E+02     Z Position          
+ 14.38        6       -1.570796E+00     Tilt: Phi           
+ 14.38        7        6.603204E-03     Tilt: Theta         
+ 14.38      138        9.997200E-01     Refraction Index for filter 38
+ 14.38      402       -2.616952E+01     Outer Stop
+ 11.39        3        9.100000E+01     X Position          
+ 11.39        4       -2.200000E+02     Y Position          
+ 11.39        5        7.464500E+02     Z Position          
+ 11.39      139        1.514748E+00     Refraction Index for filter 39
+ 11.39      402       -2.721956E+01     Outer Stop
+ 12.39        3        9.100000E+01     X Position          
+ 12.39        4       -2.200000E+02     Y Position          
+ 12.39        5        7.494500E+02     Z Position          
+ 12.39      139        1.514748E+00     Refraction Index for filter 39
+ 12.39      402       -2.696091E+01     Outer Stop
+ 13.39        1        1.500000E-03     Curvature           
+ 13.39        3        9.100000E+01     X Position          
+ 13.39        4       -2.200000E+02     Y Position          
+ 13.39        5        7.524500E+02     Z Position          
+ 13.39      139        9.997200E-01     Refraction Index for filter 39
+ 13.39      402       -2.674270E+01     Outer Stop
+ 14.39        1        4.300000E-04     Curvature           
+ 14.39        3        9.100000E+01     X Position          
+ 14.39        4       -2.200000E+02     Y Position          
+ 14.39        5        7.597817E+02     Z Position          
+ 14.39        6       -1.182685E+00     Tilt: Phi           
+ 14.39        7        1.117112E-02     Tilt: Theta         
+ 14.39      139        9.997200E-01     Refraction Index for filter 39
+ 14.39      402       -2.656480E+01     Outer Stop
+ 11.40        3        1.820000E+02     X Position          
+ 11.40        4       -2.200000E+02     Y Position          
+ 11.40        5        7.464500E+02     Z Position          
+ 11.40      140        1.514748E+00     Refraction Index for filter 40
+ 11.40      402       -2.754378E+01     Outer Stop
+ 12.40        3        1.820000E+02     X Position          
+ 12.40        4       -2.200000E+02     Y Position          
+ 12.40        5        7.494500E+02     Z Position          
+ 12.40      140        1.514748E+00     Refraction Index for filter 40
+ 12.40      402       -2.726442E+01     Outer Stop
+ 13.40        1        1.600000E-03     Curvature           
+ 13.40        3        1.820000E+02     X Position          
+ 13.40        4       -2.200000E+02     Y Position          
+ 13.40        5        7.524500E+02     Z Position          
+ 13.40      140        9.997200E-01     Refraction Index for filter 40
+ 13.40      402       -2.702752E+01     Outer Stop
+ 14.40        1        4.300000E-04     Curvature           
+ 14.40        3        1.820000E+02     X Position          
+ 14.40        4       -2.200000E+02     Y Position          
+ 14.40        5        7.588797E+02     Z Position          
+ 14.40        6       -8.853566E-01     Tilt: Phi           
+ 14.40        7        2.461890E-02     Tilt: Theta         
+ 14.40      140        9.997200E-01     Refraction Index for filter 40
+ 14.40      402       -2.683375E+01     Outer Stop
+ 11.41        3       -1.820000E+02     X Position          
+ 11.41        4        2.200000E+02     Y Position          
+ 11.41        5        7.464500E+02     Z Position          
+ 11.41      141        1.514748E+00     Refraction Index for filter 41
+ 11.41      402       -2.749158E+01     Outer Stop
+ 12.41        3       -1.820000E+02     X Position          
+ 12.41        4        2.200000E+02     Y Position          
+ 12.41        5        7.494500E+02     Z Position          
+ 12.41      141        1.514748E+00     Refraction Index for filter 41
+ 12.41      402       -2.722002E+01     Outer Stop
+ 13.41        1        1.600000E-03     Curvature           
+ 13.41        3       -1.820000E+02     X Position          
+ 13.41        4        2.200000E+02     Y Position          
+ 13.41        5        7.524500E+02     Z Position          
+ 13.41      141        9.997200E-01     Refraction Index for filter 41
+ 13.41      402       -2.698976E+01     Outer Stop
+ 14.41        1        4.300000E-04     Curvature           
+ 14.41        3       -1.820000E+02     X Position          
+ 14.41        4        2.200000E+02     Y Position          
+ 14.41        5        7.588754E+02     Z Position          
+ 14.41        6        2.256236E+00     Tilt: Phi           
+ 14.41        7        2.666439E-02     Tilt: Theta         
+ 14.41      141        9.997200E-01     Refraction Index for filter 41
+ 14.41      402       -2.680199E+01     Outer Stop
+ 11.42        3       -9.100000E+01     X Position          
+ 11.42        4        2.200000E+02     Y Position          
+ 11.42        5        7.464500E+02     Z Position          
+ 11.42      142        1.514748E+00     Refraction Index for filter 42
+ 11.42      402       -2.716770E+01     Outer Stop
+ 12.42        3       -9.100000E+01     X Position          
+ 12.42        4        2.200000E+02     Y Position          
+ 12.42        5        7.494500E+02     Z Position          
+ 12.42      142        1.514748E+00     Refraction Index for filter 42
+ 12.42      402       -2.691773E+01     Outer Stop
+ 13.42        1        1.500000E-03     Curvature           
+ 13.42        3       -9.100000E+01     X Position          
+ 13.42        4        2.200000E+02     Y Position          
+ 13.42        5        7.524500E+02     Z Position          
+ 13.42      142        9.997200E-01     Refraction Index for filter 42
+ 13.42      402       -2.670676E+01     Outer Stop
+ 14.42        1        4.300000E-04     Curvature           
+ 14.42        3       -9.100000E+01     X Position          
+ 14.42        4        2.200000E+02     Y Position          
+ 14.42        5        7.597803E+02     Z Position          
+ 14.42        6        1.958908E+00     Tilt: Phi           
+ 14.42        7        1.270976E-02     Tilt: Theta         
+ 14.42      142        9.997200E-01     Refraction Index for filter 42
+ 14.42      402       -2.653548E+01     Outer Stop
+ 11.43        4        2.200000E+02     Y Position          
+ 11.43        5        7.464500E+02     Z Position          
+ 11.43      143        1.514748E+00     Refraction Index for filter 43
+ 11.43      402       -2.666957E+01     Outer Stop
+ 12.43        4        2.200000E+02     Y Position          
+ 12.43        5        7.494500E+02     Z Position          
+ 12.43      143        1.514748E+00     Refraction Index for filter 43
+ 12.43      402       -2.646034E+01     Outer Stop
+ 13.43        1        1.500000E-03     Curvature           
+ 13.43        4        2.200000E+02     Y Position          
+ 13.43        5        7.524500E+02     Z Position          
+ 13.43      143        9.997200E-01     Refraction Index for filter 43
+ 13.43      402       -2.628495E+01     Outer Stop
+ 14.43        1        4.300000E-04     Curvature           
+ 14.43        4        2.200000E+02     Y Position          
+ 14.43        5        7.599666E+02     Z Position          
+ 14.43        6        1.570796E+00     Tilt: Phi           
+ 14.43        7        9.631677E-03     Tilt: Theta         
+ 14.43      143        9.997200E-01     Refraction Index for filter 43
+ 14.43      402       -2.614561E+01     Outer Stop
+ 11.44        3        9.100000E+01     X Position          
+ 11.44        4        2.200000E+02     Y Position          
+ 11.44        5        7.464500E+02     Z Position          
+ 11.44      144        1.514748E+00     Refraction Index for filter 44
+ 11.44      402       -2.714554E+01     Outer Stop
+ 12.44        3        9.100000E+01     X Position          
+ 12.44        4        2.200000E+02     Y Position          
+ 12.44        5        7.494500E+02     Z Position          
+ 12.44      144        1.514748E+00     Refraction Index for filter 44
+ 12.44      402       -2.689936E+01     Outer Stop
+ 13.44        1        1.500000E-03     Curvature           
+ 13.44        3        9.100000E+01     X Position          
+ 13.44        4        2.200000E+02     Y Position          
+ 13.44        5        7.524500E+02     Z Position          
+ 13.44      144        9.997200E-01     Refraction Index for filter 44
+ 13.44      402       -2.669161E+01     Outer Stop
+ 14.44        1        4.300000E-04     Curvature           
+ 14.44        3        9.100000E+01     X Position          
+ 14.44        4        2.200000E+02     Y Position          
+ 14.44        5        7.597807E+02     Z Position          
+ 14.44        6        1.182685E+00     Tilt: Phi           
+ 14.44        7        1.257794E-02     Tilt: Theta         
+ 14.44      144        9.997200E-01     Refraction Index for filter 44
+ 14.44      402       -2.652335E+01     Outer Stop
+ 11.45        3        1.820000E+02     X Position          
+ 11.45        4        2.200000E+02     Y Position          
+ 11.45        5        7.464500E+02     Z Position          
+ 11.45      145        1.514748E+00     Refraction Index for filter 45
+ 11.45      402       -2.746970E+01     Outer Stop
+ 12.45        3        1.820000E+02     X Position          
+ 12.45        4        2.200000E+02     Y Position          
+ 12.45        5        7.494500E+02     Z Position          
+ 12.45      145        1.514748E+00     Refraction Index for filter 45
+ 12.45      402       -2.720176E+01     Outer Stop
+ 13.45        1        1.600000E-03     Curvature           
+ 13.45        3        1.820000E+02     X Position          
+ 13.45        4        2.200000E+02     Y Position          
+ 13.45        5        7.524500E+02     Z Position          
+ 13.45      145        9.997200E-01     Refraction Index for filter 45
+ 13.45      402       -2.697463E+01     Outer Stop
+ 14.45        1        4.300000E-04     Curvature           
+ 14.45        3        1.820000E+02     X Position          
+ 14.45        4        2.200000E+02     Y Position          
+ 14.45        5        7.588760E+02     Z Position          
+ 14.45        6        8.853566E-01     Tilt: Phi           
+ 14.45        7        2.664056E-02     Tilt: Theta         
+ 14.45      145        9.997200E-01     Refraction Index for filter 45
+ 14.45      402       -2.678975E+01     Outer Stop
+ 11.46        3       -2.275000E+02     X Position          
+ 11.46        4       -2.045000E+02     Y Position          
+ 11.46        5        7.464500E+02     Z Position          
+ 11.46      146        1.514748E+00     Refraction Index for filter 46
+ 11.46      402       -2.764370E+01     Outer Stop
+ 12.46        3       -2.275000E+02     X Position          
+ 12.46        4       -2.045000E+02     Y Position          
+ 12.46        5        7.494500E+02     Z Position          
+ 12.46      146        1.514748E+00     Refraction Index for filter 46
+ 12.46      402       -2.736011E+01     Outer Stop
+ 13.46        1        1.800000E-03     Curvature           
+ 13.46        3       -2.275000E+02     X Position          
+ 13.46        4       -2.045000E+02     Y Position          
+ 13.46        5        7.524500E+02     Z Position          
+ 13.46      146        9.997200E-01     Refraction Index for filter 46
+ 13.46      402       -2.711943E+01     Outer Stop
+ 14.46        1        4.300000E-04     Curvature           
+ 14.46        3       -2.275000E+02     X Position          
+ 14.46        4       -2.045000E+02     Y Position          
+ 14.46        5        7.582415E+02     Z Position          
+ 14.46        6       -2.412858E+00     Tilt: Phi           
+ 14.46        7        3.846505E-02     Tilt: Theta         
+ 14.46      146        9.997200E-01     Refraction Index for filter 46
+ 14.46      402       -2.692276E+01     Outer Stop
+ 11.47        3       -1.365000E+02     X Position          
+ 11.47        4       -2.045000E+02     Y Position          
+ 11.47        5        7.464500E+02     Z Position          
+ 11.47      147        1.514748E+00     Refraction Index for filter 47
+ 11.47      402       -2.744697E+01     Outer Stop
+ 12.47        3       -1.365000E+02     X Position          
+ 12.47        4       -2.045000E+02     Y Position          
+ 12.47        5        7.494500E+02     Z Position          
+ 12.47      147        1.514748E+00     Refraction Index for filter 47
+ 12.47      402       -2.717115E+01     Outer Stop
+ 13.47        1        1.500000E-03     Curvature           
+ 13.47        3       -1.365000E+02     X Position          
+ 13.47        4       -2.045000E+02     Y Position          
+ 13.47        5        7.524500E+02     Z Position          
+ 13.47      147        9.997200E-01     Refraction Index for filter 47
+ 13.47      402       -2.693771E+01     Outer Stop
+ 14.47        1        4.300000E-04     Curvature           
+ 14.47        3       -1.365000E+02     X Position          
+ 14.47        4       -2.045000E+02     Y Position          
+ 14.47        5        7.596736E+02     Z Position          
+ 14.47        6       -2.162594E+00     Tilt: Phi           
+ 14.47        7        1.373511E-02     Tilt: Theta         
+ 14.47      147        9.997200E-01     Refraction Index for filter 47
+ 14.47      402       -2.674658E+01     Outer Stop
+ 11.48        3       -4.550000E+01     X Position          
+ 11.48        4       -2.045000E+02     Y Position          
+ 11.48        5        7.464500E+02     Z Position          
+ 11.48      148        1.514748E+00     Refraction Index for filter 48
+ 11.48      402       -2.697211E+01     Outer Stop
+ 12.48        3       -4.550000E+01     X Position          
+ 12.48        4       -2.045000E+02     Y Position          
+ 12.48        5        7.494500E+02     Z Position          
+ 12.48      148        1.514748E+00     Refraction Index for filter 48
+ 12.48      402       -2.673258E+01     Outer Stop
+ 13.48        1        1.500000E-03     Curvature           
+ 13.48        3       -4.550000E+01     X Position          
+ 13.48        4       -2.045000E+02     Y Position          
+ 13.48        5        7.524500E+02     Z Position          
+ 13.48      148        9.997200E-01     Refraction Index for filter 48
+ 13.48      402       -2.653117E+01     Outer Stop
+ 14.48        1        4.300000E-04     Curvature           
+ 14.48        3       -4.550000E+01     X Position          
+ 14.48        4       -2.045000E+02     Y Position          
+ 14.48        5        7.600435E+02     Z Position          
+ 14.48        6       -1.791210E+00     Tilt: Phi           
+ 14.48        7        8.287958E-03     Tilt: Theta         
+ 14.48      148        9.997200E-01     Refraction Index for filter 48
+ 14.48      402       -2.636806E+01     Outer Stop
+ 11.49        3        4.550000E+01     X Position          
+ 11.49        4       -2.045000E+02     Y Position          
+ 11.49        5        7.464500E+02     Z Position          
+ 11.49      149        1.514748E+00     Refraction Index for filter 49
+ 11.49      402       -2.697383E+01     Outer Stop
+ 12.49        3        4.550000E+01     X Position          
+ 12.49        4       -2.045000E+02     Y Position          
+ 12.49        5        7.494500E+02     Z Position          
+ 12.49      149        1.514748E+00     Refraction Index for filter 49
+ 12.49      402       -2.673391E+01     Outer Stop
+ 13.49        1        1.500000E-03     Curvature           
+ 13.49        3        4.550000E+01     X Position          
+ 13.49        4       -2.045000E+02     Y Position          
+ 13.49        5        7.524500E+02     Z Position          
+ 13.49      149        9.997200E-01     Refraction Index for filter 49
+ 13.49      402       -2.653223E+01     Outer Stop
+ 14.49        1        4.300000E-04     Curvature           
+ 14.49        3        4.550000E+01     X Position          
+ 14.49        4       -2.045000E+02     Y Position          
+ 14.49        5        7.600430E+02     Z Position          
+ 14.49        6       -1.350382E+00     Tilt: Phi           
+ 14.49        7        7.999824E-03     Tilt: Theta         
+ 14.49      149        9.997200E-01     Refraction Index for filter 49
+ 14.49      402       -2.636892E+01     Outer Stop
+ 11.50        3        1.365000E+02     X Position          
+ 11.50        4       -2.045000E+02     Y Position          
+ 11.50        5        7.464500E+02     Z Position          
+ 11.50      150        1.514748E+00     Refraction Index for filter 50
+ 11.50      402       -2.744898E+01     Outer Stop
+ 12.50        3        1.365000E+02     X Position          
+ 12.50        4       -2.045000E+02     Y Position          
+ 12.50        5        7.494500E+02     Z Position          
+ 12.50      150        1.514748E+00     Refraction Index for filter 50
+ 12.50      402       -2.717270E+01     Outer Stop
+ 13.50        1        1.500000E-03     Curvature           
+ 13.50        3        1.365000E+02     X Position          
+ 13.50        4       -2.045000E+02     Y Position          
+ 13.50        5        7.524500E+02     Z Position          
+ 13.50      150        9.997200E-01     Refraction Index for filter 50
+ 13.50      402       -2.693881E+01     Outer Stop
+ 14.50        1        4.300000E-04     Curvature           
+ 14.50        3        1.365000E+02     X Position          
+ 14.50        4       -2.045000E+02     Y Position          
+ 14.50        5        7.596734E+02     Z Position          
+ 14.50        6       -9.789988E-01     Tilt: Phi           
+ 14.50        7        1.364564E-02     Tilt: Theta         
+ 14.50      150        9.997200E-01     Refraction Index for filter 50
+ 14.50      402       -2.674722E+01     Outer Stop
+ 11.51        3        2.275000E+02     X Position          
+ 11.51        4       -2.045000E+02     Y Position          
+ 11.51        5        7.464500E+02     Z Position          
+ 11.51      151        1.514748E+00     Refraction Index for filter 51
+ 11.51      402       -2.764568E+01     Outer Stop
+ 12.51        3        2.275000E+02     X Position          
+ 12.51        4       -2.045000E+02     Y Position          
+ 12.51        5        7.494500E+02     Z Position          
+ 12.51      151        1.514748E+00     Refraction Index for filter 51
+ 12.51      402       -2.736161E+01     Outer Stop
+ 13.51        1        1.800000E-03     Curvature           
+ 13.51        3        2.275000E+02     X Position          
+ 13.51        4       -2.045000E+02     Y Position          
+ 13.51        5        7.524500E+02     Z Position          
+ 13.51      151        9.997200E-01     Refraction Index for filter 51
+ 13.51      402       -2.712032E+01     Outer Stop
+ 14.51        1        4.300000E-04     Curvature           
+ 14.51        3        2.275000E+02     X Position          
+ 14.51        4       -2.045000E+02     Y Position          
+ 14.51        5        7.582411E+02     Z Position          
+ 14.51        6       -7.287349E-01     Tilt: Phi           
+ 14.51        7        3.769422E-02     Tilt: Theta         
+ 14.51      151        9.997200E-01     Refraction Index for filter 51
+ 14.51      402       -2.692306E+01     Outer Stop
+ 11.52        3       -2.275000E+02     X Position          
+ 11.52        4        2.045000E+02     Y Position          
+ 11.52        5        7.464500E+02     Z Position          
+ 11.52      152        1.514748E+00     Refraction Index for filter 52
+ 11.52      402       -2.759581E+01     Outer Stop
+ 12.52        3       -2.275000E+02     X Position          
+ 12.52        4        2.045000E+02     Y Position          
+ 12.52        5        7.494500E+02     Z Position          
+ 12.52      152        1.514748E+00     Refraction Index for filter 52
+ 12.52      402       -2.731895E+01     Outer Stop
+ 13.52        1        1.800000E-03     Curvature           
+ 13.52        3       -2.275000E+02     X Position          
+ 13.52        4        2.045000E+02     Y Position          
+ 13.52        5        7.524500E+02     Z Position          
+ 13.52      152        9.997200E-01     Refraction Index for filter 52
+ 13.52      402       -2.708384E+01     Outer Stop
+ 14.52        1        4.300000E-04     Curvature           
+ 14.52        3       -2.275000E+02     X Position          
+ 14.52        4        2.045000E+02     Y Position          
+ 14.52        5        7.582445E+02     Z Position          
+ 14.52        6        2.412858E+00     Tilt: Phi           
+ 14.52        7        3.705338E-02     Tilt: Theta         
+ 14.52      152        9.997200E-01     Refraction Index for filter 52
+ 14.52      402       -2.689217E+01     Outer Stop
+ 11.53        3       -1.365000E+02     X Position          
+ 11.53        4        2.045000E+02     Y Position          
+ 11.53        5        7.464500E+02     Z Position          
+ 11.53      153        1.514748E+00     Refraction Index for filter 53
+ 11.53      402       -2.739654E+01     Outer Stop
+ 12.53        3       -1.365000E+02     X Position          
+ 12.53        4        2.045000E+02     Y Position          
+ 12.53        5        7.494500E+02     Z Position          
+ 12.53      153        1.514748E+00     Refraction Index for filter 53
+ 12.53      402       -2.712840E+01     Outer Stop
+ 13.53        1        1.500000E-03     Curvature           
+ 13.53        3       -1.365000E+02     X Position          
+ 13.53        4        2.045000E+02     Y Position          
+ 13.53        5        7.524500E+02     Z Position          
+ 13.53      153        9.997200E-01     Refraction Index for filter 53
+ 13.53      402       -2.690137E+01     Outer Stop
+ 14.53        1        4.300000E-04     Curvature           
+ 14.53        3       -1.365000E+02     X Position          
+ 14.53        4        2.045000E+02     Y Position          
+ 14.53        5        7.596747E+02     Z Position          
+ 14.53        6        2.162594E+00     Tilt: Phi           
+ 14.53        7        1.284572E-02     Tilt: Theta         
+ 14.53      153        9.997200E-01     Refraction Index for filter 53
+ 14.53      402       -2.671601E+01     Outer Stop
+ 11.54        3       -4.550000E+01     X Position          
+ 11.54        4        2.045000E+02     Y Position          
+ 11.54        5        7.464500E+02     Z Position          
+ 11.54      154        1.514748E+00     Refraction Index for filter 54
+ 11.54      402       -2.692432E+01     Outer Stop
+ 12.54        3       -4.550000E+01     X Position          
+ 12.54        4        2.045000E+02     Y Position          
+ 12.54        5        7.494500E+02     Z Position          
+ 12.54      154        1.514748E+00     Refraction Index for filter 54
+ 12.54      402       -2.669326E+01     Outer Stop
+ 13.54        1        1.500000E-03     Curvature           
+ 13.54        3       -4.550000E+01     X Position          
+ 13.54        4        2.045000E+02     Y Position          
+ 13.54        5        7.524500E+02     Z Position          
+ 13.54      154        9.997200E-01     Refraction Index for filter 54
+ 13.54      402       -2.649891E+01     Outer Stop
+ 14.54        1        4.300000E-04     Curvature           
+ 14.54        3       -4.550000E+01     X Position          
+ 14.54        4        2.045000E+02     Y Position          
+ 14.54        5        7.600434E+02     Z Position          
+ 14.54        6        1.791210E+00     Tilt: Phi           
+ 14.54        7        7.258533E-03     Tilt: Theta         
+ 14.54      154        9.997200E-01     Refraction Index for filter 54
+ 14.54      402       -2.634235E+01     Outer Stop
+ 11.55        3        4.550000E+01     X Position          
+ 11.55        4        2.045000E+02     Y Position          
+ 11.55        5        7.464500E+02     Z Position          
+ 11.55      155        1.514748E+00     Refraction Index for filter 55
+ 11.55      402       -2.690238E+01     Outer Stop
+ 12.55        3        4.550000E+01     X Position          
+ 12.55        4        2.045000E+02     Y Position          
+ 12.55        5        7.494500E+02     Z Position          
+ 12.55      155        1.514748E+00     Refraction Index for filter 55
+ 12.55      402       -2.667513E+01     Outer Stop
+ 13.55        1        1.500000E-03     Curvature           
+ 13.55        3        4.550000E+01     X Position          
+ 13.55        4        2.045000E+02     Y Position          
+ 13.55        5        7.524500E+02     Z Position          
+ 13.55      155        9.997200E-01     Refraction Index for filter 55
+ 13.55      402       -2.648401E+01     Outer Stop
+ 14.55        1        4.300000E-04     Curvature           
+ 14.55        3        4.550000E+01     X Position          
+ 14.55        4        2.045000E+02     Y Position          
+ 14.55        5        7.600434E+02     Z Position          
+ 14.55        6        1.350382E+00     Tilt: Phi           
+ 14.55        7        7.225974E-03     Tilt: Theta         
+ 14.55      155        9.997200E-01     Refraction Index for filter 55
+ 14.55      402       -2.633049E+01     Outer Stop
+ 11.56        3        1.365000E+02     X Position          
+ 11.56        4        2.045000E+02     Y Position          
+ 11.56        5        7.464500E+02     Z Position          
+ 11.56      156        1.514748E+00     Refraction Index for filter 56
+ 11.56      402       -2.737403E+01     Outer Stop
+ 12.56        3        1.365000E+02     X Position          
+ 12.56        4        2.045000E+02     Y Position          
+ 12.56        5        7.494500E+02     Z Position          
+ 12.56      156        1.514748E+00     Refraction Index for filter 56
+ 12.56      402       -2.710958E+01     Outer Stop
+ 13.56        1        1.500000E-03     Curvature           
+ 13.56        3        1.365000E+02     X Position          
+ 13.56        4        2.045000E+02     Y Position          
+ 13.56        5        7.524500E+02     Z Position          
+ 13.56      156        9.997200E-01     Refraction Index for filter 56
+ 13.56      402       -2.688571E+01     Outer Stop
+ 14.56        1        4.300000E-04     Curvature           
+ 14.56        3        1.365000E+02     X Position          
+ 14.56        4        2.045000E+02     Y Position          
+ 14.56        5        7.596755E+02     Z Position          
+ 14.56        6        9.789988E-01     Tilt: Phi           
+ 14.56        7        1.274728E-02     Tilt: Theta         
+ 14.56      156        9.997200E-01     Refraction Index for filter 56
+ 14.56      402       -2.670328E+01     Outer Stop
+ 11.57        3        2.275000E+02     X Position          
+ 11.57        4        2.045000E+02     Y Position          
+ 11.57        5        7.464500E+02     Z Position          
+ 11.57      157        1.514748E+00     Refraction Index for filter 57
+ 11.57      402       -2.757435E+01     Outer Stop
+ 12.57        3        2.275000E+02     X Position          
+ 12.57        4        2.045000E+02     Y Position          
+ 12.57        5        7.494500E+02     Z Position          
+ 12.57      157        1.514748E+00     Refraction Index for filter 57
+ 12.57      402       -2.730101E+01     Outer Stop
+ 13.57        1        1.800000E-03     Curvature           
+ 13.57        3        2.275000E+02     X Position          
+ 13.57        4        2.045000E+02     Y Position          
+ 13.57        5        7.524500E+02     Z Position          
+ 13.57      157        9.997200E-01     Refraction Index for filter 57
+ 13.57      402       -2.706895E+01     Outer Stop
+ 14.57        1        4.300000E-04     Curvature           
+ 14.57        3        2.275000E+02     X Position          
+ 14.57        4        2.045000E+02     Y Position          
+ 14.57        5        7.582463E+02     Z Position          
+ 14.57        6        7.287349E-01     Tilt: Phi           
+ 14.57        7        3.678955E-02     Tilt: Theta         
+ 14.57      157        9.997200E-01     Refraction Index for filter 57
+ 14.57      402       -2.688010E+01     Outer Stop

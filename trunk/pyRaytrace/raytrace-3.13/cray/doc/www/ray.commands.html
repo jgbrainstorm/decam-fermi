@@ -1,0 +1,1109 @@
+<html><head><title>ray.commands</title></head>
+<body><h1 align=center>RAY COMMANDS</h1>
+<p>
+<b>verbose</b> [level]</br>
+<pre>
+Set or show the level of verbosity of the program.  The default level is 1.
+If "level" is specified, the level is changed to that value; otherwise the
+current level is displayed.
+For some commands (particularly in the least squares and tolerancing section),
+the verbosity is used to control whether certain information, which can
+be tediously repetitious, is printed out or suppressed.
+</pre>
+<p>
+<b>opticNew</b> </br>
+<pre>
+Create a new OPTIC structure and allocate all storage for up to 500 surfaces
+</pre>
+<p>
+<b>opticDel</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Delete an OPTIC structure and associated storage
+</pre>
+<p>
+<b>opticInsert</b> &nbsp;&lt;OPTIC&gt;&nbsp; fsurf</br>
+<pre>
+Insert a new surface into the OPTIC structure after surface index "fsurf".
+"fsurf" can be 0, in which case the new surface becomes the first one of
+the design.
+</pre>
+<p>
+<b>opticRemove</b> &nbsp;&lt;OPTIC&gt;&nbsp; fsurf</br>
+<pre>
+Remove surface given by index "fsurf"
+</pre>
+<p>
+<b>opticRead</b> filename</br>
+<pre>
+Read an input file and create a new &nbsp;&lt;OPTIC&gt;&nbsp; structure.
+</pre>
+<p>
+<b>setDesign</b> &nbsp;&lt;OPTIC&gt;&nbsp; name</br>
+<pre>
+Set the name of design to the specified string.  This name is transient (i.e.,
+it is not written out with the design when writing to a file.)  When a design
+is read in using either opticRead or lensRead, the name is derived from the
+file name.
+</pre>
+<p>
+<b>showDesign</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Show the name of the design specified by the optic handle.
+</pre>
+<p>
+<b>writeout</b> &nbsp;&lt;OPTIC&gt;&nbsp; filename comment</br>
+<pre>
+Write out results to a file
+</pre>
+<p>
+<b>opticCopy</b> &nbsp;&lt;OPTIC1&gt;&nbsp; &nbsp;&lt;OPTIC2&gt;&nbsp;</br>
+<pre>
+Copy optics structure from 1 to 2
+</pre>
+<p>
+<b>opticzero</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Zero out optics structure
+</pre>
+<p>
+<b>opticinc</b> &nbsp;&lt;OPTIC&gt;&nbsp; arcsecmax</br>
+<pre>
+Compute a priori increments for lstsqs.  Recommended after running
+"stopcomp" if least squares is being done.  "arcsecmax" is the motion of
+a ray at the focal plane due to an increment in a parameter (used for
+most parameters).  It should be somewhat smaller than a typical spot size
+(but not too small or round-off error dominates).
+</pre>
+<p>
+<b>colorcount</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Count number of colors in an optic structure.
+Recommended after all parameters for an optical design have been inserted
+or after a new wavelength has been added.
+</pre>
+<p>
+<b>rayPattern</b> &nbsp;&lt;OPTIC&gt;&nbsp; nstep ntype</br>
+<pre>
+Define the layout of rays on the entrace aperture.  If ntype = 1, the layout
+is a set of circular rings.  If ntype = 2, the layout is a square grid.
+nstep is the number of steps from the center to the edge or side of the
+pattern.
+</pre>
+<p>
+<b>rayPatternPlot</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Make a plot of the ray pattern.
+</pre>
+<p>
+<b>glass</b> name wave</br>
+<pre>
+For the specified glass name, list the refractive index at the specified
+wavelength (given in microns).  Interpolation is done in a table.  If the
+glass does not exist, the "disp" function is called.  I'm not sure yet which
+is better.
+</pre>
+<p>
+<b>transmit</b> name wave</br>
+<pre>
+For the specified glass name, list the transmissivity (for 25 mm thickness)
+at the specified wavelength (given in microns).
+</pre>
+<p>
+<b>disp</b> name wave</br>
+<pre>
+Same as "glass" command but computes from dispersion equation rather than
+linear interpolation in a table.
+</pre>
+<p>
+<b>glassList</b> name</br>
+<pre>
+List the refractive index for a glass at all the standard wavelengths.
+Both "glass" and "disp" versions are called.
+</pre>
+<p>
+<b>abbeList</b> glass</br>
+<pre>
+List abbe numbers of the specified glass.
+</pre>
+<p>
+<b>setGlass</b> &nbsp;&lt;OPTIC&gt;&nbsp; surf glass</br>
+<pre>
+Attach the name of "glass" to the specified surface name.
+This only sets the name;
+normally indices are set individually for each color.
+Use surfGlassSwitch to change the refractive indices once an initial assignment
+has been made.
+</pre>
+<p>
+<b>showGlass</b> &nbsp;&lt;OPTIC&gt;&nbsp; surf</br>
+<pre>
+Show the glass type of the specified surface name.  
+</pre>
+<p>
+<b>surfGlassSwitch</b> &nbsp;&lt;OPTIC&gt;&nbsp; surf glass</br>
+<pre>
+Change the refractive indices for the specified surface to those of the
+specified glass.  The existing indices are used to determine which ones
+to change and which sign to use.
+</pre>
+<p>
+<b>waveAdd</b> &nbsp;&lt;OPTIC&gt;&nbsp; wave incolor</br>
+<pre>
+Add another filter to an existing design at the specified wavelength.
+Use "incolor" as a template to determine which surfaces are to be used for this
+filter.
+</pre>
+<p>
+<b>waveSwitch</b> &nbsp;&lt;OPTIC&gt;&nbsp; icolor wave</br>
+<pre>
+Set the wavelength of the specified color to a new wavelength, and recompute
+the refractive indices.  The glass types of each surface must be
+specified, otherwise the existing indices will be retained.
+</pre>
+<p>
+<b>lstsq</b> &nbsp;&lt;OPTIC&gt;&nbsp; [lscale]</br>
+<pre>
+Runs the optimizer to do a least-squares fit.  If lscale is specified, it
+overrides the value of lscale inputting using the "addSpot" command.
+If lscale = 0, telescope scale factor and distortions are not minimized;
+if lscale = 1, scale and distortion are minimized based on image centroids.
+If lscale = 2, scale and distortion are minimized based
+on image chief rays.  Either way, image sizes are minimized as well.
+
+Before running lstsq, you must have initialized the OPTIC structure, run
+"colorcount", "stopcomp", and "opticinc".  You also must have run "setflag"
+(or other related command) on all parameters to be adjusted and for
+all colors to be used in the fit.
+
+The optimizer works in an iterative mode.  The user is first prompted for
+a range of spots in the X and Y direction; enter 2 numbers at each prompt.
+For example, "-1 1" will cause the program to use a set of 3 spots spaced
+in that particular direction, one at the left edge of the detector, one in
+the center, and one at the right edge.  A rectangular grid of spots is
+used.  It is valid to enter "0 0", in which case only a single spot at
+the center is used, or "0 n" in which case n+1 spots are generated beginning
+at the center.  Thus, if the following is entered:
+	"0 2"
+	"-1 1"
+then the following grid is used:
+
+        +---------------------------------+
+	|                *       *       *|
+	|                                 |
+	|                                 |
+	|                                 |  ^
+	|                                 |  |
+	|                                 |  |
+	|                *       *       *|  Y
+	|                                 |
+	|                                 |
+	|                                 |
+	|                                 |
+	|                                 |
+	|                *       *       *|
+        +---------------------------------+
+
+                        X--&gt;&nbsp;
+
+In some situations it is useful to lay out a grid of spots but clip those
+outside a circular boundary.  In this case one can run the command
+"spotQuery clip" before the "lstsq" command, which will layout spots as above
+but clip those in the corners.  When running "lstsq", entering &nbsp;&lt;CR&gt;&nbsp;
+when prompted for XMIN, XMAX will cause the previous layout of spots to be
+used from an internal cache.
+
+In other situations where a custom array of spot positions is needed, they
+can be entered using the "clearSpot" and "addSpot" commands (described below)
+to store positions in a cache.  Again, when running the "lstsq" command,
+entering &nbsp;&lt;CR&gt;&nbsp; when prompted for XMIN, XMAX will cause the spot positions in
+the cache to be used.
+
+The iterator makes multiple passes.  The first pass runs automatically and
+adjusts spot centers.  After each pass, the user is prompted
+to continue; enter "y" or "n".  If "y" is entered, the user is prompted
+for the number of iterations (and an optional maximum fractional increment)
+to run.  If the number of iterations omitted, it defaults to 1.  If the
+maximum fractional increment is omitted, it also defaults to 1.
+The maximum fraction increment might need to be set less than 1 in some
+cases where large parameter adjustments lead to unphysical designs.
+Such situations result in the least squares bailing with some math error
+message.
+
+NOTE:  After running "lstsq", all flags are reset to 0.  They can be restored
+by using the "resetFlags" command.
+</pre>
+<p>
+<b>fastLstsqInit</b> </br>
+<pre>
+Initialize some internal flags and settings for "fastLstsq".  Must have
+set all flags first.  Must also set spots before running "fastLstsq".
+&nbsp;&lt;p&gt;&nbsp;
+Normally, "fastLstsq" assumes that one has run a regular round of "lstsq"
+first in order to set quantities such as number of iterations.  This
+command sets those quantities to reasonable defaults so "fastLstsq" can
+be run immediately.
+</pre>
+<p>
+<b>fastLstsq</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Run automated least squares computation without prompting for any input.
+In general, it is necessary to have run "lstsq" at least once already
+in order to populated internal arrays with various flags and iteration
+counters.  However, if one sets the flags and spots and runs "fastLstsqInit",
+one can run "fastLstsq" with standard defaults (e.g., 1 iteration, fractinc
+of 1).
+</pre>
+<p>
+<b>plstsq</b> &nbsp;&lt;OPTIC&gt;&nbsp; [lscale]</br>
+<pre>
+Same as "lstsq" but runs in parallel processing mode (if FORK variable is set).
+</pre>
+<p>
+<b>pfastLstsq</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Same as "fastLstsq" but runs in parallel processing mode (if FORK variable
+is set).
+</pre>
+<p>
+<b>spotQuery</b> [clip|yes]</br>
+<pre>
+Query for spot layout pattern.  If "clip" or "yes" is specified, spots
+outside a bounding circle are excluded.
+</pre>
+<p>
+<b>clearSpot</b> </br>
+<pre>
+Clear out spot cache.  This is used if spot positions are input by hand.
+</pre>
+<p>
+<b>addSpot</b> xfract yfract [weight] [lscale]</br>
+<pre>
+Add spot position at the specified (fractional) location in the focal plane.
+If weight is specified, it is used as the weighting factor in the least
+squares fit.  The default is 1.  If lscale is 1, the position of the spot
+in the focal plane is included in the merit function using the appropriate
+mapping function.
+</pre>
+<p>
+<b>plstsq</b> &nbsp;&lt;OPTIC&gt;&nbsp; [lscale]</br>
+<pre>
+Perform a least-squares fit as with the "lstsq" command, but use
+parallel processing if available.  The global variable FORK should be set
+to the number of processors available on the system.  Parallelization is
+performed over the spot positions.  Intermediate files will be created in
+the current directory.  If FORK is set to more processors than exist, no
+harm is done.  The "lscale" parameter is used in the same way as for the
+"lstsq" command.
+</pre>
+<p>
+<b>rtrace</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm icolor</br>
+<pre>
+Create spot diagram.  xmm and ymm are in mm.  Parameters such as centroid,
+fwhm, and incidence angle are computed.  Use "spotplot" to plot out.
+</pre>
+<p>
+<b>ray</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm xfract yfract icolor stopcheck</br>
+<pre>
+Run a single ray through the system. "xmm" and "ymm" are in mm and are the
+target position in the focal plane of filter "icolor".  "xfract" and
+"yfract" are the dimensionless coordinates of the impact point of the ray
+on the entrance pupil.  (1 = edge of aperture).  If stopcheck = 1,
+stops are checked to see if the ray is blocked.  Use "rayList" to print
+out the ray intercepts.
+</pre>
+<p>
+<b>rayCheck</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Print out intercepts for last ray run through the design.
+</pre>
+<p>
+<b>rayList</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Print out ray intercepts for the last ray run through the system.
+</pre>
+<p>
+<b>raySum</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm filters [stopcheck]</br>
+<pre>
+Compute D80, the diameter enclosing 80% of the light (in mm and arcsec) for
+the specified design at the specified field position and summed over all
+the specified filters.  If "stopcheck" is 1 (default) obey all stops.
+The value of D80 in arcsec is the actual value returned by this function;
+a formatted print is done if VERBOSE = 1.
+</pre>
+<p>
+<b>whisker</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm filters [stopcheck]</br>
+<pre>
+Compute residual ellipticity for a spot.  The maximully symmetric PSF is
+subtracted off, and the amplitude and orientation of the remaining linear
+component is computed.  This function is used for analyzing ellipticities in
+PSFs for weak lensing calculations.  Allow multiple filters so one can
+compute effects of lateral chromatic.  This code works much like raySum.
+The returned items are the x and y Cartesian components of the whisker vector
+and the total amplitude and position angle.
+</pre>
+<p>
+<b>flagzero</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Zero out optics structure flags only
+</pre>
+<p>
+<b>stopcomp</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Compute stops at each surface.
+Run this after running "colorcount".  The optical design must be good enough
+that chief rays from any point in any focal plane can successfully pass
+through  the system.
+</pre>
+<p>
+<b>opticPlot</b> &nbsp;&lt;OPTIC&gt;&nbsp; nmin nmax filter [flag]</br>
+<pre>
+Plot side view of optical surfaces relevant to the specified filter;
+must specify min and max surface names.  If flag is specified, sample rays
+for two spot positions (center and edge of
+fields) are NOT plotted; otherwise they are.
+</pre>
+<p>
+<b>chiefPlot</b> &nbsp;&lt;OPTIC&gt;&nbsp; filter</br>
+<pre>
+Must run "opticPlot" first.  Plot the chief rays for set of spot positions
+across the field of view for the specified filter, which should be the
+same as used for "opticPlot".  This command is useful when used in
+conjunction with the "ghostDup" command to identify surfaces that could
+produce prominent pupil ghosts.
+</pre>
+<p>
+<b>setparam</b> &nbsp;&lt;OPTIC&gt;&nbsp; surface index param</br>
+<pre>
+Set the parameter value specified by an index in a surface.  This low-level
+command should not be used; instead, use the following easier commands.
+</pre>
+<p>
+<b>setFocal</b> &nbsp;&lt;OPTIC&gt;&nbsp; color param value</br>
+<pre>
+Set a focal plane parameter.  "color" is the index of a particular color.
+"param" can be one of the following:
+	"xoff", "yoff"		Position on the sky (in arcmin) that maps to
+				the focal plane center for this color.
+				Useful for mosaiced focal planes where each
+				detector has a different offset
+	"xrad", "yrad"		Radius of focal plane in mm.  If both are
+				negative, focal plane is rectangular rather
+				than circular; "xrad" is half-width of the
+				x direction, etc.
+	"scale"			Arcsec/mm
+	"wave"			Wavelength in microns
+	"dist"			Distortion coeff
+	"rot"			Position angle on sky of x-axis of focal plane.
+	"weight"		Weighting to use in least squares fit.
+	"map"			Mapping mode from sky to focal plane.  0 =
+				normal, 1 = drift-scan
+	"fl"			Paraxial focal length (read-only)
+	"exit"			Paraxial Z position of exit pupil (read-only)
+</pre>
+<p>
+<b>showFocal</b> &nbsp;&lt;OPTIC&gt;&nbsp; color param</br>
+<pre>
+Display the value of a focal plane parameter.  "color" and "param" are the
+same as for "setFocal".
+</pre>
+<p>
+<b>showSurf</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfid param</br>
+<pre>
+Display the value of an optical surface parameter.  "surfid" is the name of
+the surface, param is the ascii version of the parameter type (see setSurf)
+</pre>
+<p>
+<b>showSurfInc</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfid param</br>
+<pre>
+Display the increment value of an optical surface parameter.  "surfid" is the
+name of the surface.  The increment is used for least squares and for
+tolerancing.
+</pre>
+<p>
+<b>showWave</b> &nbsp;&lt;OPTIC&gt;&nbsp; color</br>
+<pre>
+Show wavelength for the specified color.  Shortcut for showFocal ... wave.
+</pre>
+<p>
+<b>showScale</b> &nbsp;&lt;OPTIC&gt;&nbsp; color</br>
+<pre>
+Show scale for the specified color.  Shortcut for showFocal ... scale.
+</pre>
+<p>
+<b>setSurf</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfid param value</br>
+<pre>
+Set a surface parameter for the specified surface.  Parameters are:
+	"curv"		Curvature
+	"ccon"		Conic constant
+	"x" or "xoff"	X position of surface
+	"y" or "yoff"	Y position of surface
+	"z" or "zoff"	Z position of surface
+	"phi"		Position angle of line of nodes for tilting
+	"theta"		Tilt about line of nodes
+	"a2"		Polynomial coefficient for 2nd order term.
+	"a4"		Ditto for 4th order
+	"a6"		Ditto for 6th order
+	"a8"		Ditto for 8th order
+	"a10"		Ditto for 10th order
+	"astig"		Astigmatism (acts like a2)
+	"aphi"		Orientation of +astigmatism (relative to lab frame)
+</pre>
+<p>
+<b>setLensSurf</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfid1 surfid2 param value</br>
+<pre>
+Similar "setSurf" but operates on two surfaces (of a lens) at a time.
+This command is most useful for the position paramters (x, y, z, phi,
+and theta) since it moves both surfaces as a single unit.  For tilts
+(theta), the tilt is performed about the mid-point connecting the vertices,
+and x,y, and z  offsets are adjusted accordingly as well.  If the vertices
+have additional offsets relative to one another, this command is not
+guaranteed to preserve those offsets, so they should be applied after this
+command using the "setSurf" command directly, remembering that all positions
+are treated as absolute coordinates, not lens-o-centric.
+</pre>
+<p>
+<b>lensInsert</b> &nbsp;&lt;OPTIC&gt;&nbsp; fsurf zpos zthick glass</br>
+<pre>
+Insert a lens into the specific optical design after surface "fsurf".
+"zpos" is the absolute z position of the first lens surface.  "zthick" is
+the lens thickness.  "glass" is the glass type of the lens.  The trailing
+lens surface has the same refractive index as "fsurf".  Signs of refractive
+indices are propagated.  All colors with non-zero refractive indices in "fsurf"
+are filled in with appropriate refractive indices for the lens.
+</pre>
+<p>
+<b>setSurfInc</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfid param value</br>
+<pre>
+Set the increment of a surface parameter to the specified value.  See
+"setSurf" for meaning of parameters.  The increment is used for least squares
+and for tolerancing.
+</pre>
+<p>
+<b>setflag</b> &nbsp;&lt;OPTIC&gt;&nbsp; surface index param</br>
+<pre>
+Set a flag for a parameter specified by an index in a surface.  This is a
+low-level command; it is easier to run one of the following.
+</pre>
+<p>
+<b>setFocalFlag</b> &nbsp;&lt;OPTIC&gt;&nbsp; color param value</br>
+<pre>
+Set a focal plane parameter flag for least squares. "color" is the index of a
+particular color.  "param" can be one of the following:
+	"xoff", "yoff"		Position on the sky (in arcmin) that maps to
+				the focal plane center for this color.
+				Useful for mosaiced focal planes where each
+				detector has a different offset
+	"xrad", "yrad"		Radius of focal plane in mm.  If both are
+				negative, focal plane is rectangular rather
+				than circular; "xrad" is half-width of the
+				x direction, etc.
+	"scale"			Arcsec/mm
+	"wave"			Wavelength in microns
+	"dist"			Distortion coeff
+	"rot"			Position angle on sky of x-axis of focal plane.
+	"fl"			Paraxial focal length
+	"exit"			Paraxial Z position of exit pupil
+The value is either "1" for simple adjustment or a number &gt;&nbsp;1 for linked
+parameter adjustment.  See the section on raytrace operations to learn more
+about how to link parameters (called "pickups" in other raytrace programs).
+For "fl" and "exit" (which are derived parameters), one can only specify a
+value of -1, which signifies that this parameter should be held constant
+via Lagrange multipliers in the least squares adjustment.
+</pre>
+<p>
+<b>linkFocalFlag</b> &nbsp;&lt;OPTIC&gt;&nbsp; colors index param value</br>
+<pre>
+Same as setFocal Flag but used to link multiple colors in the least squares
+fit.  "value" should be a number unique to this combination that is different
+from 1.
+</pre>
+<p>
+<b>setColorFlag</b> &nbsp;&lt;OPTIC&gt;&nbsp; color value</br>
+<pre>
+Set a flag for a specific color to be used in a least squares fit.  If value
+is 1, this color is not linked to others.  If value is 2 or greater, all
+colors flagged with this value are linked in the fit, which means that
+they share a common center.  One links colors in order to minimize chromatic
+aberrations.
+</pre>
+<p>
+<b>linkColorFlag</b> &nbsp;&lt;OPTIC&gt;&nbsp; colors value</br>
+<pre>
+Same as setColorFlag but used to link mutiple colors in the least squares
+fit (e.g., to control chromatic aberrations).  "colors" is a TCL list.
+"value" should be a number unique to this combination that is different from
+1.
+</pre>
+<p>
+<b>setSurfFlag</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfid param value</br>
+<pre>
+Set a surface parameter flag for the specified surface for use in least
+squares.  Parameters are:
+	"curv"		Curvature
+	"ccon"		Conic constant
+	"x" or "xoff"	X position of surface
+	"y" or "yoff"	Y position of surface
+	"z" or "zoff"	Z position of surface
+	"phi"		Position angle of line of nodes for tilting
+	"theta"		Tilt about line of nodes
+	"a2"		Polynomial coefficient for 2nd order term.
+	"a4"		Ditto for 4th order
+	"a6"		Ditto for 6th order
+	"a8"		Ditto for 8th order
+	"a10"		Ditto for 10th order
+	"astig"		Astigmatism (acts like a2)
+	"aphi"		Orientation of +astigmatism (relative to lab frame)
+The value is either "1" for simple adjustment or a number &gt;&nbsp;1 for linked
+parameter adjustment.  See the section on raytrace operations to learn more
+about how to link parameters (called "pickups" in other raytrace programs).
+</pre>
+<p>
+<b>linkSurfFlag</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfids param value</br>
+<pre>
+Same as setSurfFlag but used to link multiple surfaces in the least squares
+fit.  "surfids" is a TCL list.  "value" should be a number unique to this
+combination that is different from 1.
+</pre>
+<p>
+<b>cacheFlags</b> </br>
+<pre>
+Save a list of all flags set since the last least squares fit.
+</pre>
+<p>
+<b>resetFlags</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Reset flags in an optic structure based on those saved using cacheFlags.
+This is useful if one is repeating a least squares fit with the same
+flags.
+</pre>
+<p>
+<b>clearFlags</b> </br>
+<pre>
+Clear flags from the cache.  No flags in an OPTIC structure are affected.
+</pre>
+<p>
+<b>clearSpot</b> </br>
+<pre>
+Clear internal cache of spots.
+</pre>
+<p>
+<b>spotQuery</b> [clip]</br>
+<pre>
+Query for a set of fractional spot positions.  The query format is the same
+as for the "lstsq" command above.  "clip" can be either yes or no; if yes,
+spots outside a circular fields are clipped if a rectangular pattern of spot
+positions is specified.  The spot positions are stored in a cache.
+</pre>
+<p>
+<b>spotAdd</b> x y [weight] [lscale]</br>
+<pre>
+Alternative to "spotQuery" as a way to enter spots in the cache.  "x" and "y"
+are locations of spots on the focal plane expressed as fractions of the focal
+plane field.  If weight is specified, this weighting is applied to the spot
+in the least squares fit (default is 1).  If "lscale" is 1, the spot location
+is used in the merit funtion based in the focal plane mapping model.  For
+optical systems with distortion, it is useful to have exactly one spot
+position location constrained in the least squares as a way to preserve
+the effective focal length.  [The scale factor must have been set to the
+desired value already.]
+</pre>
+<p>
+<b>spotList</b> </br>
+<pre>
+List spots stored in the internal cache.
+</pre>
+<p>
+<b>focaltosky</b> &nbsp;&lt;OPTIC&gt;&nbsp; xf yf icolor</br>
+<pre>
+Convert focal plane mm to sky arcmin
+</pre>
+<p>
+<b>skytofocal</b> &nbsp;&lt;OPTIC&gt;&nbsp; angx angy icolor</br>
+<pre>
+Convert sky arcmin to focal plane mm
+</pre>
+<p>
+<b>focaltoskydrift</b> &nbsp;&lt;OPTIC&gt;&nbsp; xf yf icolor</br>
+<pre>
+Convert focal plane mm to sky arcmin appropriate for drift scan
+</pre>
+<p>
+<b>skytofocaldrift</b> &nbsp;&lt;OPTIC&gt;&nbsp; angx angy</br>
+<pre>
+Convert sky arcmin to focal plane mm
+</pre>
+<p>
+<b>showparam</b> &nbsp;&lt;OPTIC&gt;&nbsp; surf param</br>
+<pre>
+Display a parameter value.  This is very low-level.  Use showSurf and showFocal
+instead.
+</pre>
+<p>
+<b>fslist</b> &nbsp;&lt;OPTIC&gt;&nbsp; filter</br>
+<pre>
+Print all parameters for those surfaces applicable to the
+specified filter
+</pre>
+<p>
+<b>zlist</b> &nbsp;&lt;OPTIC&gt;&nbsp; filter [file]</br>
+<pre>
+Print out all parameters for those surfaces applicable to the specified
+filter in a format that is more compact than fslist and uses more common
+notation.  Curvatures are converted to radii, and absolute Z positions
+are converted to thicknesses.
+</pre>
+<p>
+<b>zlist</b> &nbsp;&lt;OPTIC&gt;&nbsp; filter [file]</br>
+<pre>
+Print out all parameters for those surfaces applicable to the specified
+filter in a format that is more compact than fslist and uses more common
+notation.  Curvatures are converted to radii.  Absolute Z positions
+are retained.
+</pre>
+<p>
+<b>lensParam</b> &nbsp;&lt;OPTIC&gt;&nbsp; filter [margin] [rim]</br>
+<pre>
+For a design with lenses, list dimensions of the lens components for those
+relevant to the specified filter.  The dimensions include the thickness
+and diameter of a bounding cylinder (useful for specifying blank sizes)
+and the dimension of the lens at its thinnest cross-section (useful for
+scaring opticians).  If "margin" is specified, it is a fraction increase
+in the clear aperture of the lens, useful for oversizing lenses to guard
+against small fabrication and alignment errors.  The oversized part
+is assumed to be optically active.  If "rim" is specified, it is a linear
+increase in the radius of the lens to be used for mounting fixtures.  The
+thickness of the lens is held constant at its value at the outer edge
+of the optically active surfaces, including any oversizing specified by
+"margin".
+</pre>
+<p>
+<b>lensAbsorb</b> &nbsp;&lt;OPTIC&gt;&nbsp; filter</br>
+<pre>
+For a design with lenses, list a characteristic path length through each
+lens and compute the absorption.  At present all I do is list the length.
+Four marginal rays are run for a position at the edge (in the x dimension)
+of the focal plane.
+</pre>
+<p>
+<b>filterplot</b> &nbsp;&lt;OPTIC&gt;&nbsp; filter</br>
+<pre>
+Plot a spot diagram for the central position in the focal plane for
+the specified filter.
+</pre>
+<p>
+<b>optdiff</b> &nbsp;&lt;OPTIC1&gt;&nbsp; &nbsp;&lt;OPTIC2&gt;&nbsp;</br>
+<pre>
+Computes the difference in parameter values between two OPTIC
+structures; results are place back in OPTIC1.
+</pre>
+<p>
+<b>focalPlot</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Plot the layout of the focal plane.  Useful for SDSS 2.5 m focal
+plane.
+</pre>
+<p>
+<b>incidence</b> &nbsp;&lt;OPTIC&gt;&nbsp; filter [surfid]</br>
+<pre>
+Plot incidence angle relative to the normal vector for the chief ray
+as a function of location in the focal plane.  If surfid is plotted,
+make the plot for rays incident on the specified surface instead.  This
+function is useful for determining the telecentricity of rays on a surface
+such as might be needed for matching the incoming beam to fiber optics
+or for determining the tilt angle of an incident beam on an interference
+filters in order to determine possible wavelength shifts.
+</pre>
+<p>
+<b>zernikeFit</b> &nbsp;&lt;OPTIC&gt;&nbsp; &nbsp;&lt;ZERNIKE&gt;&nbsp; norder xmm ymm icolor</br>
+<pre>
+Fit zernike polynomials to the wavefront errors at the exit pupil of the
+optical design.  A &nbsp;&lt;ZERNIKE&gt;&nbsp; structure is created with the command
+"genericNew ZERNIKE".  "norder" is the highest order radial polynomial
+of the fit and must be even.  The fit is done for filter "icolor".
+Fits are made to both the wavefront error and to the sine and cosine of
+the error.
+</pre>
+<p>
+<b>zernikeZero</b> &nbsp;&lt;ZERNIKE&gt;&nbsp;</br>
+<pre>
+Zeros out the specified data structure (including freeing any dynamic
+memory).  Must be done before deleting a &nbsp;&lt;ZERNIKE&gt;&nbsp; structure, which
+is done using "genericDel &nbsp;&lt;ZERNIKE&gt;&nbsp;".
+</pre>
+<p>
+<b>psfMap</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm "filter1 filter2 ..." [mode]</br>
+<pre>
+Compute a diffraction map using the specified design.  "xmm" and "ymm" are
+the target position in the focal plane for each specified filter.
+If "mode" is 1, certain setup parameters are computed, but the map itself
+is not.  Outputs are written to FITS files named "fft&nbsp;&lt;i&gt;&nbsp;n&nbsp;&lt;/i&gt;&nbsp;.fit" where
+&nbsp;&lt;i&gt;&nbsp;n&nbsp;&lt;/i&gt;&nbsp; is the specified filter index.  This procedure makes use of
+several global variables which, if set, override defaults.  "NPIX"
+gives the dimension of the output image (default 256); powers of 2 are good.
+"PIXMM" gives the scale in mm/pixel of the output image.  "SCALE" gives
+the scale in arcsec per pixel of the output image.  (PIXMM overrides SCALE if
+both are set).  "NPUPIL" gives the number of samples across the exit pupil.
+Two auxiliary variables, "G" and "F" are printed out.  Normally "G" should
+be 2 or greater, "F" should be about 2.  "SIGMA" is an optional Gaussian
+blur (in mm).
+</pre>
+<p>
+<b>psfCheck</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm "filter1 filter2 ..."</br>
+<pre>
+This command runs "psfMap" with "mode" = 1 to check the impact of varying
+"NPIX", etc, on the derived parameters "G" and "F".
+</pre>
+<p>
+<b>spotMap</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm "filter1 filter2 ..."</br>
+<pre>
+Compute a spot diagram map for each filter at the specified position and
+write out to a FITS file.  The file is named "spot.fit".  Global parameters
+are similar to but not identical to "psfMap".  NPIX gives the dimension
+of the output image (default 256).  SCALE gives the scale in arcsec per
+pixel of the output image.  Alternatively, PIXMM gives the scale in mm per
+pixel.  (PIXMM overrides SCALE).  SIGMA is a Gaussian blur in arcsec
+that is convolved with the points of a spot diagram to make a smooth map.
+Note that "rayPattern" can be used to increase the spot density.
+</pre>
+<p>
+<b>fileToPPM</b> file1 file2 file3 outfile</br>
+<pre>
+Read diffaction maps from three input files and create a color PPM picture
+in outfile.
+</pre>
+<p>
+<b>waveFrontMap3d</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm filter</br>
+<pre>
+This command makes a 3d plot of the wave front error at the specified
+position in the focal plane for the specified filter.
+</pre>
+<p>
+<b>zernikeMap3d</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm filter</br>
+<pre>
+This command is just like waveFrontMap3d but fits Zernike polynomials and
+uses them to compute the wave front error.  In addition, the first 3 terms
+(offset, cosine, sine) are set to 0; this corresponds to removing a
+constant term (of no consequence) and a translation in origin of the image
+center.  These shifts do not affect the image quality and better match
+the behavior of other ray trace programs like OSLO and give a better
+estimate of the true image quality.
+</pre>
+<p>
+<b>psfMap3d</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm filter</br>
+<pre>
+This command makes a 3d representation of the diffract-limited point spread
+function at the specified position in the focal plane for the specified
+filter.
+</pre>
+<p>
+<b>eePlot</b> filter</br>
+<pre>
+Make encircled energy plot.  Must have run psfMap .... filter already to
+create a file "fft&nbsp;&lt;filter&gt;&nbsp;.fit".
+</pre>
+<p>
+<b>fomType</b> spot|wave</br>
+<pre>
+</pre>
+<p>
+<b>Specify</b> the figure of merit as being either rms spot size or rms wavefront</br>
+<pre>
+error (in nm).
+</pre>
+<p>
+<b>fom</b> &nbsp;&lt;OPTIC&gt;&nbsp;</br>
+<pre>
+Compute "figure of merit" for an optical design.  Must have run a round of
+least squares fitting.  If fom type is "spot", the figure of merit is rms spot
+size plus (if optimizing spot positions) rms spot position error.
+</pre>
+<p>
+<b>dither</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfid param fract</br>
+<pre>
+Increment a surface parameter by fract * param-increment.  Param-increment
+is that used for least squares fit and can be seen using the showSurfInc
+command.
+</pre>
+<p>
+<b>ditherStudy</b> &nbsp;&lt;OPTIC&gt;&nbsp; surf param fractinc fixed converge</br>
+<pre>
+Find the increment that changes the specified surface parameter by either
+a fixed fraction or up to a fixed amount.  The bigger of the two is used.
+"converge" specifies the maximum allowed fractional change in the parameter
+increment between two iterations before iterations are ended.
+</pre>
+<p>
+<b>tolInit</b> </br>
+<pre>
+Initialize (actually, delete) tolerancing arrays
+</pre>
+<p>
+<b>tolSurf</b> surfid1 surfid2 ...</br>
+<pre>
+Define a list of surfaces to be used for tolerance studies.
+</pre>
+<p>
+<b>tolParam</b> param1 param2 ...</br>
+<pre>
+Define a list of parameters to be used for tolerance studies.  A param
+can be a list of parameters if two are similar degrees of freedom (e.g.,
+x and y).
+</pre>
+<p>
+<b>tolSetup</b> </br>
+<pre>
+Form all combinations of surfaces and parameters from tolSurf and tolParam.
+Target type is dynamic.
+</pre>
+<p>
+<b>tolStatic</b> surfids params tolerance</br>
+<pre>
+Add or redefine the surface-parameter combination to be static (fixed
+tolerance) using the specified tolerance value.  "param" can be a list
+as for tclParam.  Multiple surfaces and/or parameters can be "linked"
+so that they are incremented as a single unit.  This is useful, e.g.,
+if a surface is duplicated in multiple configurations but is physically
+a single element (e.g., a secondary mirror that is refocused in different
+configurations), in which case one would want to link the different surfaces
+for tolerancing curvature.  An additional use would be to tolerance the
+index of refraction of multiple wavelengths in a single lens.  Linked surfaces
+are specified as a list; link parameters are specified as a list of a list,
+so as to not conflict with the use of a single list to define parameters
+with similar degrees of freedom.
+&nbsp;&lt;p&gt;&nbsp;
+Example:  multiple surfaces:  tolStatic "2.01 2.02 2.03 2.04" curv 1.e-5
+Example:  refraction index:   tolStatic 3 [list "1 2 3 4"] 1.e-4
+&nbsp;&lt;p&gt;&nbsp;
+It is important to understand the distinction between the two uses of
+multiple parameters.  In the first case, the parameters have independent
+errors (e.g., x and y alignment errors) but have the same impact statistically.
+In the second case, the parameters have the same errors (e.g., changing
+the refraction index at one wavelength changes it at all wavelengths)
+and it is necessary to increment all indices when computing the merit
+function in the tolerancing process.
+</pre>
+<p>
+<b>tolDynamic</b> surfids params</br>
+<pre>
+Add or redefine the surface-parameter combination to use dynamic tolerancing.
+In this mode, a global maximum target figure of merit is defined and is
+divided equally amongst all toleranced parameters (except those declared
+of type static or target).  "surfid" and "param" can be lists as for
+tolStatic.
+</pre>
+<p>
+<b>tolTarget</b> surfids params fominc</br>
+<pre>
+Add or redefine the surface-parameter combination to have a target
+increment in the figure of merit given by "fominc".  The parameter is
+toleranced to produce the specified increment in f.o.m.  "surfid" and
+"param" can be lists as for tclStatic
+</pre>
+<p>
+<b>tolLimit</b> &nbsp;&lt;OPTIC&gt;&nbsp; fractinc fixed converge</br>
+<pre>
+Compute table of tolerances and write to global array "tolTable".
+"fractinc", "fixed", and "converge" have the same meaning as for
+ditherStudy.  Parallel processing is used if global variable FORK is &gt;&nbsp; 1.
+Static parameters are analyzed to determine the increase in f.o.m.
+Target parameters are analyzed to determine the needed parameter tolerances.
+The cumulative f.o.m. increase from these parameters is subtracted from
+the global increment in f.o.m. specified by "fractinc" and/or "fixed", and
+the remaining f.o.m. budget is divided equally amongst the remaining
+dynamic parameters.
+</pre>
+<p>
+<b>tolList</b> </br>
+<pre>
+List the results of tolLimit.
+</pre>
+<p>
+<b>tolScale</b> scale</br>
+<pre>
+Multiply all tolerances in a tolerance table by factor "scale".  The
+target fomlim is also reset.  For small fraction increments in FOM, the 
+increment will change by "scale^2".  For large fractional increments, the
+change is more complicated.
+</pre>
+<p>
+<b>arrayWrite</b> tolTable &nbsp;&lt;file&gt;&nbsp;</br>
+<pre>
+Write out the array "tolTable" to a file.  This command saves the results of
+a tolerance analysis.  "file" is in TCL format and can be reread at a later
+time to recreate the tolerancing environment.  To reread, type:
+
+   source &nbsp;&lt;file&gt;&nbsp;
+</pre>
+<p>
+<b>tolToOptic</b> </br>
+<pre>
+Reset certain entries used for tolerancing and computing least squares.
+This command is normally run after resourcing a tolerance table as described
+in the previous command.  Specifically, this command resets the flags,
+spot positions, and iteration count used for adjusting compensation
+variables, and it resets the type of the figure-of-merit (spot size or Strehl
+ratio).
+</pre>
+<p>
+<b>monteCarlo</b> &nbsp;&lt;OPTIC&gt;&nbsp; niter</br>
+<pre>
+Perform a Monte-Carlo simulation tolerance analysis.  Parameters that
+are tabulated in "tolTable" are randomly incremented by up to +/- the max.
+tolerance in the table.  The figure of merit is recomputed after first
+adjusting the compensating variables.  niter is the number of trials.
+The results are stored in tolTable(monteCarlo).  Parallel processing
+is used if global variable FORK is &gt;&nbsp; 1.  If niter = 0, a single iteration
+is run and the optics structure is returned.
+</pre>
+<p>
+<b>monteCarloPlot</b> </br>
+<pre>
+Plot the results of the most recent monteCarlo command.
+</pre>
+<p>
+<b>disk</b> name [nnode]</br>
+<pre>
+Prepares an input file for the "triangle" triangular mesh generator.
+The file defines the outline of a circular disk.  nnode is the number of
+nodes along the rim; default is 2000.  The "triangle" program is also
+executed, producing two output files.
+</pre>
+<p>
+<b>meshPlot</b> name</br>
+<pre>
+Make a plot of the outputs of the triangle mesh generator.
+</pre>
+<p>
+<b>feaInput</b> name</br>
+<pre>
+Read the outputs of "triangle" and create an input file for the "slffea"
+finite element analysis program.  Note that "CalculiX" is preferred over
+"slffea".
+</pre>
+<p>
+<b>ccxDisk</b> name</br>
+<pre>
+Read the outputs of "triangle" and create an input file for "ccx", the
+CalculiX finite element analysis program.  This version creates a
+constant thickness glass disk with hard-wired parameters, mainly used for
+testing.
+</pre>
+<p>
+<b>ccxLens</b> name lens &nbsp;&lt;OPTIC&gt;&nbsp; surf1 surf2</br>
+<pre>
+Read the outputs of "triangle" and create an input file for "ccx", the
+CalculiX finite element analysis program.  "name" is the name used for
+inputs/outputs of "triangle".  "lens" is the name of the output file
+from this command.  Note that one can use the outputs of "triangle" (which
+just defines a 2-D mesh) for many lenses; hence the desire to have
+a separate naming convention.  &nbsp;&lt;OPTIC&gt;&nbsp; gives the optical design, and
+surfaces "surfid1" and "surfid2" are the names of the
+bounding surfaces of the lens.
+</pre>
+<p>
+<b>ccxDeflect</b> lens</br>
+<pre>
+Read the outputs of the ccx program and calculate the deflection of the
+lens center due to gravity loading.
+</pre>
+<p>
+<b>ccxCurv</b> lens</br>
+<pre>
+Read the outputs of the ccx program and calculate the change in curvature
+of the lens due to gravity loading.
+</pre>
+<p>
+<b>ccxPlot</b> lens</br>
+<pre>
+Read the inputs to the ccx program and plot the mesh.  This routine is
+used mainly to debug the input file.
+</pre>
+<p>
+<b>strutAdd</b> &nbsp;&lt;OPTIC&gt;&nbsp; isurf z width angle</br>
+<pre>
+Add a rectangular strut as a stop to the optical design.  Insert after
+surface "isurf" and at z position "z".  "width" gives the full width of the
+strut, which is assumed to extend from the mirror center to the edge.
+"angle" gives the orientation angle relative to the x axis.
+</pre>
+<p>
+<b>directMap</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm color zoff nstrut strutwidth strutang</br>
+<pre>
+Generate a diffraction image from a telescope design using an analytical
+calculation based on an approximate model of the exit pupil occultation.
+The wavefront error is assumed to be 0.  The purpose of this command is
+to make large-scale images of diffraction spikes much faster than using
+the FFT methods of the "psfMap" command.  Global parameters NPIX and
+PIXMM are used to determine the image size and scale as is done in 
+"psfMap".  The exit pupil is assumed to be occulted by a circular secondary
+and a spider.  For off-center field positions, the occulting elements
+are also placed off-center.  "xmm" and "ymm" are the field position in
+the focal plane.  "color" is the desired filter number.  "zoff" is the
+position (typically negative) of the occulting elements relative to the
+entrance aperture.  The size of the secondary is taken from the
+"&nbsp;&lt;OPTIC&gt;&nbsp;.tel-&gt;&nbsp;finner" parameter of the design.  "nstrut" is the number
+of struts in the spider.  "strutwidth" is the width of each strut expressed
+as a fraction of the mirror radius.  "strutang" is the position angle
+(relative to the x axis) of the first strut of the spider.  Note that
+the offsetting of the occulting elements in the exit pupil for off-center
+field positions has not been debugged yet for correctness of sign.
+</pre>
+<p>
+<b>opticSeidel</b> &nbsp;&lt;OPTIC&gt;&nbsp; xmm ymm filter</br>
+<pre>
+Compute the Seidel aberrations at the specified location in the focal
+plane for the specified filter.  Spherical aberration, coma, astigmatism,
+and Petzval curvature are computed.
+</pre>
+<p>
+<b>ghostDup</b> &nbsp;&lt;OPTIC&gt;&nbsp; surf1 surf2 filter</br>
+<pre>
+Create an OPTIC structure that is a copy of the specified input structure
+with extra surfaces added to create a ghost image between surf1 and surf2
+for the specified filter.  If surf2 is blank, the focal plane is
+used.  This routine is called by
+opticGhost as part of a procedure to construct a ghost image.
+</pre>
+<p>
+<b>opticGhost</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfids surf2 filter npix</br>
+<pre>
+Create a FITS file with an image of ghost reflections bewteen
+each of the specified surfaces and surface surf2 and back
+in the specified filter band.  If surf2 is blank, the focal plane is used.
+"npix" gives the resolution of the image.  The ghost reflections assume
+that incident light uniformly illuminates the focal plane.  A separate
+FITS file is created for each surface, named "ghost-surfid-filter.fit".
+</pre>
+<p>
+<b>opticZernikeAdd</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfid norder</br>
+<pre>
+Create a zernike data structure of the specified order to be used to
+describe the shape of the specified surface id.  The Zernike terms can be
+set using zset (see below) but cannot be adjusted in a least squares fit.
+</pre>
+<p>
+<b>opticZernikeDel</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfid</br>
+<pre>
+Delete a zernike data structure for the specified surface.
+</pre>
+<p>
+<b>zset</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfid n m val [0|1]</br>
+<pre>
+Set a single zernike coefficient on surface with the specified order.
+(n = order of radial term, m = order of angular term).  If the zernike
+structure does not exists or is of too low an order (norder = n + m),
+it is created or extended,
+but any extension will zero out any other coefficients previously defined.
+For m &gt;&nbsp; 0, the flag 0 means cosine term, 1 means sine term.
+</pre>
+<p>
+<b>zshow</b> &nbsp;&lt;OPTIC&gt;&nbsp; surfid n m</br>
+<pre>
+Show the Zernike coefficient for the specified surface.
+</pre>
+<p>
+<b>diffRefract</b> wave1 wave2 zenith</br>
+<pre>
+Compute differential refraction between 2 wavelengths for the specified
+zenith angle.  The value is computed for an elevation of about 7000 feet.
+</body></html>

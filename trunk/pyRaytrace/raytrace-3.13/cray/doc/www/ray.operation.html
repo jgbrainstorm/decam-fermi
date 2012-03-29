@@ -1,0 +1,767 @@
+<HTML>
+<HEAD>
+<TITLE>Ray Trace Operations</TITLE>
+</HEAD>
+<BODY bgcolor=white>
+<A NAME="operation"><H2>Program Operation</H2></A>
+<UL>
+<LI><A HREF="#start">Getting started</A>
+<LI><A HREF="#define">Defining an optical design</A>
+<LI><A HREF="#stops">Stops</A>
+<LI><A HREF="#print">Printing out information</A>
+<LI><A HREF="#lstsq">Optimizing a design</A>
+<LI><A HREF="#general">General plotting instructions</A>
+<LI><A HREF="#plotspot">Plotting spot diagrams</A>
+<LI><A HREF="#plotsurf">Plotting optical elements</A>
+<LI><A HREF="#fea">Finite Element Analysis of Lenses</A>
+<LI><A HREF="#tol">Tolerance Analysis</A>
+</UL>
+In the following documentation, parameters that are input by the user
+are <i>underlined</i>.  An complete list of available commands is
+given <A HREF="ray.commands.html">here</A>
+
+<P>
+<A NAME="start"><H2>Getting started</H2></A>
+
+<ol>
+<li><b>(Execute this step only if you are working in the SDSS dervish
+environment.  Ignore this if you have downloaded a binary tar file
+and installed locally on your machine.)</b>
+Log into a machine with the cray product installed. Then type
+<PRE>
+	setup cray
+
+</PRE>
+This defines several environment variables.  If you are familiar with the
+Dervish environment, all Dervish tools are available.  If not, don't worry.
+There are several sample designs in the ray trace directory.  Type
+<PRE>
+	ls $CRAY_DIR/data
+
+</PRE>
+to see them.  You might want to copy one to your home area:
+<PRE>
+	cp $CRAY_DIR/data/3.5m.dat .
+
+</PRE>
+<P>
+<li><b>(Execute this step if you are working with a local copy of the 
+binary distribution.)</b>
+<p>
+<tt>cd</tt> to the top level directory of the installation.
+<li>
+To start the program, type
+<PRE>
+	trace
+</PRE>
+<b>(Note: If you are working with a binary distribution, the environment
+variable "CRAY_DIR" points to the top of the installed directory tree, which
+is also your current directory.)</b>
+</ol>
+<P>
+<A NAME="define"><H2>Defining an optical design</H2></A>
+
+The program can store many optical designs.  Each one is stored in a structure
+that is accessed by a symbolic "handle", which is simply the letter "h"
+followed by a number.  There are 3 ways to specify an optical design:
+<UL>
+<LI>Read the design from a file.  This is the easiest way to start if you
+are using the program for the first time.
+The command to read from "3.5m.dat"
+is
+<PRE>
+	opticRead <i>3.5m</i>
+</PRE>
+If no extension is provided, the command automatically appends ".dat" to the
+file name.  If the file is not in the current directory, the command
+automatically searches in the "$CRAY_DIR/data" directory next.  This command
+returns a "handle" (e.g., h0) that is used to reference the internal
+data structures hereon.  It is possible to read and work with multiple
+designs at once.
+
+Several designs are distributed in the data directory:
+   <ul>
+   <li><tt>cass.dat</tt> - a classical Cassegrain telescope
+   <li><tt>3.5m.dat</tt> - the APO 3.5 m telescope
+   <li><tt>img003.dat</tt> - the SDSS 2.5 m telescope in imager mode
+   <li><tt>gunn06.dat</tt> - the SDSS 2.5m telescope in spectroscopic mode.
+   <li><tt>snapfull.dat</tt> - the current SNAP design with one set of imaging detectors
+   </ul>
+<p>
+<li> Use a "wizard" command that queries for a set of parameters for
+specific types of designs.  For example, to design a Cassegrain telescope,
+enter the command
+<PRE>
+	cassInit
+</PRE>
+You will be queried for 4 parameters that fully specified the design.
+<p>
+<LI>Enter the design parameters using a series of cray commands.  The following
+commands create a new Cassegrain telescope design with a 3500 mm diameter
+mirror.
+<PRE>
+	opticNew
+</PRE>
+This will respond with the name of the new handle (e.g., "h1").  Use this
+handle in all subsequent operations.  In all the following discussions,
+I will use h1 explicitly - just remember to substitute the actual handle
+as appropriate.  Next, we initialize several paramters that describe the focal
+plane.  Each wavelength/filter/color/configuration is numbered from 1 to 99.
+We will set paramaters for filter 1:
+<PRE>
+	setFocal h1 1 xpos 0		;# X Position of focal plane center
+	setFocal h1 1 ypos 0		;# Y Position of focal plane center
+	setFocal h1 1 xrad -24.6	;# X half-width (mm) square focal plane
+	setFocal h1 1 yrad -24.6	;# Y half-width (mm) square focal plane
+	setFocal h1 1 scale 5.8299	;# Pixel scale (arcsec/mm)
+	setFocal h1 1 wave .58		;# Wavelength (microns)
+	setFocal h1 1 dist 0		;# Distortion (see basic overview)
+	setFocal h1 1 rot 0		;# Rotation, radians (see basic overv.)
+	setFocal h1 1 map 0		;# Mapping mode (see basic overview)
+	setFocal h1 1 weight 0		;# Weighting (0 = used default mode)
+</PRE>
+Next, we enter some flags that signal which and how many colors are being
+defined.  Surface "0" holds this information.
+<PRE>
+	setSurf h1 0 z -1.e14		;# Position at "infinity" of object
+	setIndex h1 0 1 1		;# Index of refraction for filter 1
+</PRE>
+Next, we enter the surface parameters.  These must be inserted from front
+to back.
+<PRE>
+#Primary mirror - surface 1
+	setSurf h1 1 z 0		;# Z position of primary
+	setSurf h1 1 curv -8.143e-5	;# Curvature
+	setSurf h1 1 ccon -1.0		;# Conic constant
+	setIndex h1 1 -1		;# Index of refraction (-1 = reflect)
+	setSurf h1 1 instop 382		;# Radius of inner hole of primary
+	setSurf h1 1 outstop 1750	;# Radius of primary
+	setSurf h1 1 stoptype 2		;# Define this surface to be aperture
+					;# stop (One Must Be Defined!)
+#Secondary mirror
+	setSurf h1 2 z 
+	setSurf h1 2 curv -0.0003172	;# Curvature
+	setSurf h1 2 ccon -2.017	;# Conic constant
+	setSurf h1 2 z -4837.49		;# Z position
+	setIndex h1 2 1 1		;# Index of refraction (1 = reflect)
+#Focal plane
+	setSurf h1 3 z 2663.22		;# Z position
+	setIndex h1 3 1 1		;# Index of refraction (1 = pass-thru)
+</PRE>
+Finally, we initialize internal data structures with
+parameters of the design.  THe only ones that is important is diam (mirror
+diameter).  XXX UPDATE: I think the only one I use now is finner.
+Everything else is taken from the main optics structure.
+<PRE>
+	handleSet h1.tel->diam 3500	;# Mirror diameter
+
+#The rest of these are not always relevant for every design.
+	handleSet h1.tel->fr1 1.75	;# Primary focal ratio
+	handleSet h1.tel->fr2 10	;# Final focal ratio
+	handleSet h1.tel->back 2200	;# Back focal distance
+	handleSet h1.tel->fl1 6125	;# Primary mirror focal length
+	handleSet h1.tel->ck1 -1	;# Primary conic constant
+	handleSet h1.tel->rad1 $R1
+	handleSet h1.tel->finner .25	;# Ratio of inner to outer stop
+	handleSet h1.tel->mag $M	;# Magnification of seconday
+	handleSet h1.tel->beta $beta
+	handleSet h1.tel->fl2 $F2
+	handleSet h1.tel->ck2 $ck2
+	handleSet h1.tel->rad2 $R2
+	handleSet h1.tel->delta $delta
+	handleSet h1.tel->D $d
+	handleSet h1.tel->sep $sep	;# Separation of primary and secondary
+	handleSet h1.tel->f3 $F3	;# Final focal length
+	handleSet h1.tel->fmed $fmed	;# Median curvature
+	handleSet h1.tel->fpetz $fpetz	;# Petzval curvature
+</PRE>
+At the end, we compute various derived quantities.
+<PRE>
+#Count the number of distinct "colors in the design
+	colorcount h1
+#Comput stop sizes (if they were not specified in the design)
+	stopcomp h1
+#Compute parameter increments for use by optimizer
+	opticinc h1
+#compute paraxial quantities for filter 1
+	opticInfo h1 1
+#Define an initial pattern of rays to be used for tracing.
+	rayPattern 6 1
+</PRE>
+</UL>
+<P>
+A sample file format is shown here.  This sample covers the basic elements
+of specifying a design.  More advanced elements will be discussed later.
+<PRE>
+#RC Telescope design parameters
+       3500.000     Diameter
+          1.750     Primary Focal Ratio
+         10.000     Final Focal Ratio
+       2200.000     Back Focal Distance in MM
+          0.250     Fractional inner radius of primary
+#The real optical parameters
+#Revised 3.5m design with stops                                                 
+   -1       101               -24.6     Y half-width filter  1
+   -2       101               -24.6     X half-width filter  1
+   -3         1             5.83469     Scale Factor for filter  1
+   -3         2                23.6     Scale Factor for filter  2
+   -3         3                23.6     Scale Factor for filter  3
+   -3       101                 0.5     Wavelength for filter  1
+   -6         1             35358.1     Paraxial Focal Length  1
+   -6       101            -6026.34     Exit Pupil Z distance  1
+#Primary
+     0        5       -1.000000e+14     Z Position
+     0      101        1.000000e+00     Refraction Index for filter  1
+     1        1       -8.143320e-05     Curvature
+     1        2       -1.019400e+00     Conic Constant
+     1      101       -1.000000e+00     Refraction Index for filter  1
+     1      402        1.750000e+03     Outer stop
+     1      403                   2     Stop type
+#Secondary
+     2        1       -3.172130e-04     Curvature
+     2        2       -2.179000e+00     Conic Constant
+     2        5       -4.837489e+03     Z Position
+     2      101        1.000000e+00     Refraction Index for filter  1
+     2      402        3.776807e+02     Outer stop
+#Focal plane
+     3        1       -7.589314e-04     Curvature
+     3        5        2.663288e+03     Z Position
+     3      101        1.000000e+00     Refraction Index for filter  1
+     3      402        3.479095e+01     Outer stop
+</PRE>
+This specifies the optical design for the 3.5m ARC telescope (ignoring
+the tertiary mirror, which is just a flat).  Some salient points:
+<P>
+<UL>
+<LI>Lines beginning with # are comments
+<LI>Column spacings don't matter.
+<LI>The 1st five uncommented lines must be present, but they actually
+are not used subsequently (except for mirror diameer).
+The program calculates several parameters that
+might be helpful for designing an RC telescope based on the input parameters.
+<LI>All subsequent lines specify three parameters per line: the surface
+index, the parameter index, and the parameter value.  The definitions
+of the surface and parameter indices are given <A HREF="ray.params.html">here
+</A>.  The surface indices should be specified in ascending order.
+<LI>Parameters that are zero need not be entered.
+<LI>You should be sure to include appropriate indices for at least one
+color.  This is done by specifying a refraction index (parameter indices
+101 - 200) for each surface, including surface 0.
+<LI>Parameter index 1 (curvature) deviates from the normal convention of
+specifying radius of curvature.
+Parameter index 5 (vertical position) gives the absolute "z" position
+of the vertex of each surface.  This deviates from the normal convention
+of specifying the spacing in "z" to the next surface.  Otherwise, the
+input parameters have fairly conventional definitions.
+<LI>For surfaces greater than 1, the surface index can have a more general
+form:  "mm.nn".  This is useful in mosaic designs where you might have
+multiple optical elements for each mosaic CCD.  The numbers "mm" and "nn"
+can be arbitrary but should represent something meaningful.
+</UL>
+The optical design may be subsequently modified by using the commands
+"setFocal", "setSurf", and "setIndex".  The first way of enteringa design
+above illustrates how to do this.  For example, to change the
+secondary position, you would type
+<PRE>
+	setSurf h1 2 5 -4839
+
+</PRE>
+The parameters are the handle to the optical structure, the surface ID,
+the parameter index, and the parameter value.
+
+<A name="stops"><H2>Stops</H2></A>
+<P>
+There are three types of stops supported by cray:  Annuluar stops, aperture
+stops, and rectangular stops.  An aperture stop is the same as an annuluar
+stop, but the outer radius is not checked explicitly for blockage when
+running a trace (the reason being that it is expect that rays are defined
+to be within the entrance pupil, and aberrations might throw them very
+slightly outside the aperture stop itself, which one normally does not want
+to stop).
+
+<A name="gratings"><H2>Gratings</H2></A>
+<P>
+A fourth type of "stop" is a grating - this has stoptype 5.  Two additional
+parameters are set - the order and the "lines" (lines per mm).  A grating
+is often tilted w.r.t. other optics - one must be able to specify both the
+orientation of the vector normal and of the orientation of the grooves.
+Right now full generality is not implemented.  It is recommended that
+a grating only be tilted about the Y axis.  (This is accomplished by setting
+a value for theta and setting phi = 0.)  In this case, the grooves are
+automatically assumed to be oriented parallel to the Y axis (or more
+generally, the line of nodes.)
+
+<P>
+<A NAME="print"><H2>Displaying information</H2></A>
+
+The following commands print out stuff.
+<PRE>
+	fslist <i>h1 1</i>
+
+</PRE>
+prints out most of the optical structure for those focal plane parameters
+and surfaces that are relevant to filter 1.
+This command is most useful for displaying part of a complicated
+mosaic (such as the 2.5 m design).
+<p>
+There is a TK widget set under development that has a table to display
+even more information than fslist.  The commands so far are:
+<PRE>
+	plotInit a		;# Initialize TK widget
+	opticDisplay h1 1	;# Displays info for filter 1
+</PRE>
+<P>
+<A NAME="lstsq"><H2>Optimizing a design</H2></A>
+
+To prepare for optimizing a design, you must be sure to have the following
+steps completed:
+<DIR>
+<LI>Have all outer stops in the design specified, either by inputting them
+or running "stopcomp".
+<LI>Specify increments for all parameters to be adjusted, either by
+inputting them (e.g., using "setparam") or running "optinc".
+</DIR>
+<P>
+Next, set flags for all parameters to be adjusted AND for all colors
+to be included.  The following shows the steps needed to prepare for
+adjusting the focus and solving for the scale factor in the example above:
+<PRE>
+#Scale factor for filter 1
+	setFocalFlag <i>h1 1 scale 1</i>
+#Set flag to use color 1
+	setColorFlag <i>h1 1 1</i>
+#Secondary focus
+	setSurfFlag <i>h1 2 z 1</i>
+
+</PRE>
+See <A HREF="ray.commands.html#setflag">setflag</A> for documention on
+the arguments to this command.  Surface -3 contains the scale factor.
+Surface 0 contains flags to indicate which colors to be used in the
+fit.  Surface 2 is the secondary mirror, and parameter 5 is the z position.
+<P>
+In more complex situations, one wants to <A HREF="ray.intro.html#link">link
+</A>parameters and colors together.  This is done by setting the adjust
+flag (the last parameter in the "setflag" command) to a number other than
+0 or 1.
+<P>
+Once the flags are set, type the following:
+<PRE>
+	lstsq h1 1
+
+</PRE>
+The last parameter above can be 0 (don't solve for sky-to-focal-plane mapping
+function), 1 (solve for mapping parameters using image centroids) or
+2 (solve for mapping parameters using chief rays).  It is set to 1
+here to solve for the scale factor.  If this parameter is 0, the
+optimizer will minimize the rms spot sizes only.  If it is 1 or 2,
+then the optimizer will also minimize the deviations in image position
+relative to one of 2 mapping functions.  The <A HREF="ray.map.html">mapping
+function</A> converts sky positions to focal plane positions.
+
+The "lstsq" command prompts for additional input.  First, it asks
+for a layout of spot sizes in the focal plane.  Two sets of integers are
+input: one set each for the x and y directions.  For each color active
+in the least squares fit, a rectangular grid of spots is laid out [note:
+this pattern should be generalized some day].  Each color has focal
+plane x and y dimensions already defined in the parameter arrays.
+Normally the grid spans the full size of the focal plane.
+The set of integers "-2 2", for example, means that 5 spots will be laid
+covering the full width of the focal plane in that particular dimension.
+If either integer is 0, then the corresponding limit willl be the focal
+plane midpoint.  If both integers are 0, then only a single spot is
+used in that dimension.
+
+Here is the pattern for a couple of cases:
+<PRE>
+X min, max  = -1 1		X min, max  = 0 2
+Y min, max  = -1 1		Y min, max  = 0 0
+
+
+   *----------*----------*		|---------------------|
+   |                     |		|                     |
+Y  |                     |		|                     |
+   |                     |		|                     |
+a  *          *          *		|          *     *    *
+x  |                     |		|                     |
+i  |                     |		|                     |
+s  |                     |		|                     |
+   *----------*----------*		|---------------------|
+           X axis
+</PRE>
+<P>
+The least squares routine next computes residuals, fills in the normal
+equations, and inverts the coefficient matrix.  The routine next prompts
+for a flag - enter Y or N (upper or lower case is OK).  If Y, the programs
+prints out some numbers and asks for the number of iterations.
+A value of 1 is OK; however for the first iteration, only internal parameters
+(spot centers) are adjusted, so a value of 2 would be more appropriate.
+The routine then iterates back to the beginning, recomputing residuals,
+and prompts again for the iteration flag and count.
+<p>
+One can also enter spot positions by running the command "spotQuery",
+answering the prompts, and then when running lstsq, just hit
+&lt;CR&gt; at the first prompt.  The spot positions from "spotQuery" are
+reused.  A slightly different layout is obtain if one runs the command as:
+<PRE>
+	spotQuery clip
+</PRE>
+In this case, even if a rectangular grid of points is specified, spots
+are trimmed outside a circle bouded by the grid.  This is useful if one
+wants a rectangular grid overlaid onto a circular focal plane.  [This
+helps the most when running parallelized least squres.]
+<P>
+There is now a parallelized version of least squares called "plstsq" which
+works the same as "lstsq" but will take advantage of multiple processors
+if available.  The number of processors that are used is specified by
+the global variable "FORK".  For example,
+<PRE>
+	set FORK 4
+	plstsq h0 0
+</PRE>
+Parallelization is done over spot positions.  [Hence the desire to trim
+unused positions in spotQuery.]  [It would be fun to try the program on
+Domino, an SGI with 64 processors, but alas I don't have an account.]
+<P>
+
+<A NAME="general"><H2>General Plotting Instructions</H2></A>
+To make plots, first issue the dervish command "pgBegin &lt.devtype&gt." where
+&lt.devType&gt. is either XWINDOW, TEK4010, PS, or some other valid pgPlot
+device type (see the dervish documentation for further information).
+<P>
+Alternatively, there is now a TK plotting widget that provides two plotting
+windows and a table to display optical design parameters.  To start this,
+type
+<PRE>
+	plotInit a
+</PRE>
+The widget should appear.  Plots of spot diagrams and so forth will appear
+in the left hand window.  Plots of opical designs and focal plane layouts
+appear in the right hand window.
+<P>
+Note Feb 2003: The pgPlot package has been swapped out for plplot, which has
+a more generous license (LGPL).  Wrappers have been written to emulate the
+more common pgPlot commands.
+<P>
+
+<A NAME="plotspot"><H2>Plotting spot diagrams</H2></A>
+<P>
+The basic command to generate spots is:
+<PRE>
+	rtrace h1 xmm ymm color stopcheck
+</PRE>
+where "xmm" and "ymm" are in mm, and "color" is a valid color index.
+"stopcheck" is 0 if all rays are to be traced, 1 if stops are to be
+respected.
+The output of the command is store in the OPTIC structure.  A tcl command
+is used to plot the last computed spot:
+<PRE>
+	diagramplot h1 [overlay]
+</PRE>
+The spot diagram is plotted and various numbers printed out.  "overlay" is
+optional; set it to "y" to overlay rather than begin a new plot.
+<P>
+A more useful command that combines the two is
+<PRE>
+	spotPlot h1 xmm ymm "filter1 filter ..."
+</PRE>
+In this form, the spot is traced and plotted for one or more filters.
+The different filters are colored differently in the plot.
+<P>
+Sometimes it is useful to have spot diagrams for an array of spots distributed
+over the focal plane:
+<PRE>
+	manyPlot h1 "filter1 filter ..."
+</PRE>
+<p>
+
+<A NAME="plotsurf"><H2>Plotting optical elements</H2></A>
+<P>
+The basic command to plot spots is:
+<PRE>
+	opticPlot h1 surf1 surf2 color
+</PRE>
+where all elements between index "surf1" and "surf2" are plotted.  Sample
+rays for the color "color" are plotted.  In a multi-configuration design,
+"color" also defines which configuration is plotted.
+<p>
+The following command makes a plot of all occulting stops in the entrance
+pupil:
+<PRE>
+	stopPlot h1
+</PRE>
+<P>
+<A NAME="diffract"><H2>Diffraction</H2></A>
+<p>
+A few commands are used to evaluate an optical design in the diffraction limit.
+"cray" usees the standard quick-fix set of approximations to compute telescope
+performance in the diffraction limit - i.e., all effects are mapped to the
+exit pupil, the exit pupil is assumed to subtend a small angle from the 
+focal plane, so FFT's can be used, distortions between the entrance and
+exit pupil are ignored (illumination is thus constant except for stops).
+<p>
+The following command fits Zernike polynomials to a wavefront.  "norder" must
+be even (and at least 2).
+<PRE>
+	genericNew ZERNIKE
+	zernikeFit h1 &lt;ZERNIKE&gt; norder xmm ymm icolor
+</PRE>
+The zernike polynomial coefficients are returned in the structure.
+The next command prints out the wave front error based on the Zernikes:
+<PRE>
+	zernikeWaveErr &lt;ZERNIKE&gt; xfract yfract
+</PRE>
+<p>
+A direct computation of the wavefront error can be done with the following
+commands:
+<PRE>
+	genericNew WAVEFRONT
+	chiefRay h1 &lt;WAVEFRONT&gt; xmm ymm icolor
+	offRay h1 &lt;WAVEFRONT&gt; xmm ymm icolor
+</PRE>
+This set of command should give the same answers as the Zernikes.
+<P>
+The next command computes a diffraction image in the focal plane:
+<PRE>
+	psfMap h1 xmm ymm "color1 color2 ..." [mode]
+</PRE>
+One file is produced for each color and is named "fft$color.fit".  The
+images all have the same pixel scale.  The default size is 256x256 and
+the default resolution is a function of the mirror diameter, wavelength, etc.
+Several global parameters control how this routine works:
+<PRE>
+	NPIX	Size of image
+	PIXMM	Size of one pixel (mm)
+	SCALE	Alternative way to set size of one pixel (arcsec/mm)
+	NPUPIL	Number of points across the exit pupil (1-d)
+</PRE>
+These parameters interact in a complicated way that affects the accuracy
+of the map.  The routine prints out two parameters, F and G, that are nearly
+equal and control the sampling in the pupil plane.  It is necessary for
+G to be 2 or greater (to avoid aliasing) but it should not be too large
+or the computation will take forever.  NPIX should be a power of 2 or at
+least have small prime factors.
+<p>
+The above method uses FFTs but is not well suited to computing diffraction
+spikes over large areas of the image such as are produced by the secondary
+mirror supports in a typical telescope.  For this purpose it is sufficient
+to ignore wavefront errors and compute the image analytically from an
+approximate model of the stops:
+<PRE>
+	directMap h1 xmm ymm color zstop nstrut strutw strutang
+</PRE>
+This command works like psfMap and uses the NPIX and PIXMM to set the image
+size and scale.  The stops in the entrance pupil are assumed to be a
+circular secondary and a set of support struts.  Parameters are
+not taken from the
+optical design due to the large number of possible variations in design that
+are possible.  Instead, the size of the secondary is taken from the element
+<tt>h1.tel-&gt;finner</tt>, which gives the radius
+of the secondary expressed as a fraction of the radius of the primary
+mirror.
+<tt>zstop</tt> gives the position of the stops relative to the primary mirror.
+<tt>nstrut</tt> is the number of struts (or legs) of the secondary support
+system.  Each strut is assumed to extend from the secondary mirror to the
+edge of the entrance pupil.  <tt>strutw</tt> gives the width of each strut
+expressed as a fraction of the radius of the primary mirror. <tt>strutang</tt>
+gives the orientation (position angle) of the first strut relative to the
+x axis.
+<P>
+The next commands make plots of the wave front and psf map as contour
+diagrams in the plotting window:
+<PRE>
+	waveFrontMap3d h1 xmm ymm color
+	psfMap3d h1 xmm ymm color
+</PRE>
+Caution: psfMap3d creates a new fftn.fit file, and all the parameters
+NPIX, PIXMM, etc are deleted if they exist.  psfMap3d plots the square root
+of the intensity, which compresses the intensity scale to show small scale
+structure better but is misleading r.e. the true intensity of diffraction
+rings.
+<p>
+An alternative command to waveFrontMap3d is:
+<PRE>
+	zernikeMap3d h1 xmm ymm color
+</PRE>
+which removes linear x and y slopes from the wavefront map, which coresponds
+to a shift in image position but does not affect image quality.  This command
+is probably preferable but may give inaccurate answers for very complex
+wavefront shapes that require very high order Zernike fits.
+<p>
+<A NAME="fea"><H2>Finite Element Analysis</H2></A>
+
+Although C-RAY does not have built-in capability for FEA (finite element
+analysis), it is capable of interfacing to two FEA programs that can
+evaluate the impact of gravity loading on lenses.  At present this capability
+is quite limited, and is only useful for computing the deflection of
+lenses mounted horizontally and supported at their edges.  This is still
+a common-enough situation to be useful.  If the programs "triangle" and
+"ccx" are in your PATH when the program starts, the interface code will be
+loaded.
+<p>
+Running an FEA model is a multi-step process:
+<ol>
+<li>Create a 2-D outline of the lens edge
+<li>Run a mesh generation program to construct a triangular mesh
+<li>Create a 3-D model of the lens using wedge elements and defining
+the boundary and static loading condiitions.
+<li>Run an FEA code that evaluates the static behavior
+<li>Run a post-processing analysis
+</ol>
+Steps 1, 3, and 5 are done by C-RAY.  Step 2 involves running the program
+<b>triangle</b> from Jonathan Shewchuk
+(http://www-2.cs.cmu.edu/~quake/triangle.html)
+Step 4 involves running the program <b>CalculiX</b> from Guido Dhondt and
+Klaus Wittig (www.calculix.de). [Note: CalculiX also has a mesh generator
+that I have not tried yet.]
+<p>
+For specificity, let h0 be a handle to an optical design in which surfaces
+2 and 3 bound a lens.  The following instructions calculate the sag due
+to gravity at the vertex of the lens, assuming that it is oriented
+horizontally:
+<PRE>
+	disk d1000 1000 (create a 2-D disk border with 1000 vertices.)
+</PRE>
+The mesh generation program "triangle" is run automatically with default
+parameters.  Output files are d1000.poly, d1000.1.ele, d1000.1.node.
+<PRE>
+	ccxLens d1000 lens h0 2 3   (create a file lens.inp that is input
+				    to the FEA program.)
+	ccx lens	(Run the FEA program and create files lens.dat,
+			lens.sta, lens.frd, and spoooles.dat).
+	ccxDeflect lens		(Calculate the vertical vertex deflection in
+				meters).
+</PRE>
+<p>
+The FEA program works in SI units, hence meters for the output of ccxDeflect.
+<p>
+One can also compute the change in curvature of the lens surfaces (which are
+both assumed to deflect the same amount and thus give the same change in
+curvature):
+<PRE>
+	ccxCurv lens
+</PRE>
+
+<p>
+<A NAME="tol"><H2>Tolerance  Analysis</H2></A>
+
+NOTE: Tolerancing is still a work in progress.
+
+Tolerance information is stored in the global array "tolTable".
+
+Before tolerancing can begin, it is necessary to perform a least-squares
+fit in which "compensating variables" are defined.  At a minimum one or more
+colors must be included in the fit.  Often other variables are adjusted as
+well, e.g. focus position of one of the optical elements.  Spot positions
+are included in the merit function if they are used as constraints
+(<tt>lscale</tt> = 1 or 2).  By default, the merit function for the least
+squares fit (rms spot size
+and/or spot positions) is also used for tolerancing.
+However, one can use rms wavefront error (in nanometers) instead:
+<PRE>
+	fomType [spot|wave]
+</PRE>
+The least square fit is normally run for one iteration with <tt>fract</tt>
+= 1.
+<P>
+The initial figure-of-merit can be found by:
+<pre>
+	fom h1
+</pre>
+<p>
+Three modes of tolerancing a particular parameter are supported:
+<ol>
+   <li>Static:  The maximum increment of a parameter is specified, and
+	the resulting change in merit function is computed.
+   <li>Target:  A specified maximum increase in merit function is specified,
+	and the maximum increment in that parameter is computed.
+   <li>Dynamic:  A specified maximum increate in the total merit function is
+	specified, and it is split equally amongst all parameters flagged
+	as being "dynamic".  The maximum increment for each parameter
+	is computed.
+</ol>
+<p>
+All three methods may be used simultaneously in doing a global tolerance
+analysis.  Static parameters are analyzed first, target parameters second,
+and the residual allowable increase in merit function is split amongst
+the remaining dynamic parameters.
+<p>
+To begin,
+<PRE>
+	tolInit
+</PRE>
+Sometimes one wants to tolerance the same set of parameters on all surfaces,
+e.g, curvature, offset, tilt.  A shortcut to do so (and make all paramters
+dynamic) is to use:
+<PRE>
+	tolSurf surf1 surf2 ...
+	tolParam param1 param2 ...
+	tolSetup
+</PRE>
+Surfaces are specified by their ID.  Parameters are specified by name,
+e.g., <tt>curv, z, theta</tt>.  Indices of refraction can be toleranced as
+well, and they are specified by color number.
+<p>
+It is possible to add parameters individually and specify their type:
+<PRE>
+	tolStatic surf param increment
+	tolTarget surf param fom-increment
+	tolDynamic surf param
+</PRE>
+<P>
+NOTE: In many cases, two degress of freedom will have the same tolerance; e.g.,
+x and y offsets are often equivalent.  Because CRAY uses Euler angles for
+rotations, it is not possible to elegantly tolerance rotations in more than
+one dimension.  In simple situations, one can tolerance "theta" (a 1-D
+rotation about the y axis) and use the same tolerance for rotation about
+the x axis.  For dynamic parameters, where one needs to know the total
+number of degrees of freedom when constructing the tolerance error
+budget, it is possible to tolerance one parameter but give it extra weight
+to account for a second equivalent parameter.  This is done by specifying
+the parameter name as a TCL list of parameters; e.g., {x y} or
+{theta phi}.  Only the first parameter of the list is toleranced, but it
+counts double in the figure-of-merit budget.
+<p>
+It may be helpful to turn off the a lot of annoying printout:
+<PRE>
+	verbose 0
+</PRE>
+<p>
+"tolLimit" can take advantages of multiple processors if available:
+<PRE>
+	set FORK n
+</PRE>
+where n is a number that can range from 2 up to the maximum number of
+processors on the system.  Bigger numbers than this cause no harm but don't
+gain anything.
+<p>
+Once the parameter types are set up, the full tolerance analysis is done:
+<PRE>
+	tolLimit h1 fractinc abstarg [thresh]
+</PRE>
+There are two ways to specify a maximum targetfigure-of-merit.  The first
+way is to specify a fractional increase <tt>fractinc</tt> above the
+default value.  The second is to specify and absolute target value 
+<tt>abstarg</tt>.  Both methods can be specified, and the larger target value
+of the two is used.  To turn off one method, set its parameter (either
+<tt>fractinc</tt> or <tt>abstarg</tt>) to 0.  "thresh" is a tuning
+parameter to control the iterations used to locate the maximum parameter
+increment that matches a target figure-of-merit.  The default is .01.
+Making it bigger speeds up the iterations but makes the tolerance values
+less accurate.
+<p>
+The results of tolerancing can be shown by
+<PRE>
+	tolList
+</PRE>
+<p>
+One tolerances have been established, a Monte Carlo simulation can be done:
+<PRE>
+	monteCarlo h1 n
+</PRE>
+where n is the number of iterations.  Parallel processing can be done.
+Once done, the results are plotted:
+<PRE>
+	monteCarloPlot
+</PRE>
+</BODY>
+</HTML>

@@ -1,0 +1,113 @@
+#RC Telescope design parameters
+        508.000     Diameter
+          3.000     Primary Focal Ratio
+          8.500     Final Focal Ratio
+        366.800     Back Focal Distance in MM
+          0.250     Fractional size of inner hole in primary
+#The real optical parameters
+#Revised filter position a la AU's drawing                                      
+   -3         1        4.738287E+01     Scale Factor for filter         1
+   -3         2        4.738998E+01     Scale Factor for filter         2
+   -3         3        4.740178E+01     Scale Factor for filter         3
+   -3         4        4.740651E+01     Scale Factor for filter         4
+   -3         5        4.741375E+01     Scale Factor for filter         5
+   -3       101        3.600000E-01     Wavelength for filter           1
+   -3       102        4.500000E-01     Wavelength for filter           2
+   -3       103        5.800000E-01     Wavelength for filter           3
+   -3       104        7.400000E-01     Wavelength for filter           4
+   -3       105        1.000000E+00     Wavelength for filter           5
+   -2       101       -2.460000E+01     X half-width filter             1
+   -2       102       -2.460000E+01     X half-width filter             2
+   -2       103       -2.460000E+01     X half-width filter             3
+   -2       104       -2.460000E+01     X half-width filter             4
+   -2       105       -2.460000E+01     X half-width filter             5
+   -1       101       -2.460000E+01     Y half-width filter             1
+   -1       102       -2.460000E+01     Y half-width filter             2
+   -1       103       -2.460000E+01     Y half-width filter             3
+   -1       104       -2.460000E+01     Y half-width filter             4
+   -1       105       -2.460000E+01     Y half-width filter             5
+  0           5       -1.000000E+14     Z Position          
+  0         101        1.000000E+00     Refraction Index for filter  1
+  0         102        1.000000E+00     Refraction Index for filter  2
+  0         103        1.000000E+00     Refraction Index for filter  3
+  0         104        1.000000E+00     Refraction Index for filter  4
+  0         105        1.000000E+00     Refraction Index for filter  5
+  1           1       -3.281000E-04     Curvature           
+  1           2       -1.000000E+00     Conic Constant      
+  1         101       -1.000000E+00     Refraction Index for filter  1
+  1         102       -1.000000E+00     Refraction Index for filter  2
+  1         103       -1.000000E+00     Refraction Index for filter  3
+  1         104       -1.000000E+00     Refraction Index for filter  4
+  1         105       -1.000000E+00     Refraction Index for filter  5
+  1         402       -2.540847E+02     Outer Stop
+#Secondary                                                                      
+  2           1       -6.007900E-04     Curvature           
+  2           2       -4.850116E+00     Conic Constant      
+  2           5       -1.008607E+03     Z Position          
+  2         101        1.000000E+00     Refraction Index for filter  1
+  2         102        1.000000E+00     Refraction Index for filter  2
+  2         103        1.000000E+00     Refraction Index for filter  3
+  2         104        1.000000E+00     Refraction Index for filter  4
+  2         105        1.000000E+00     Refraction Index for filter  5
+  2         402       -9.423116E+01     Outer Stop
+#Front of corrector                                                             
+  3           1       -6.493500E-03     Curvature           
+  3           5        4.975880E+01     Z Position          
+  3         101        1.474901E+00     Refraction Index for filter  1
+  3         102        1.468397E+00     Refraction Index for filter  2
+  3         103        1.459007E+00     Refraction Index for filter  3
+  3         104        1.455509E+00     Refraction Index for filter  4
+  3         105        1.450489E+00     Refraction Index for filter  5
+  3         402       -4.589920E+01     Outer Stop
+#back of corrector                                                              
+  4           1       -6.680800E-03     Curvature           
+  4           5        6.715900E+01     Z Position          
+  4         101        1.000000E+00     Refraction Index for filter  1
+  4         102        1.000000E+00     Refraction Index for filter  2
+  4         103        1.000000E+00     Refraction Index for filter  3
+  4         104        1.000000E+00     Refraction Index for filter  4
+  4         105        1.000000E+00     Refraction Index for filter  5
+  4         402       -4.704270E+01     Outer Stop
+#front of filter                                                                
+  5           5        2.393600E+02     Z Position          
+  5         101        1.536529E+00     Refraction Index for filter  1
+  5         102        1.524996E+00     Refraction Index for filter  2
+  5         103        1.516680E+00     Refraction Index for filter  3
+  5         104        1.511722E+00     Refraction Index for filter  4
+  5         105        1.507084E+00     Refraction Index for filter  5
+  5         402       -3.809143E+01     Outer Stop
+#back of filter                                                                 
+  6           5        2.443600E+02     Z Position          
+  6         101        1.000000E+00     Refraction Index for filter  1
+  6         102        1.000000E+00     Refraction Index for filter  2
+  6         103        1.000000E+00     Refraction Index for filter  3
+  6         104        1.000000E+00     Refraction Index for filter  4
+  6         105        1.000000E+00     Refraction Index for filter  5
+  6         402       -3.791145E+01     Outer Stop
+#front of field flattener                                                       
+  7           1       -1.253800E-02     Curvature           
+  7           5        3.240305E+02     Z Position          
+  7         101        1.474901E+00     Refraction Index for filter  1
+  7         102        1.468397E+00     Refraction Index for filter  2
+  7         103        1.459007E+00     Refraction Index for filter  3
+  7         104        1.455509E+00     Refraction Index for filter  4
+  7         105        1.450489E+00     Refraction Index for filter  5
+  7         402       -3.311984E+01     Outer Stop
+#back of field flattener                                                        
+  8           1       -9.136700E-03     Curvature           
+  8           5        3.414295E+02     Z Position          
+  8         101        1.000000E+00     Refraction Index for filter  1
+  8         102        1.000000E+00     Refraction Index for filter  2
+  8         103        1.000000E+00     Refraction Index for filter  3
+  8         104        1.000000E+00     Refraction Index for filter  4
+  8         105        1.000000E+00     Refraction Index for filter  5
+  8         402       -3.505966E+01     Outer Stop
+#Focal plane                                                                    
+  9           1        4.920000E-04     Curvature           
+  9           5        3.662425E+02     Z Position          
+  9         101        1.000000E+00     Refraction Index for filter  1
+  9         102        1.000000E+00     Refraction Index for filter  2
+  9         103        1.000000E+00     Refraction Index for filter  3
+  9         104        1.000000E+00     Refraction Index for filter  4
+  9         105        1.000000E+00     Refraction Index for filter  5
+  9         402       -3.503330E+01     Outer Stop

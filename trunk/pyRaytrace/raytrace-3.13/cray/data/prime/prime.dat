@@ -1,0 +1,36 @@
+#RC Telescope design parameters
+        750.000     Diameter
+          1.290     Primary Focal Ratio
+         10.175     Final Focal Ratio
+        756.000     Back Focal Distance in MM
+          0.400     Fractional inner radius of primary
+#The real optical parameters
+#Adjusted focal plane focus only                                                
+   -3         0              27.029     Scale Factor for filter  0
+   -3         1                  27     Scale Factor for filter  1
+   -3       101                 0.5     Wavelength for filter  1
+   -2       101               -37.9     X half-width filter  1
+   -1       101               -18.9     Y half-width filter  1
+     0        5       -1.000000e+14     Z Position
+     0      101        1.000000e+00     Refraction Index for filter  1
+#Primary
+     1        1       -2.455070e-04     Curvature
+     1        2       -1.172600e+00     Conic Constant
+     1      101       -1.000000e+00     Refraction Index for filter  1
+     1      402       -3.751306e+02     Outer stop
+#Secondary                                                              
+     2        1       -7.093260e-04     Curvature
+     2        2       -2.314400e+00     Conic Constant
+     2        5       -1.400000e+03     Z Position
+     2      101        1.000000e+00     Refraction Index for filter  1
+     2      402       -9.861611e+01     Outer stop
+#Tertiary                                                              
+     3        1       -2.229000e-04     Curvature
+     3        2       -1.069230e+01     Conic Constant
+     3        5        2.702900e+01     Z Position
+     3      101       -1.000000e+00     Refraction Index for filter  1
+     3      402       -9.651302e+01     Outer stop
+#Focal plane                                                            
+    10        5       -1.534879e+03     Z Position
+    10      101        1.000000e+00     Refraction Index for filter  1
+    10      402       -4.242031e+01     Outer stop

@@ -1,0 +1,34 @@
+NAME
+       subst - Perform backslash, command, and variable substitutions
+
+SYNOPSIS
+       subst ?-nobackslashes? ?-nocommands? ?-novariables? string
+
+
+DESCRIPTION
+       This  command  performs  variable substitutions, command substitutions,
+       and backslash substitutions on its  string  argument  and  returns  the
+       fully-substituted  result.   The substitutions are performed in exactly
+       the same way as for Tcl commands.  As a result, the string argument  is
+       actually substituted twice, once by the Tcl parser in the usual fashion
+       for Tcl commands, and again by the subst command.
+
+       If any of the -nobackslashes, -nocommands, or -novariables  are  speci-
+       fied,  then  the  corresponding  substitutions  are not performed.  For
+       example, if -nocommands is specified, no command substitution  is  per-
+       formed:   open  and  close  brackets are treated as ordinary characters
+       with no special interpretation.
+
+       Note: when it performs its substitutions, subst does not give any  spe-
+       cial  treatment  to  double  quotes  or curly braces.  For example, the
+       script
+              set a 44
+              subst {xyz {$a}}
+       returns ‘‘xyz {44}’’, not ‘‘xyz {$a}’’.
+
+
+SEE ALSO
+       eval(n)
+
+
+KEYWORDS

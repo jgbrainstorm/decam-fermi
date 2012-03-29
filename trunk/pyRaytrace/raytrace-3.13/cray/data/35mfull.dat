@@ -1,0 +1,77 @@
+#RC Telescope design parameters
+       3500.000     Diameter
+          1.750     Primary Focal Ratio
+         10.000     Final Focal Ratio
+       2200.000     Back Focal Distance in MM
+          0.250     Fractional inner radius of primary
+#The real optical parameters
+#With aperture stops, bigger field                                              
+   -1       101                  75     Y half-width filter  1
+   -2       101                  75     X half-width filter  1
+   -3         1             5.83469     Scale Factor for filter  1
+   -3         2                23.6     Scale Factor for filter  2
+   -3         3                23.6     Scale Factor for filter  3
+   -3       101                0.44     Wavelength for filter  1
+     0        5       -1.000000e+14     Z Position
+     0      101        1.000000e+00     Refraction Index for filter  1
+     1        5       -4.838000e+03     Z Position
+     1      101        1.000000e+00     Refraction Index for filter  1
+     1      403                   3     Stop type%
+     1      404        2.000000e+01     Strut x1
+     1      405        1.039231e-05     Strut y1
+     1      406        2.000091e+01     Strut x2
+     1      407       -1.750000e+03     Strut y2
+     1      408       -1.999909e+01     Strut x3
+     1      409       -1.750000e+03     Strut y3
+     1      410       -2.000000e+01     Strut x4
+     1      411       -1.039231e-05     Strut y4
+     2        5       -4.838000e+03     Z Position
+     2      101        1.000000e+00     Refraction Index for filter  1
+     2      403                   3     Stop type%
+     2      404        6.928204e-06     Strut x1
+     2      405       -2.000000e+01     Strut y1
+     2      406       -1.750000e+03     Strut x2
+     2      407       -2.000061e+01     Strut y2
+     2      408       -1.750000e+03     Strut x3
+     2      409        1.999939e+01     Strut y3
+     2      410       -6.928204e-06     Strut x4
+     2      411        2.000000e+01     Strut y4
+     3        5       -4.838000e+03     Z Position
+     3      101        1.000000e+00     Refraction Index for filter  1
+     3      403                   3     Stop type%
+     3      404       -2.000000e+01     Strut x1
+     3      405       -3.464102e-06     Strut y1
+     3      406       -2.000030e+01     Strut x2
+     3      407        1.750000e+03     Strut y2
+     3      408        1.999970e+01     Strut x3
+     3      409        1.750000e+03     Strut y3
+     3      410        2.000000e+01     Strut x4
+     3      411        3.464102e-06     Strut y4
+     4        5       -4.838000e+03     Z Position
+     4      101        1.000000e+00     Refraction Index for filter  1
+     4      403                   3     Stop type%
+     4      405        2.000000e+01     Strut y1
+     4      406        1.750000e+03     Strut x2
+     4      407        2.000000e+01     Strut y2
+     4      408        1.750000e+03     Strut x3
+     4      409       -2.000000e+01     Strut y3
+     4      411       -2.000000e+01     Strut y4
+     5        5       -4.838000e+03     Z Position
+     5      101        1.000000e+00     Refraction Index for filter  1
+     5      401        3.820000e+02     Inner stop
+     5      402        4.000000e+03     Outer stop
+     5      403                   1     Stop type%
+     6        1       -8.143320e-05     Curvature
+     6        2       -1.019400e+00     Conic Constant
+     6      101       -1.000000e+00     Refraction Index for filter  1
+     6      402        1.750000e+03     Outer stop
+     6      403                   2     Stop type%
+     7        1       -3.172130e-04     Curvature
+     7        2       -2.179000e+00     Conic Constant
+     7        5       -4.837489e+03     Z Position
+     7      101        1.000000e+00     Refraction Index for filter  1
+     7      402        3.832943e+02     Outer stop
+     8        1       -7.589314e-04     Curvature
+     8        5        2.663288e+03     Z Position
+     8      101        1.000000e+00     Refraction Index for filter  1
+     8      402        7.499125e+01     Outer stop
