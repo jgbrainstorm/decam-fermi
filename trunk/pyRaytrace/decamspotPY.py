@@ -31,7 +31,7 @@ z = 0.1
 output='temp.fit'
 #------------------------------
 
-def decamspot(xmm=None,ymm=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None):
+def decamspot(xmm=None,ymm=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     #---generating the .par file------
     file = open('temp.par','w')
     file.write('RAYPATTERN '+str(raypattern) +'\n')
@@ -42,7 +42,18 @@ def decamspot(xmm=None,ymm=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., 
     file.write('FILTER '+filter +'\n')
     file.write('XMM '+str(xmm)+'\n')
     file.write('YMM '+str(ymm)+'\n')
-    file.write('WEIGHTS 1 0.9 0.8 0.7 0.6 \n')
+    if suband is None:
+        file.write('WEIGHTS 1 0.9 0.8 0.7 0.6 \n')
+    elif suband == 1:
+        file.write('WEIGHTS 1 0.00001 0.00001 0.00001 0.00001\n') #approximately monochromatic
+    elif suband == 2:
+        file.write('WEIGHTS 0.00001 1 0.00001 0.00001 0.00001 \n')
+    elif suband == 3:
+        file.write('WEIGHTS 0.00001 0.00001 1 0.00001 0.00001 \n')
+    elif suband == 4:
+        file.write('WEIGHTS 0.00001 0.00001 0.00001 1 0.00001 \n')
+    elif suband == 5:
+        file.write('WEIGHTS 0.00001 0.00001 0.00001 0.00001 1 \n')
     file.write('THETA '+corrector+' '+str(theta)+'\n')
     if x is not None:
         file.write('X '+corrector+' '+str(x)+'\n')
@@ -64,7 +75,7 @@ def decamspot(xmm=None,ymm=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., 
     return np.concatenate((pos,bb)),hdr
 
 
-def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None):
+def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     """
     seeing is the rms in arcseconds
     """
@@ -75,7 +86,7 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='
         for i in range(Nstar):
             xmm = np.random.rand()*225*randfactor[np.random.randint(0,2)]
             ymm = np.random.rand()*225*randfactor[np.random.randint(0,2)]
-            res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z)
+            res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband)
             datalist.append(res[0])
             hdrlist.append(res[1])
         data = np.array(datalist)
@@ -87,7 +98,7 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='
             else:
                 xmm = np.random.rand()*15*randfactor[np.random.randint(0,2)] + ccd[1]
                 ymm = np.random.rand()*30*randfactor[np.random.randint(0,2)] + ccd[2]
-            res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z)
+            res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband)
             datalist.append(res[0])
             hdrlist.append(res[1])
         data = np.array(datalist)
@@ -113,7 +124,7 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='
     return data,hdrlist
 
    
-def disImg(data=None,colorbar=True):
+def disImg(data=None,colorbar=False):
     """
     data is a vector with first, second as the center position, then is an image vector.
     """
@@ -121,7 +132,7 @@ def disImg(data=None,colorbar=True):
     size = np.sqrt(len(data[2:]))
     xmm = data[0]
     ymm = data[1]
-    pl.contourf(data[2:].reshape(size,size),100)
+    pl.matshow(data[2:].reshape(size,size),fignum=0)
     if colorbar == True:
         pl.colorbar()
     pl.xlim(0,size-1)
@@ -141,7 +152,7 @@ def disImgAll(imgV=None):
         img = imgV[i,2:].reshape(size,size)
         xm = np.round(np.arange(size) - x,3)
         ym = np.round(np.arange(size) - y,3)
-        pl.contourf(xm,ym,img,100)
+        pl.matshow(img)
 
 def disImgCCD(imgV=None,ccd=None):
     """
@@ -188,7 +199,7 @@ def decompPCA(data=None,comp=None):
     size = np.sqrt(img.shape[0])
     pca = PCA(n_components=20)
     imgNew = pca.fit_transform(img)
-    pl.imshow(imgNew[:,comp-1].reshape(size,size),interpolation='spline16')
+    pl.matshow(imgNew[:,comp-1].reshape(size,size))
     pl.title('The '+str(comp)+' PC')
     pl.colorbar()
     return pca.explained_variance_ratio_
@@ -204,8 +215,8 @@ def fitPCAimg(coef=None, data = None, maxcomp = None):
     nimg = img.shape[1]
     #def residule(basis=None,maxcomp=None):
 
-def centroidChange(ccd=None, filter=None):
-    res = genImgV(Nstar=1,ccd=ccd,filter=filter)
+def centroidChange(ccd=None, filter=None, suband=None):
+    res = genImgV(Nstar=1,ccd=ccd,filter=filter,suband=suband)
     data = res[0]
     xcen = res[1][0]['xcen']
     ycen = res[1][0]['ycen']
@@ -230,6 +241,83 @@ def decompZernike(ccd=None,seeing=0.,theta=0.,x=None,y=None,z=None,filter=None):
     res = dict(zip(names,coeff))
     disImgCCD(imgV,ccd)
     return res
+
+def gaussian(height, center_x, center_y, width_x, width_y):
+    """Returns a gaussian function with the given parameters"""
+    width_x = float(width_x)
+    width_y = float(width_y)
+    return lambda x,y: height*np.exp(-(((center_x-x)/width_x)**2+((center_y-y)/width_y)**2)/2)
+
+def moments(data):
+    """
+    Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution by calculating its
+    moments
+    """
+    total = data.sum()
+    X, Y = np.indices(data.shape)
+    x = (X*data).sum()/total
+    y = (Y*data).sum()/total
+    col = data[:, int(y)]
+    width_x = np.sqrt(abs((np.arange(col.size)-y)**2*col).sum()/col.sum())
+    row = data[int(x), :]
+    width_y = np.sqrt(abs((np.arange(row.size)-x)**2*row).sum()/row.sum())
+    height = data.max()
+    return height, x, y, width_x, width_y
+
+def fitgaussian(data):
+    """Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution found by a fit"""
+    params = moments(data)
+    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
+    p, success = leastsq(errorfunction, params)
+    return p
+
+def psfSizeCCD(ccd=None,filter='g',seeing=0,theta=0., zenith = 0., x=None, y=None,z=None):
+    res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,zenith=zenith,x=x,y=y,z=z)
+    imgV = res[0]
+    size = np.sqrt(len(imgV[0][2:]))
+    img = imgV[0][2:].reshape(size,size)        
+    xcen = res[1][0]['xcen']
+    ycen = res[1][0]['ycen']
+    height, x, y, width_x, width_y = fitgaussian(img)
+    disImgCCD(imgV,ccd)
+    pl.figtext(0.2,0.85,'CCD: '+ccd[0], color='r')
+    pl.figtext(0.2,0.8,'Filter: '+filter, color='r')
+    return width_x, width_y
+
+
+def bfplane(x, y, z):
+    """
+    fit a best fit plane z = a*x +b*y +c
+    return: a, b, c
+    """
+    n = float(len(x))
+    A = np.array([[sum(x*x),sum(x*y),sum(x)],[sum(x*y),sum(y*y),sum(y)],[sum(x),sum(y),n]])
+    B = np.array([sum(x*z),sum(y*z),sum(z)])
+    res = np.linalg.solve(A,B)
+    return res
+
+def psfSizeAll(Nstar=None,filter='g',npix=40,seeing=0,theta=0., zenith = 0.,corrector='corrector', x=None, y=None,z=None):
+    res = genImgV(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z)
+    imgV = res[0]
+    x = imgV[:,0]
+    y = imgV[:,1]
+    x_width = np.zeros(Nstar)
+    y_width = np.zeros(Nstar)
+    for i in range(Nstar):
+        img = imgV[i,2:].reshape(npix,npix)
+        hight,x[i],y[i], x_width[i],y_width[i] = fitgaussian(img)
+        #hight,xx,yy, x_width[i],y_width[i] = moments(img)
+    return x, y, x_width, y_width,img
+
+
+
+
+def adaptiveMoment(data):
+    return 0
+
+
 
 
 def centroidChangeband(side=None):
@@ -288,10 +376,58 @@ def centroidChangeband(side=None):
     pl.ylim(-1.5,1.5)
     return '--- done!---'
 
+def centroidChangeFP(filter='g',suband=None):
+    xmm,ymm = np.meshgrid([-230,-180,-120,-40,0,40,120,180,230],[-230,-180,-120,-40,0,40,120,180,230])
+    xmm = xmm.flatten()
+    ymm = ymm.flatten()
+    Nstar = len(xmm)
+    xcen = np.zeros(Nstar)
+    ycen = np.zeros(Nstar)
+    for i in range(Nstar):
+        res=decamspot(xmm=xmm[i],ymm=ymm[i],seeing=0,npix=40,zenith=0,filter=filter, theta=0., corrector='corrector',x=None,y=None,z=None,suband=suband)
+        xcen[i] = res[1]['xcen']
+        ycen[i] = res[1]['ycen']
+    return xcen,ycen
+
+
+def centroidSuband(filter=None):
+    xceng1,yceng1 = centroidChangeFP(filter=filter,suband = 1)
+    xceng2,yceng2 = centroidChangeFP(filter=filter,suband = 2)
+    xceng3,yceng3 = centroidChangeFP(filter=filter,suband = 3)
+    xceng4,yceng4 = centroidChangeFP(filter=filter,suband = 4)
+    xceng5,yceng5 = centroidChangeFP(filter=filter,suband = 5)
+    r = np.sqrt(xceng1**2 + yceng1**2)
+    pl.figure(figsize=(10,7))
+    pl.subplot(2,1,1)
+    pl.plot(r,(xceng2-xceng1)*1000./15.,'b.',label='sub2 - sub1')
+    pl.plot(r,(xceng3-xceng1)*1000./15.,'r.',label='sub3 - sub1')
+    pl.plot(r,(xceng4-xceng1)*1000./15.,'g.',label='sub4 - sub1')
+    pl.plot(r,(xceng5-xceng1)*1000./15.,'c.',label='sub5 - sub1')
+    pl.legend(loc='lower left')
+    pl.hlines(0,0,300,color='k',linestyle='dashed')
+    pl.xlim(0,300)
+    pl.xlabel('distance to the FP center (mm)')
+    pl.ylabel('x centroid difference (pixel)')
+    pl.title('Centroid Change for subands of filter: '+filter)
+    pl.subplot(2,1,2)
+    pl.plot(r,(yceng2-yceng1)*1000./15.,'b.',label='sub2 - sub1')
+    pl.plot(r,(yceng3-yceng1)*1000./15.,'r.',label='sub3 - sub1')
+    pl.plot(r,(yceng4-yceng1)*1000./15.,'g.',label='sub4 - sub1')
+    pl.plot(r,(yceng5-yceng1)*1000./15.,'c.',label='sub5 - sub1')
+    pl.legend(loc='lower left')
+    pl.hlines(0,0,300,color='k',linestyle='dashed')
+    pl.xlim(0,300)
+    pl.xlabel('distance to the FP center (mm)')
+    pl.ylabel('y centroid difference (pixel)')
+    return xceng1, yceng1, xceng2, yceng2,xceng3,yceng3,xceng4,yceng4,xceng5,yceng5
+    
+
 
 
 if __name__ == '__main__':
+    import healpy as hp
     # ----the centroid change for different filters -----
+    """
     S=[S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14,S15,S16,S17,S18,S19,S20,S21,S22,S23,S24,S25,S26,S27,S28,S29,S30,S31]
 
     N=[N1,N2,N3,N4,N5,N6,N7,N8,N9,N10,N11,N12,N13,N14,N15,N16,N17,N18,N19,N20,N21,N22,N23,N24,N25,N26,N27,N28,N29,N30,N31]
@@ -302,3 +438,64 @@ if __name__ == '__main__':
     pl.figure(figsize=(15,10))
     centroidChangeband(N)
     pl.savefig('/home/jghao/research/decamFocus/figures/Ncentroid_band.png')
+
+    """
+    #-----as function of radial -----
+    # ----different suband ----
+    colnames = ['xcen_sub1','ycen_sub1','xcen_sub2','ycen_sub2','xcen_sub3','ycen_sub3','xcen_sub4','ycen_sub4','xcen_sub5','ycen_sub5']
+    
+    res = centroidSuband(filter='g')
+    pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_suband_g.png')
+    hp.mwrfits('/home/jghao/research/decamFocus/data_g.fit',res,colnames = colnames)
+    res = 0
+    pl.close()
+
+    res=centroidSuband(filter='r')
+    pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_suband_r.png')
+    hp.mwrfits('/home/jghao/research/decamFocus/data_r.fit',res,colnames = colnames)
+    res = 0
+    pl.close()
+
+   
+    res=centroidSuband(filter='i')
+    pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_suband_i.png')
+    hp.mwrfits('/home/jghao/research/decamFocus/data_i.fit',res,colnames = colnames)
+    res = 0
+    pl.close()
+    
+  
+    res=centroidSuband(filter='z')
+    pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_suband_z.png')
+    hp.mwrfits('/home/jghao/research/decamFocus/data_z.fit',res,colnames = colnames)
+    res = 0
+    pl.close()
+    
+    """
+    #----for different band----
+    xceng,yceng = centroidChangeFP(filter='g')
+    xcenr,ycenr = centroidChangeFP(filter='r')
+    xceni,yceni = centroidChangeFP(filter='i')
+    xcenz,ycenz = centroidChangeFP(filter='z')
+   
+    r = np.sqrt(xceng**2 + yceng**2)
+    pl.figure(figsize=(10,7))
+    pl.subplot(2,1,1)
+    pl.plot(r,(xcenr - xceng)*1000./15.,'b.',label = 'r - g')
+    pl.plot(r,(xceni - xceng)*1000./15.,'g.',label = 'i - g')
+    pl.plot(r,(xcenz - xceng)*1000./15.,'r.',label = 'z - g')
+    pl.xlabel('distance to the FP center (mm)')
+    pl.ylabel('x centroid difference (pixel)')
+    pl.legend(loc='best')
+    pl.hlines(0,0,300,color='k',linestyle='dashed')
+    pl.xlim(0,300)
+    pl.subplot(2,1,2)
+    pl.plot(r,(ycenr - yceng)*1000./15.,'b.',label = 'r - g')
+    pl.plot(r,(yceni - yceng)*1000./15.,'g.',label = 'i - g')
+    pl.plot(r,(ycenz - yceng)*1000./15.,'r.',label = 'z - g')
+    pl.xlabel('distance to the FP center (mm)')
+    pl.ylabel('y centroid difference (pixel)')
+    pl.legend(loc='best')
+    pl.hlines(0,0,300,color='k',linestyle='dashed')
+    pl.xlim(0,300)
+    pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_fp.png')
+    """
