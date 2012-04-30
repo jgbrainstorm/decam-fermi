@@ -1,0 +1,5 @@
+import sys
+sys.path.append('/home/jghao/decam-fermi')
+if len(sys.argv) == 1:
+    print 'syntax: oscanCCD imagefile extension'
+else:

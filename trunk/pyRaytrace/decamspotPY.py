@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 #---this is a python scrit that encapsulate the raytracing code from steve to make it more interactive/scriptable. 
 # J Hao 3/28/2012 @ FNAL
 
@@ -14,6 +15,40 @@ try:
 except ImportError:
     print 'the required packages are: numpy, pyfits,pylab,scikit,scipy,mahotas'
     raise
+
+#---------------calcuate moments ---------------
+def moments(data):
+    """
+    Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution by calculating its
+    moments
+    """
+    total = data.sum()
+    if total != 0.:
+        X, Y = np.indices(data.shape)
+        x = (X*data).sum()/total
+        y = (Y*data).sum()/total
+        col = data[:, int(y)]
+        width_x = np.sqrt(abs((np.arange(col.size)-y)**2*col).sum()/col.sum())
+        row = data[int(x), :]
+        width_y = np.sqrt(abs((np.arange(row.size)-x)**2*row).sum()/row.sum())
+        height = data.max()
+    else:
+        height=0
+        x=0
+        y=0
+        width_x=0
+        width_y=0
+    return height, x, y, width_x, width_y
+
+def gaussianMoments(data):
+    """Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution found by a fit"""
+    params = moments(data)
+    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
+    p, success = leastsq(errorfunction, params)
+    return p
+
 #-----define the parameters --------
 # this parameter will be written into the header
 
@@ -123,6 +158,44 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='
             hdu.writeto(filename)        
     return data,hdrlist
 
+
+def genImgVfixedPos(filename=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+    """
+    seeing is the rms in arcseconds
+    """
+    datalist = []
+    hdrlist = []
+    xmm,ymm = np.meshgrid([-120,-80,-40,-20,0,20,40,80,120],[-120,-80,-40,-20,0,20,40,80,120])
+    xmm = xmm.flatten()
+    ymm = ymm.flatten()
+    Nstar = len(xmm)
+    for i in range(Nstar):
+        res = decamspot(xmm=xmm[i],ymm=ymm[i],seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband)
+        datalist.append(res[0])
+        hdrlist.append(res[1])
+    data = np.array(datalist)
+    if filename is not None:
+        hdu = pf.PrimaryHDU(data)
+        hdu.header.add_comment('RAYPATTERN: '+str(raypattern))
+        hdu.header.add_comment('NPIX: '+str(npix))
+        hdu.header.add_comment('SCALE: '+str(scale))
+        hdu.header.add_comment('FWHM: '+str(fwhm))
+        hdu.header.add_comment('ZENITH: '+str(zenith))
+        hdu.header.add_comment('FILTER: '+filter)
+        hdu.header.add_comment('THETA: '+str(theta))
+        hdu.header.add_comment('CORRECTOR: '+str(corrector))
+        hdu.header.add_comment('X: '+str(x))
+        hdu.header.add_comment('Y: '+str(y))
+        hdu.header.add_comment('Z: '+str(z))
+        hdu.header.add_comment('Seeing: '+str(seeing))
+        if os.path.exists(filename):
+            os.system('rm '+filename)
+            hdu.writeto(filename)
+        else:
+            hdu.writeto(filename)        
+    return data,hdrlist
+
+
    
 def disImg(data=None,colorbar=False):
     """
@@ -180,10 +253,10 @@ def disImgCCD(imgV=None,ccd=None):
     return 'The image is done!'
 
 
-def imgCCDctr(ccd=None,filter='g',seeing=0,z=None):
+def imgCCDctr(ccd=None,filter='g',seeing=0,z=None,theta=None):
     xmm = ccd[1]
     ymm = ccd[2]
-    res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,z=z)
+    res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,z=z)
     data = res[0]
     xcen = res[1][0]['xcen']
     ycen = res[1][0]['ycen']
@@ -192,7 +265,8 @@ def imgCCDctr(ccd=None,filter='g',seeing=0,z=None):
     pl.figtext(0.2,0.8,'Filter: '+filter, color='r')
     pl.figtext(0.2,0.75, 'xtarget: '+str(xmm) + ',  ytarget: '+str(ymm), color='r')
     pl.figtext(0.2,0.7, 'xcen: '+str(xcen) + ',  ycen: '+str(ycen), color='r')
-    return '---done!-----'
+    height, x, y, width_x, width_y = moments(data[0][2:].reshape(npix,npix))
+    return height, x, y, width_x, width_y
 
 def decompPCA(data=None,comp=None):
     img = data[:,2:].T
@@ -231,7 +305,7 @@ def addseeing(imgV=None,seeing=None):
     img = imgV[0]
 
     
-def decompZernike(ccd=None,seeing=0.,theta=0.,x=None,y=None,z=None,filter=None):
+def decompZernike(ccd=None,seeing=0.,theta=0.,x=None,y=None,z=None,filter='g'):
     imgV=genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta = theta,filter=filter,x=x,y=y,z=z)[0]
     size = np.sqrt(len(imgV[0][2:]))
     img = imgV[0][2:].reshape(size,size)        
@@ -248,30 +322,6 @@ def gaussian(height, center_x, center_y, width_x, width_y):
     width_y = float(width_y)
     return lambda x,y: height*np.exp(-(((center_x-x)/width_x)**2+((center_y-y)/width_y)**2)/2)
 
-def moments(data):
-    """
-    Returns (height, x, y, width_x, width_y)
-    the gaussian parameters of a 2D distribution by calculating its
-    moments
-    """
-    total = data.sum()
-    X, Y = np.indices(data.shape)
-    x = (X*data).sum()/total
-    y = (Y*data).sum()/total
-    col = data[:, int(y)]
-    width_x = np.sqrt(abs((np.arange(col.size)-y)**2*col).sum()/col.sum())
-    row = data[int(x), :]
-    width_y = np.sqrt(abs((np.arange(row.size)-x)**2*row).sum()/row.sum())
-    height = data.max()
-    return height, x, y, width_x, width_y
-
-def fitgaussian(data):
-    """Returns (height, x, y, width_x, width_y)
-    the gaussian parameters of a 2D distribution found by a fit"""
-    params = moments(data)
-    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
-    p, success = leastsq(errorfunction, params)
-    return p
 
 def psfSizeCCD(ccd=None,filter='g',seeing=0,theta=0., zenith = 0., x=None, y=None,z=None):
     res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,zenith=zenith,x=x,y=y,z=z)
@@ -307,20 +357,28 @@ def psfSizeAll(Nstar=None,filter='g',npix=40,seeing=0,theta=0., zenith = 0.,corr
     y_width = np.zeros(Nstar)
     for i in range(Nstar):
         img = imgV[i,2:].reshape(npix,npix)
-        hight,x[i],y[i], x_width[i],y_width[i] = fitgaussian(img)
-        #hight,xx,yy, x_width[i],y_width[i] = moments(img)
-    return x, y, x_width, y_width,img
+        hight,xtmp,tmp, x_width[i],y_width[i] = moments(img)
+    return x, y, x_width, y_width, np.sqrt(x_width**2+y_width**2)
 
-
-
-
-def adaptiveMoment(data):
-    return 0
-
-
-
+def psfSizeAllZernike(Nstar=None,filter='g',npix=40,seeing=0,theta=0., zenith = 0.,corrector='corrector', x=None, y=None,z=None,rand=False):
+    if rand is False:
+        res = genImgVfixedPos(seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z)
+    else:
+        res=genImgV(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z)
+    imgV = res[0]
+    x = imgV[:,0]
+    y = imgV[:,1]
+    coeff=[]
+    Nstar = len(x)
+    for i in range(Nstar):
+        img = imgV[i,2:].reshape(npix,npix)
+        coeff.append(mh.zernike.zernike_moments(img,30,degree = 3, cm=mh.center_of_mass(img)))
+    return x, y, np.array(coeff)
 
 def centroidChangeband(side=None):
+    """
+    This code calculate the centroid change of stars at different positions of the FP as the band filter changes
+    """
     Nccd = len(side)
     xmmg = np.zeros(Nccd)
     ymmg = np.zeros(Nccd)
@@ -391,6 +449,9 @@ def centroidChangeFP(filter='g',suband=None):
 
 
 def centroidSuband(filter=None):
+    """
+    This code calcualte the centroid change in each subband. 
+    """
     xceng1,yceng1 = centroidChangeFP(filter=filter,suband = 1)
     xceng2,yceng2 = centroidChangeFP(filter=filter,suband = 2)
     xceng3,yceng3 = centroidChangeFP(filter=filter,suband = 3)
@@ -439,7 +500,7 @@ if __name__ == '__main__':
     centroidChangeband(N)
     pl.savefig('/home/jghao/research/decamFocus/figures/Ncentroid_band.png')
 
-    """
+
     #-----as function of radial -----
     # ----different suband ----
     colnames = ['xcen_sub1','ycen_sub1','xcen_sub2','ycen_sub2','xcen_sub3','ycen_sub3','xcen_sub4','ycen_sub4','xcen_sub5','ycen_sub5']
@@ -470,7 +531,7 @@ if __name__ == '__main__':
     res = 0
     pl.close()
     
-    """
+    
     #----for different band----
     xceng,yceng = centroidChangeFP(filter='g')
     xcenr,ycenr = centroidChangeFP(filter='r')
@@ -499,3 +560,10 @@ if __name__ == '__main__':
     pl.xlim(0,300)
     pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_fp.png')
     """
+
+#----generate the data ------
+    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar1000_notilt_nodefocus.fit',Nstar=1000,seeing=0.9)
+    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_notilt_z0.01mm.fit',Nstar=1000,z=0.01,seeing=0.9)
+    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_notilt_z0.1mm.fit',Nstar=1000,z=0.1,seeing=0.9)
+    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_tilt_10arcsec_nodefocus.fit',Nstar=1000,theta=10.,seeing=0.9)
+    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_tilt_100arcsec_nodefocus.fit',Nstar=1000,theta=100.,seeing=0.9)
