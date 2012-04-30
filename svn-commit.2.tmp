@@ -1,0 +1,8 @@
+some additional functions added to decamspotPY.py
+--This line, and those below, will be ignored--
+
+A    psfSize.py~
+A    pixel~
+M    pyRaytrace/decamspotPY.py
+AM   DECamCCD_def.pyc
+A    psfSize.py
