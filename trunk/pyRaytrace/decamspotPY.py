@@ -12,6 +12,8 @@ try:
     from scipy.optimize import leastsq
     import mahotas as mh
     import scipy.ndimage as nd
+    import healpy as hp
+    import glob as gl
 except ImportError:
     print 'the required packages are: numpy, pyfits,pylab,scikit,scipy,mahotas'
     raise
@@ -41,6 +43,100 @@ def moments(data):
         width_y=0
     return height, x, y, width_x, width_y
 
+def wr(x,y,xcen,ycen,sigma):
+    """
+    Returns a gaussian weight function with the given parameters
+    """
+    res=np.exp(-((x-xcen)**2+(y-ycen)**2)/(2.*np.pi*sigma**2))/2.*np.pi/sigma 
+    return res
+
+def amoments(data,rowmean=None,colmean=None,sigma=None):
+    """
+    This codes calcualte the moments with/without a Gaussian weight.
+    the sigma is the weight the Gaussian weights. It is the sqrt(sigma_x**2+sigma_y**2)
+    col : x direction
+    row : y direction
+    """
+    nrow,ncol=data.shape
+    Isum = data.sum()
+    Icol = data.sum(axis=0) # sum over all rows
+    Irow = data.sum(axis=1) # sum over all cols
+    IcolSum = np.sum(Icol)
+    IrowSum = np.sum(Irow)
+    colgrid = np.arange(ncol)
+    rowgrid = np.arange(nrow)
+    if rowmean == None:
+        rowmean=np.sum(rowgrid*Irow)/IrowSum
+        colmean=np.sum(colgrid*Icol)/IcolSum
+    if sigma == None:
+        rowvar = np.sum((rowgrid-rowmean)**2*Irow)/(IrowSum)
+        colvar = np.sum((colgrid-colmean)**2*Icol)/(IcolSum)
+    else:
+        ROW,COL=np.indices((nrow,ncol))
+        wrmat = wr(ROW,COL,rowmean,colmean,sigma)
+        IWmat = data*wrmat
+        wrcol = wrmat.sum(axis=0)
+        wrrow = wrmat.sum(axis=1)
+        wrcolsum = np.sum(Icol*wrcol)
+        wrrowsum = np.sum(Irow*wrrow)
+        rowvar = np.sum((rowgrid-rowmean)**2*Irow*wrrow)/(wrrowsum)
+        colvar = np.sum((colgrid-colmean)**2*Icol*wrcol)/(wrcolsum)
+        #rowcolcov = np.sum((rowgrid-rowmean)*(colgrid-colmean)*IWmat)/np.sum(IWmat)
+        rowcolcov = np.sum(np.outer((rowgrid-rowmean),(colgrid-colmean))*IWmat)/np.sum(IWmat)
+    return rowmean,colmean,rowvar,colvar,rowcolcov
+
+
+def AdaptM(data=None,sigma=None):
+    """
+    Calculate the adaptive moements e1 and e2 and the variances in row and col
+    """
+    rowmean,colmean,rowvar,colvar,rowcolcov = amoments(data,sigma=sigma)
+    #rowmean,colmean,rowvar,colvar,rowcolcov = amoments(data,rowmean,colmean,sigma=sigma)
+    #rowmean,colmean,rowvar,colvar,rowcolcov = amoments(data,rowmean,colmean,sigma=sigma)
+    mrrcc = rowvar + colvar
+    me1 = (colvar - rowvar)/mrrcc
+    me2 = 2.*rowcolcov/mrrcc
+    return me1,me2,rowvar,colvar
+
+def moments7(data=None,sigma=None):
+    """
+    This one calcualte the 3 2nd moments and 4 thrid moments at the Gaussian weights.
+    col : x direction
+    row : y direction
+    """
+        nrow,ncol=data.shape
+    Isum = data.sum()
+    Icol = data.sum(axis=0) # sum over all rows
+    Irow = data.sum(axis=1) # sum over all cols
+    IcolSum = np.sum(Icol)
+    IrowSum = np.sum(Irow)
+    colgrid = np.arange(ncol)
+    rowgrid = np.arange(nrow)
+    if rowmean == None:
+        rowmean=np.sum(rowgrid*Irow)/IrowSum
+        colmean=np.sum(colgrid*Icol)/IcolSum
+    if sigma == None:
+        rowvar = np.sum((rowgrid-rowmean)**2*Irow)/(IrowSum)
+        colvar = np.sum((colgrid-colmean)**2*Icol)/(IcolSum)
+    else:
+        ROW,COL=np.indices((nrow,ncol))
+        wrmat = wr(ROW,COL,rowmean,colmean,sigma)
+        IWmat = data*wrmat
+        wrcol = wrmat.sum(axis=0)
+        wrrow = wrmat.sum(axis=1)
+        wrcolsum = np.sum(Icol*wrcol)
+        wrrowsum = np.sum(Irow*wrrow)
+        Mrr = np.sum((rowgrid-rowmean)**2*Irow*wrrow)/(wrrowsum)
+        Mcc = np.sum((colgrid-colmean)**2*Icol*wrcol)/(wrcolsum)
+        Mrc = np.sum(np.outer((rowgrid-rowmean),(colgrid-colmean))*IWmat)/np.sum(IWmat)
+        Mrrr = np.sum((rowgrid-rowmean)**3*Irow*wrrow)/(wrrowsum)
+        Mccc = np.sum((colgrid-colmean)**3*Icol*wrcol)/(wrcolsum)
+        Mrrc = np.sum(np.outer((rowgrid-rowmean)**2,(colgrid-colmean))*IWmat)/np.sum(IWmat)
+        Mrcc = np.sum(np.outer((rowgrid-rowmean),(colgrid-colmean)**2)*IWmat)/np.sum(IWmat)
+        return Mrr, Mcc, Mrc, Mrrr, Mccc, Mrrc, Mrcc
+
+
+
 def gaussianMoments(data):
     """Returns (height, x, y, width_x, width_y)
     the gaussian parameters of a 2D distribution found by a fit"""
@@ -64,11 +160,13 @@ x = None
 y = None
 z = 0.1
 output='temp.fit'
+seeing=0.9  # in arcseconds, fwhm
 #------------------------------
 
-def decamspot(xmm=None,ymm=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+def decamspot(xmm=None,ymm=None,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     #---generating the .par file------
-    file = open('temp.par','w')
+    dir ='/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/'
+    file = open(dir+'temp.par','w')
     file.write('RAYPATTERN '+str(raypattern) +'\n')
     file.write('NPIX '+str(npix) +'\n')
     file.write('SCALE '+str(scale)+'\n')
@@ -99,11 +197,15 @@ def decamspot(xmm=None,ymm=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., 
     file.write('OUTPUT '+output+'\n')
     file.close()
     #---execute the raytrace code ------
-    os.system('raytrace-3.13/decamspot '+'temp.par')
+    os.system(dir+'raytrace-3.13/decamspot '+dir+'temp.par')
     #---output the result as an image vector
-    b=pf.getdata('temp.fit')
-    seeing = seeing/scale # convert arcseconds to pixel
-    b=nd.filters.gaussian_filter(b,(seeing,seeing))
+    b=pf.getdata(dir+'temp.fit')
+    if seeing !=0:
+        seeing = seeing/scale # convert arcseconds to pixel
+        sgm = seeing/2.35482  # convert fwhm to sigma
+        sgmx = np.sqrt(sgm**2/2.)
+        sgmy = sgmx
+        b=nd.filters.gaussian_filter(b,(sgmx,sgmy))
     hdr = pf.getheader('temp.fit')
     bb = b.reshape(npix*npix)
     pos = np.array([xmm,ymm])
@@ -113,6 +215,7 @@ def decamspot(xmm=None,ymm=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., 
 def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     """
     seeing is the rms in arcseconds
+    syntax: genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
     """
     datalist = []
     hdrlist = []
@@ -159,7 +262,7 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='
     return data,hdrlist
 
 
-def genImgVfixedPos(filename=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+def genImgVfixedPos(filename=None,seeing=0,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     """
     seeing is the rms in arcseconds
     """
@@ -248,25 +351,31 @@ def disImgCCD(imgV=None,ccd=None):
         nrow = nstar/ncol
     pl.figure(figsize=(nrow*5,ncol*5))
     for i in range(nstar):
-        pl.subplot(min(nrow,ncol),max(nrow,ncol),i+1)
+        pl.subplot(min(nrow,ncol),max(nrow,ncol),i+1)            
         disImg(imgVV[i,:],colorbar=False)
     return 'The image is done!'
 
-
-def imgCCDctr(ccd=None,filter='g',seeing=0,z=None,theta=None):
+  
+def imgCCDctr(ccd=None,filter='g',seeing=0,z=0.,theta=0.,contour=False):
     xmm = ccd[1]
     ymm = ccd[2]
     res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,z=z)
     data = res[0]
+    disImgCCD(data,ccd)
+    if contour is True:
+        pl.contourf(data[0][2:].reshape(npix,npix),n=100)
+    e1,e2, rowvar,colvar =AdaptM(data[0][2:].reshape(npix,npix),sigma=1.1)
     xcen = res[1][0]['xcen']
     ycen = res[1][0]['ycen']
-    disImgCCD(data,ccd)
-    pl.figtext(0.2,0.85,'CCD: '+ccd[0], color='r')
-    pl.figtext(0.2,0.8,'Filter: '+filter, color='r')
-    pl.figtext(0.2,0.75, 'xtarget: '+str(xmm) + ',  ytarget: '+str(ymm), color='r')
-    pl.figtext(0.2,0.7, 'xcen: '+str(xcen) + ',  ycen: '+str(ycen), color='r')
-    height, x, y, width_x, width_y = moments(data[0][2:].reshape(npix,npix))
-    return height, x, y, width_x, width_y
+    pl.figtext(0.2,0.84,'CCD: '+ccd[0] +',   '+'Filter: '+filter, color='r')
+    pl.figtext(0.2,0.8, 'e1: '+str(round(e1,3)) + ',  e2: '+str(round(e2,3)), color='r')
+    pl.figtext(0.2,0.75, 'xcen: '+str(xcen) + ',  ycen: '+str(ycen), color='r')
+    pl.figtext(0.2,0.7, 'seeing: '+str(seeing)+'" (fwhm)', color='r')
+    if z:
+        pl.figtext(0.2,0.65, 'defocus: '+str(z)+' (mm)', color='r')
+    if theta:
+        pl.figtext(0.2,0.6,'tilt: '+str(theta)+' (arcsec)', color='r')
+    return e1,e2, rowvar,colvar
 
 def decompPCA(data=None,comp=None):
     img = data[:,2:].T
@@ -305,7 +414,7 @@ def addseeing(imgV=None,seeing=None):
     img = imgV[0]
 
     
-def decompZernike(ccd=None,seeing=0.,theta=0.,x=None,y=None,z=None,filter='g'):
+def decompZernike(ccd=None,seeing=0.,theta=0.,x=0.,y=0.,z=0.,filter='g'):
     imgV=genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta = theta,filter=filter,x=x,y=y,z=z)[0]
     size = np.sqrt(len(imgV[0][2:]))
     img = imgV[0][2:].reshape(size,size)        
@@ -323,7 +432,7 @@ def gaussian(height, center_x, center_y, width_x, width_y):
     return lambda x,y: height*np.exp(-(((center_x-x)/width_x)**2+((center_y-y)/width_y)**2)/2)
 
 
-def psfSizeCCD(ccd=None,filter='g',seeing=0,theta=0., zenith = 0., x=None, y=None,z=None):
+def psfSizeCCD(ccd=None,filter='r',seeing=0,theta=0., zenith = 0., x=0., y=0.,z=0.):
     res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,zenith=zenith,x=x,y=y,z=z)
     imgV = res[0]
     size = np.sqrt(len(imgV[0][2:]))
@@ -348,7 +457,7 @@ def bfplane(x, y, z):
     res = np.linalg.solve(A,B)
     return res
 
-def psfSizeAll(Nstar=None,filter='g',npix=40,seeing=0,theta=0., zenith = 0.,corrector='corrector', x=None, y=None,z=None):
+def psfSizeAll(Nstar=None,filter='r',npix=40,seeing=0,theta=0., zenith = 0.,corrector='corrector', x=None, y=None,z=None):
     res = genImgV(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z)
     imgV = res[0]
     x = imgV[:,0]
@@ -360,7 +469,7 @@ def psfSizeAll(Nstar=None,filter='g',npix=40,seeing=0,theta=0., zenith = 0.,corr
         hight,xtmp,tmp, x_width[i],y_width[i] = moments(img)
     return x, y, x_width, y_width, np.sqrt(x_width**2+y_width**2)
 
-def psfSizeAllZernike(Nstar=None,filter='g',npix=40,seeing=0,theta=0., zenith = 0.,corrector='corrector', x=None, y=None,z=None,rand=False):
+def psfSizeAllZernike(Nstar=None,filter='r',npix=40,seeing=0,theta=0., zenith = 0.,corrector='corrector', x=None, y=None,z=None,rand=False):
     if rand is False:
         res = genImgVfixedPos(seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z)
     else:
@@ -481,7 +590,23 @@ def centroidSuband(filter=None):
     pl.xlabel('distance to the FP center (mm)')
     pl.ylabel('y centroid difference (pixel)')
     return xceng1, yceng1, xceng2, yceng2,xceng3,yceng3,xceng4,yceng4,xceng5,yceng5
-    
+
+
+def genPSFimage(filename=None,dir=None):
+    """
+    convert the PSF image vector file to the set of PSF images
+    """
+    b=pf.getdata(filename)
+    nn = len(b)
+    npix = int(np.sqrt(len(b[0][2:])))
+    for i in range(nn):
+        img = b[i][2:].reshape(npix,npix)
+        h = pf.PrimaryHDU(img)
+        h.header.update('xmm',b[i][0])
+        h.header.update('ymm',b[i][1])
+        h.scale('int16', '', bzero=32768)
+        h.writeto(dir+'psf_'+str(i)+'.fit')
+
 
 
 
@@ -559,7 +684,6 @@ if __name__ == '__main__':
     pl.hlines(0,0,300,color='k',linestyle='dashed')
     pl.xlim(0,300)
     pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_fp.png')
-    """
 
 #----generate the data ------
     genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar1000_notilt_nodefocus.fit',Nstar=1000,seeing=0.9)
@@ -567,3 +691,37 @@ if __name__ == '__main__':
     genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_notilt_z0.1mm.fit',Nstar=1000,z=0.1,seeing=0.9)
     genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_tilt_10arcsec_nodefocus.fit',Nstar=1000,theta=10.,seeing=0.9)
     genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_tilt_100arcsec_nodefocus.fit',Nstar=1000,theta=100.,seeing=0.9)
+
+    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_tilt_xshift_0.01mm_nodefocus_notilt.fit',Nstar=1000,theta=0.,x=0.01,seeing=0.9)
+    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_tilt_xshift_0.1mm_nodefocus_notilt.fit',Nstar=1000,theta=0.,x=0.1,seeing=0.9)
+  
+
+    """
+#-----analyzing the generated data -------------
+    def measuredata(filename):
+        b=pf.getdata(filename)
+        Nobj = len(b)
+        x=np.zeros(Nobj)
+        y=np.zeros(Nobj)
+        e1=np.zeros(Nobj)
+        e2=np.zeros(Nobj)
+        rowvar=np.zeros(Nobj)
+        colvar=np.zeros(Nobj)
+        colnames = ['x','y','e1','e2','rowvar','colvar']
+        sigma = 1.1/0.27
+        for i in range(Nobj):
+            e1[i],e2[i],rowvar[i],colvar[i]=AdaptM(b[i][2:].reshape(40,40),sigma=sigma)
+            x[i]=b[i][0]
+            y[i]=b[i][1]
+            data = [x,y,e1,e2,rowvar,colvar]
+        hp.mwrfits(filename[:-4]+'_moments_gausswt_11.fit',data,colnames=colnames)
+        return 0
+
+ 
+    filenameAll = gl.glob('/home/jghao/research/decamFocus/PSF_seeing_*xshift*.fit')
+    Nfile=len(filenameAll)
+
+    for j in range(Nfile):
+        measuredata(filenameAll[j])
+    
+
