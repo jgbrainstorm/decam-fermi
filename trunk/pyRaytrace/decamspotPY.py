@@ -98,13 +98,13 @@ def AdaptM(data=None,sigma=None):
     me2 = 2.*rowcolcov/mrrcc
     return me1,me2,rowvar,colvar
 
-def moments7(data=None,sigma=None):
+def moments7(data=None,sigma=None,rowmean=None,colmean=None):
     """
-    This one calcualte the 3 2nd moments and 4 thrid moments at the Gaussian weights.
+    This one calcualte the 3 2nd moments and 4 thrid moments with the Gaussian weights.
     col : x direction
     row : y direction
     """
-        nrow,ncol=data.shape
+    nrow,ncol=data.shape
     Isum = data.sum()
     Icol = data.sum(axis=0) # sum over all rows
     Irow = data.sum(axis=1) # sum over all cols
@@ -601,6 +601,7 @@ def genPSFimage(filename=None,dir=None):
     npix = int(np.sqrt(len(b[0][2:])))
     for i in range(nn):
         img = b[i][2:].reshape(npix,npix)
+        img = img/img.sum()
         h = pf.PrimaryHDU(img)
         h.header.update('xmm',b[i][0])
         h.header.update('ymm',b[i][1])
@@ -608,6 +609,47 @@ def genPSFimage(filename=None,dir=None):
         h.writeto(dir+'psf_'+str(i)+'.fit')
 
 
+def measuredata(filename):
+    b=pf.getdata(filename)
+    Nobj = len(b)
+    x=np.zeros(Nobj)
+    y=np.zeros(Nobj)
+    e1=np.zeros(Nobj)
+    e2=np.zeros(Nobj)
+    rowvar=np.zeros(Nobj)
+    colvar=np.zeros(Nobj)
+    colnames = ['x','y','e1','e2','rowvar','colvar']
+    sigma = 1.1/0.27
+    for i in range(Nobj):
+        e1[i],e2[i],rowvar[i],colvar[i]=AdaptM(b[i][2:].reshape(40,40),sigma=sigma)
+        x[i]=b[i][0]
+        y[i]=b[i][1]
+        data = [x,y,e1,e2,rowvar,colvar]
+    hp.mwrfits(filename[:-4]+'_moments_gausswt_11.fit',data,colnames=colnames)
+    return 0
+
+
+def measuredataM7(filename):
+    b=pf.getdata(filename)
+    Nobj = len(b)
+    x=np.zeros(Nobj)
+    y=np.zeros(Nobj)
+    Mrr=np.zeros(Nobj)
+    Mcc=np.zeros(Nobj)
+    Mrc=np.zeros(Nobj)
+    Mrrr=np.zeros(Nobj)
+    Mccc=np.zeros(Nobj)
+    Mrrc=np.zeros(Nobj)
+    Mrcc=np.zeros(Nobj)
+    colnames = ['x','y','Mrr','Mcc','Mrc','Mrrr','Mccc','Mrrc','Mrcc']
+    sigma = 1.1/0.27
+    for i in range(Nobj):
+        Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(b[i][2:].reshape(40,40),sigma=sigma)
+        x[i]=b[i][0]
+        y[i]=b[i][1]
+        data = [x,y,Mrr, Mcc, Mrc, Mrrr, Mccc, Mrrc, Mrcc]
+    hp.mwrfits(filename[:-4]+'_moments7_gausswt_11.fit',data,colnames=colnames)
+    return 0
 
 
 if __name__ == '__main__':
@@ -698,30 +740,12 @@ if __name__ == '__main__':
 
     """
 #-----analyzing the generated data -------------
-    def measuredata(filename):
-        b=pf.getdata(filename)
-        Nobj = len(b)
-        x=np.zeros(Nobj)
-        y=np.zeros(Nobj)
-        e1=np.zeros(Nobj)
-        e2=np.zeros(Nobj)
-        rowvar=np.zeros(Nobj)
-        colvar=np.zeros(Nobj)
-        colnames = ['x','y','e1','e2','rowvar','colvar']
-        sigma = 1.1/0.27
-        for i in range(Nobj):
-            e1[i],e2[i],rowvar[i],colvar[i]=AdaptM(b[i][2:].reshape(40,40),sigma=sigma)
-            x[i]=b[i][0]
-            y[i]=b[i][1]
-            data = [x,y,e1,e2,rowvar,colvar]
-        hp.mwrfits(filename[:-4]+'_moments_gausswt_11.fit',data,colnames=colnames)
-        return 0
-
+ 
  
     filenameAll = gl.glob('/home/jghao/research/decamFocus/PSF_seeing_*xshift*.fit')
     Nfile=len(filenameAll)
 
     for j in range(Nfile):
-        measuredata(filenameAll[j])
+        measuredataM7(filenameAll[j])
     
 
