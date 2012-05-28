@@ -1,5 +1,7 @@
 #! /usr/bin/env python
-#---this is a python scrit that encapsulate the raytracing code from steve to make it more interactive/scriptable. 
+#---this is a python scrit that encapsulate the raytracing code from steve to make it more interactive/scriptable.
+# the zernike polynomial definition codes is adopted from:
+#http://www.staff.science.uu.nl/~werkh108/docs/teach/2011b_python/python102/examples/py102-example2-zernike.py
 # J Hao 3/28/2012 @ FNAL
 
 try:
@@ -14,6 +16,7 @@ try:
     import scipy.ndimage as nd
     import healpy as hp
     import glob as gl
+    from scipy.misc import factorial as fac
 except ImportError:
     print 'the required packages are: numpy, pyfits,pylab,scikit,scipy,mahotas'
     raise
@@ -208,7 +211,7 @@ def decamspot(xmm=None,ymm=None,seeing=0.9,npix=40,zenith=0,filter='r', theta=0.
         b=nd.filters.gaussian_filter(b,(sgmx,sgmy))
     hdr = pf.getheader('temp.fit')
     bb = b.reshape(npix*npix)
-    pos = np.array([xmm,ymm])
+    pos = np.array([hdr['xcen'],hdr['ycen']])
     return np.concatenate((pos,bb)),hdr
 
 
@@ -234,8 +237,8 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='
                 xmm = ccd[1]
                 ymm = ccd[2]
             else:
-                xmm = np.random.rand()*15*randfactor[np.random.randint(0,2)] + ccd[1]
-                ymm = np.random.rand()*30*randfactor[np.random.randint(0,2)] + ccd[2]
+                xmm = np.random.rand()*13*randfactor[np.random.randint(0,2)] + ccd[1]
+                ymm = np.random.rand()*28*randfactor[np.random.randint(0,2)] + ccd[2]
             res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband)
             datalist.append(res[0])
             hdrlist.append(res[1])
@@ -650,6 +653,123 @@ def measuredataM7(filename):
         data = [x,y,Mrr, Mcc, Mrc, Mrrr, Mccc, Mrrc, Mrcc]
     hp.mwrfits(filename[:-4]+'_moments7_gausswt_11.fit',data,colnames=colnames)
     return 0
+
+def genImgVallCCD(filename=None,Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+    """
+    Nstar is the number of stars on each CCD
+    """
+    hduList = pf.HDUList()
+    hdu = pf.PrimaryHDU(np.array([0]))
+    hdu.header.add_comment('RAYPATTERN: '+str(raypattern))
+    hdu.header.add_comment('NPIX: '+str(npix))
+    hdu.header.add_comment('SCALE: '+str(scale))
+    hdu.header.add_comment('FWHM: '+str(fwhm))
+    hdu.header.add_comment('ZENITH: '+str(zenith))
+    hdu.header.add_comment('FILTER: '+filter)
+    hdu.header.add_comment('THETA: '+str(theta))
+    hdu.header.add_comment('CORRECTOR: '+str(corrector))
+    hdu.header.add_comment('X: '+str(x))
+    hdu.header.add_comment('Y: '+str(y))
+    hdu.header.add_comment('Z: '+str(z))
+    hdu.header.add_comment('Seeing: '+str(seeing))
+    hduList.append(hdu)
+    for ccd in N[1:]+S[1:]:
+        res = genImgV(filename=filename,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband)
+        hdu = pf.PrimaryHDU(res[0])
+        hdu.header.update('ccdPos',ccd[0])
+        hdu.header.update('ccdXcen',ccd[1])
+        hdu.header.update('ccdYcen',ccd[2])
+        hduList.append(hdu)
+    hduList.writeto(filename)
+
+
+def zernike_rad(m, n, rho):
+    """
+    Calculate the radial component of Zernike polynomial (m, n) 
+    given a grid of radial coordinates rho.
+    
+    >>> zernike_rad(3, 3, 0.333)
+    0.036926037000000009
+    >>> zernike_rad(1, 3, 0.333)
+    -0.55522188900000002
+    >>> zernike_rad(3, 5, 0.12345)
+    -0.007382104685237683
+    """
+    if (n < 0 or m < 0 or abs(m) > n):
+        raise ValueError
+    if ((n-m) % 2):
+        return rho*0.0
+    pre_fac = lambda k: (-1.0)**k * fac(n-k) / ( fac(k) * fac( (n+m)/2.0 - k ) * fac( (n-m)/2.0 - k ) )
+    return sum(pre_fac(k) * rho**(n-2.0*k) for k in xrange((n-m)/2+1))
+
+def zernike(m, n, rho, phi):
+    """
+    Calculate Zernike polynomial (m, n) given a grid of radial
+    coordinates rho and azimuthal coordinates phi.
+    >>> zernike(3,5, 0.12345, 1.0)
+    0.0073082282475042991
+    >>> zernike(1, 3, 0.333, 5.0)
+    -0.15749545445076085
+    """
+    if (m > 0): return zernike_rad(m, n, rho) * np.cos(m * phi)
+    if (m < 0): return zernike_rad(-m, n, rho) * np.sin(-m * phi)
+    return zernike_rad(0, n, rho)
+
+def zernikel(j, rho, phi):
+    """
+    Calculate Zernike polynomial with Noll coordinate j given a grid of radial coordinates rho and azimuthal coordinates phi.
+    >>> zernikel(0, 0.12345, 0.231)
+    1.0
+    >>> zernikel(1, 0.12345, 0.231)
+    0.028264010304937772
+    >>> zernikel(6, 0.12345, 0.231)
+    0.0012019069816780774
+    """
+    n = 0
+    while (j > n):
+        n += 1
+        j -= n
+    m = -n+2*j
+    return zernike(m, n, rho, phi)
+
+
+def zernikeFit(x, y, z,max_rad=1.,cm=None,max_order=20):
+    """
+    Fit a set of x, y, z data to a zernike polynomial with the least square fitting. Note that here x, y, z are all 1 dim array.
+    """
+    if len(x.shape) == 2 or len(y.shape) == 2 or len(z.shape) == 2:
+        print 'array must be 1 dim'
+        exit()
+    if cm == None:
+        xcm = nd.center_of_mass(x)
+        ycm = nd.center_of_mass(y)
+    else:
+        xcm = cm[0]
+        ycm = cm[1]
+    x = x - xcm
+    y = y - ycm
+    rho = np.sqrt(x**2+y**2)
+    phi = np.arctan2(y,x)
+    dataX = []
+    ok = rho <= max_rad
+    for j in range(max_order):
+        dataX.append(zernikel(j,rho[ok],phi[ok]))
+    dataX=np.array(dataX).T
+    beta = np.linalg.lstsq(dataX,z[ok])
+    z_fitted = np.zeros(len(z))
+    for j in range(max_order):
+        z_fitted[ok] = z_fitted[ok]+beta[0][j]*zernikel(j,rho[ok],phi[ok])
+    return beta,z_fitted
+
+def dispZernike(beta=1.,j=0,gridsize = 10, max_rad = 10):
+    x,y = np.meshgrid(np.arange(-gridsize,gridsize,0.01),np.arange(-gridsize,gridsize,0.01))
+    rho = np.sqrt(x**2+y**2)
+    phi = np.arctan2(y,x)
+    ok = rho < max_rad
+    znk = beta*zernikel(j,rho,phi)*ok
+    pl.imshow(znk)
+    return znk
+    
 
 
 if __name__ == '__main__':
