@@ -212,6 +212,7 @@ def decamspot(xmm=None,ymm=None,seeing=0.9,npix=40,zenith=0,filter='r', theta=0.
     hdr = pf.getheader('temp.fit')
     bb = b.reshape(npix*npix)
     pos = np.array([hdr['xcen'],hdr['ycen']])
+    os.system('rm '+dir+'temp.fit temp.par')
     return np.concatenate((pos,bb)),hdr
 
 
@@ -654,6 +655,34 @@ def measuredataM7(filename):
     hp.mwrfits(filename[:-4]+'_moments7_gausswt_11.fit',data,colnames=colnames)
     return 0
 
+
+def measureDataM7_multiext(filename):
+    hdu=pf.open(filename)
+    nn = len(hdu)
+    data = []
+    colnames = ['x','y','Mrr','Mcc','Mrc','Mrrr','Mccc','Mrrc','Mrcc']
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        Mrr=np.zeros(Nobj)
+        Mcc=np.zeros(Nobj)
+        Mrc=np.zeros(Nobj)
+        Mrrr=np.zeros(Nobj)
+        Mccc=np.zeros(Nobj)
+        Mrrc=np.zeros(Nobj)
+        Mrcc=np.zeros(Nobj)
+        sigma = 1.1/0.27
+        for i in range(Nobj):
+            Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(hdui.data[i][2:].reshape(40,40),sigma=sigma)
+        x=hdui.header['ccdXcen']
+        y=hdui.header['ccdYcen']
+        data.append([x,y,np.median(Mrr), np.median(Mcc), np.median(Mrc), np.median(Mrrr), np.median(Mccc),np.median(Mrrc), np.median(Mrcc)])
+    data=np.array(data)
+    hp.mwrfits(filename[:-7]+'_moments7_gausswt_11.fit',data.T,colnames=colnames)
+    return '---done !-----'
+
+
+
+
 def genImgVallCCD(filename=None,Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     """
     Nstar is the number of stars on each CCD
@@ -674,13 +703,20 @@ def genImgVallCCD(filename=None,Nstar=None,seeing=0,npix=40,zenith=0,filter='g',
     hdu.header.add_comment('Seeing: '+str(seeing))
     hduList.append(hdu)
     for ccd in N[1:]+S[1:]:
+        print ccd
         res = genImgV(filename=filename,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband)
         hdu = pf.PrimaryHDU(res[0])
         hdu.header.update('ccdPos',ccd[0])
         hdu.header.update('ccdXcen',ccd[1])
         hdu.header.update('ccdYcen',ccd[2])
         hduList.append(hdu)
-    hduList.writeto(filename)
+    if os.path.exists(filename):
+        os.system('rm '+filename)
+        hduList.writeto(filename)
+    else:
+        hduList.writeto(filename)
+    os.system('gzip '+filename)
+    return '---done---'
 
 
 def zernike_rad(m, n, rho):
@@ -767,6 +803,18 @@ def dispZernike(beta=1.,j=0,gridsize = 10, max_rad = 10):
     phi = np.arctan2(y,x)
     ok = rho < max_rad
     znk = beta*zernikel(j,rho,phi)*ok
+    pl.imshow(znk)
+    return znk
+    
+def showZernike(beta=None,gridsize = 10, max_rad = 10):
+    x,y = np.meshgrid(np.arange(-gridsize,gridsize,0.01),np.arange(-gridsize,gridsize,0.01))
+    rho = np.sqrt(x**2+y**2)
+    phi = np.arctan2(y,x)
+    ok = rho < max_rad
+    nn = len(beta)
+    znk=0
+    for j in range(nn):
+        znk = znk + beta[j]*zernikel(j,rho,phi)*ok
     pl.imshow(znk)
     return znk
     
@@ -858,8 +906,8 @@ if __name__ == '__main__':
     genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_tilt_xshift_0.1mm_nodefocus_notilt.fit',Nstar=1000,theta=0.,x=0.1,seeing=0.9)
   
 
-    """
-#-----analyzing the generated data -------------
+    
+    #-----analyzing the generated data -------------
  
  
     filenameAll = gl.glob('/home/jghao/research/decamFocus/PSF_seeing_*xshift*.fit')
@@ -868,4 +916,10 @@ if __name__ == '__main__':
     for j in range(Nfile):
         measuredataM7(filenameAll[j])
     
+    """
 
+    #--generate multi extension data -----
+    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar20_notilt_nodefocus_multi_ext.fit'
+    genImgVallCCD(filename=filename,Nstar=20,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
+    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar20_tilt_100arecse_nodefocus_multi_ext.fit'
+    genImgVallCCD(filename=filename,Nstar=20,seeing=0.9,npix=40,zenith=0,filter='r', theta=100., corrector='corrector',x=None,y=None,z=None,suband=None)
