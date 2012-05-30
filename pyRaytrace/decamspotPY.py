@@ -710,13 +710,14 @@ def genImgVallCCD(filename=None,Nstar=None,seeing=0,npix=40,zenith=0,filter='g',
         hdu.header.update('ccdXcen',ccd[1])
         hdu.header.update('ccdYcen',ccd[2])
         hduList.append(hdu)
-    if os.path.exists(filename):
-        os.system('rm '+filename)
-        hduList.writeto(filename)
-    else:
-        hduList.writeto(filename)
-    os.system('gzip '+filename)
-    return '---done---'
+    if filename != None:
+        if os.path.exists(filename):
+            os.system('rm '+filename)
+            hduList.writeto(filename)
+        else:
+            hduList.writeto(filename)
+        os.system('gzip '+filename)
+    return hduList
 
 
 def zernike_rad(m, n, rho):
@@ -769,25 +770,19 @@ def zernikel(j, rho, phi):
     return zernike(m, n, rho, phi)
 
 
-def zernikeFit(x, y, z,max_rad=1.,cm=None,max_order=20):
+def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
     """
-    Fit a set of x, y, z data to a zernike polynomial with the least square fitting. Note that here x, y, z are all 1 dim array.
+    Fit a set of x, y, z data to a zernike polynomial with the least square fitting. Note that here x, y, z are all 1 dim array. Here the max_rad is by default equal to 225 mm, the size of the decam focal plane. 
     """
     if len(x.shape) == 2 or len(y.shape) == 2 or len(z.shape) == 2:
         print 'array must be 1 dim'
         exit()
-    if cm == None:
-        xcm = nd.center_of_mass(x)
-        ycm = nd.center_of_mass(y)
-    else:
-        xcm = cm[0]
-        ycm = cm[1]
-    x = x - xcm
-    y = y - ycm
-    rho = np.sqrt(x**2+y**2)
+    x = x - cm[0]
+    y = y - cm[1]
+    rho = np.sqrt(x**2+y**2)/max_rad #normalize to unit circle.
     phi = np.arctan2(y,x)
     dataX = []
-    ok = rho <= max_rad
+    ok = rho <= 1.
     for j in range(max_order):
         dataX.append(zernikel(j,rho[ok],phi[ok]))
     dataX=np.array(dataX).T
@@ -806,7 +801,7 @@ def dispZernike(beta=1.,j=0,gridsize = 10, max_rad = 10):
     pl.imshow(znk)
     return znk
     
-def showZernike(beta=None,gridsize = 10, max_rad = 10):
+def showZernike(beta=None,gridsize = 1, max_rad = 1):
     x,y = np.meshgrid(np.arange(-gridsize,gridsize,0.01),np.arange(-gridsize,gridsize,0.01))
     rho = np.sqrt(x**2+y**2)
     phi = np.arctan2(y,x)
@@ -817,7 +812,41 @@ def showZernike(beta=None,gridsize = 10, max_rad = 10):
         znk = znk + beta[j]*zernikel(j,rho,phi)*ok
     pl.imshow(znk)
     return znk
-    
+
+
+def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+    """
+    This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
+    """
+    hdu = genImgVallCCD(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z)
+    nn = len(hdu)
+    data = []
+    colnames = ['x','y','Myy','Mxx','Myx','Myyy','Mxxx','Myyx','Myxx']
+    #colnames = ['x','y','Mrr','Mcc','Mrc','Mrrr','Mccc','Mrrc','Mrcc']
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        Mrr=np.zeros(Nobj)
+        Mcc=np.zeros(Nobj)
+        Mrc=np.zeros(Nobj)
+        Mrrr=np.zeros(Nobj)
+        Mccc=np.zeros(Nobj)
+        Mrrc=np.zeros(Nobj)
+        Mrcc=np.zeros(Nobj)
+        sigma = 1.1/0.27
+        for i in range(Nobj):
+            Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(hdui.data[i][2:].reshape(40,40),sigma=sigma)
+        x=hdui.header['ccdXcen']
+        y=hdui.header['ccdYcen']
+        data.append([x,y,np.median(Mrr), np.median(Mcc), np.median(Mrc), np.median(Mrrr), np.median(Mccc),np.median(Mrrc), np.median(Mrcc)])
+    data=np.array(data)
+    pl.figure(figsize=(15,15))
+    for i in range(2,9):
+        pl.subplot(3,3,i-1)
+        beta = zernikeFit(data[:,0],data[:,1],data[:,i])[0][0]
+        znk=showZernike(beta=beta)
+        pl.colorbar()
+        pl.title(colnames[i])
+    return '----done!----'
 
 
 if __name__ == '__main__':
