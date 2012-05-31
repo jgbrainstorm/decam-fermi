@@ -10,9 +10,9 @@ try:
     import pylab as pl
     import os
     from DECamCCD_def import *
-    from sklearn.decomposition import PCA
-    from scipy.optimize import leastsq
-    import mahotas as mh
+    #from sklearn.decomposition import PCA
+    #from scipy.optimize import leastsq
+    #import mahotas as mh
     import scipy.ndimage as nd
     import healpy as hp
     import glob as gl
