@@ -772,7 +772,8 @@ def zernikel(j, rho, phi):
 
 def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
     """
-    Fit a set of x, y, z data to a zernike polynomial with the least square fitting. Note that here x, y, z are all 1 dim array. Here the max_rad is by default equal to 225 mm, the size of the decam focal plane. 
+    Fit a set of x, y, z data to a zernike polynomial with the least square fitting. Note that here x, y, z are all 1 dim array. Here the max_rad is by default equal to 225 mm, the size of the decam focal plane.
+    It will return the beta, the error and the chi2
     """
     if len(x.shape) == 2 or len(y.shape) == 2 or len(z.shape) == 2:
         print 'array must be 1 dim'
@@ -786,11 +787,10 @@ def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
     for j in range(max_order):
         dataX.append(zernikel(j,rho[ok],phi[ok]))
     dataX=np.array(dataX).T
-    beta = np.linalg.lstsq(dataX,z[ok])
-    z_fitted = np.zeros(len(z))
-    for j in range(max_order):
-        z_fitted[ok] = z_fitted[ok]+beta[0][j]*zernikel(j,rho[ok],phi[ok])
-    return beta,z_fitted
+    beta,SSE,rank,sing = np.linalg.lstsq(dataX,z[ok])# SSE is the residual sum square
+    SST = np.var(z[ok])*(len(z[ok])-1)# SST is the sum((z_i - mean(z))^2)
+    R2 = 1 - SSE/SST
+    return beta,R2
 
 def dispZernike(beta=1.,j=0,gridsize = 10, max_rad = 10):
     x,y = np.meshgrid(np.arange(-gridsize,gridsize,0.01),np.arange(-gridsize,gridsize,0.01))
@@ -814,7 +814,7 @@ def showZernike(beta=None,gridsize = 1, max_rad = 1):
     return znk
 
 
-def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,zernike_max_order=20):
     """
     This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
     """
@@ -834,7 +834,7 @@ def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0.,
         Mrcc=np.zeros(Nobj)
         sigma = 1.1/0.27
         for i in range(Nobj):
-            Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(hdui.data[i][2:].reshape(40,40),sigma=sigma)
+            Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(hdui.data[i][2:].reshape(npix,npix),sigma=sigma)
         x=hdui.header['ccdXcen']
         y=hdui.header['ccdYcen']
         data.append([x,y,np.median(Mrr), np.median(Mcc), np.median(Mrc), np.median(Mrrr), np.median(Mccc),np.median(Mrrc), np.median(Mrcc)])
@@ -842,11 +842,12 @@ def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0.,
     pl.figure(figsize=(15,15))
     for i in range(2,9):
         pl.subplot(3,3,i-1)
-        beta = zernikeFit(data[:,0],data[:,1],data[:,i])[0][0]
+        beta,R2 = zernikeFit(data[:,0],data[:,1],data[:,i],max_order=zernike_max_order)
         znk=showZernike(beta=beta)
         pl.colorbar()
         pl.title(colnames[i])
-    return '----done!----'
+        print '--- R^2 of the fit is: '+str(R2) +'---'
+    return beta
 
 
 if __name__ == '__main__':
