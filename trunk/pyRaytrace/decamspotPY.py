@@ -14,7 +14,7 @@ try:
     #from scipy.optimize import leastsq
     #import mahotas as mh
     import scipy.ndimage as nd
-    import healpy as hp
+    #import healpy as hp
     import glob as gl
     from scipy.misc import factorial as fac
 except ImportError:
@@ -168,7 +168,7 @@ seeing=0.9  # in arcseconds, fwhm
 
 def decamspot(xmm=None,ymm=None,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     #---generating the .par file------
-    dir ='/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/'
+    dir = os.getcwd()+'/'
     file = open(dir+'temp.par','w')
     file.write('RAYPATTERN '+str(raypattern) +'\n')
     file.write('NPIX '+str(npix) +'\n')
