@@ -736,13 +736,6 @@ def zernike_rad(m, n, rho):
     """
     Calculate the radial component of Zernike polynomial (m, n) 
     given a grid of radial coordinates rho.
-    
-    >>> zernike_rad(3, 3, 0.333)
-    0.036926037000000009
-    >>> zernike_rad(1, 3, 0.333)
-    -0.55522188900000002
-    >>> zernike_rad(3, 5, 0.12345)
-    -0.007382104685237683
     """
     if (n < 0 or m < 0 or abs(m) > n):
         raise ValueError
@@ -755,10 +748,6 @@ def zernike(m, n, rho, phi):
     """
     Calculate Zernike polynomial (m, n) given a grid of radial
     coordinates rho and azimuthal coordinates phi.
-    >>> zernike(3,5, 0.12345, 1.0)
-    0.0073082282475042991
-    >>> zernike(1, 3, 0.333, 5.0)
-    -0.15749545445076085
     """
     if (m > 0): return zernike_rad(m, n, rho) * np.cos(m * phi)
     if (m < 0): return zernike_rad(-m, n, rho) * np.sin(-m * phi)
@@ -767,12 +756,6 @@ def zernike(m, n, rho, phi):
 def zernikel(j, rho, phi):
     """
     Calculate Zernike polynomial with Noll coordinate j given a grid of radial coordinates rho and azimuthal coordinates phi.
-    >>> zernikel(0, 0.12345, 0.231)
-    1.0
-    >>> zernikel(1, 0.12345, 0.231)
-    0.028264010304937772
-    >>> zernikel(6, 0.12345, 0.231)
-    0.0012019069816780774
     """
     n = 0
     while (j > n):
@@ -785,7 +768,7 @@ def zernikel(j, rho, phi):
 def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
     """
     Fit a set of x, y, z data to a zernike polynomial with the least square fitting. Note that here x, y, z are all 1 dim array. Here the max_rad is by default equal to 225 mm, the size of the decam focal plane.
-    It will return the beta, the error and the chi2
+    It will return the beta and the adjusted R2
     """
     if len(x.shape) == 2 or len(y.shape) == 2 or len(z.shape) == 2:
         print 'array must be 1 dim'
@@ -802,8 +785,10 @@ def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
     beta,SSE,rank,sing = np.linalg.lstsq(dataX,z[ok])# SSE is the residual sum square
     SST = np.var(z[ok])*(len(z[ok])-1)# SST is the sum((z_i - mean(z))^2)
     R2 = 1 - SSE/SST
-    R2_adj = 1-(1-R2)*(len(z[ok])-1)/((len(z[ok])-max_order)
-    return beta,R2_adj
+    R2adj = 1-(1-R2)*(len(z[ok])-1)/(len(z[ok])-max_order)                
+    return beta, R2adj
+
+
 
 def dispZernike(beta=1.,j=0,gridsize = 10, max_rad = 10):
     x,y = np.meshgrid(np.arange(-gridsize,gridsize,0.01),np.arange(-gridsize,gridsize,0.01))
@@ -853,14 +838,20 @@ def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0.,
         data.append([x,y,np.median(Mrr), np.median(Mcc), np.median(Mrc), np.median(Mrrr), np.median(Mccc),np.median(Mrrc), np.median(Mrcc)])
     data=np.array(data)
     pl.figure(figsize=(15,15))
+    betaAll=[]
+    R2adjAll=[]
     for i in range(2,9):
         pl.subplot(3,3,i-1)
         beta,R2_adj = zernikeFit(data[:,0],data[:,1],data[:,i],max_order=zernike_max_order)
+        betaAll.append(beta)
+        R2adjAll.append(R2_adj)
         znk=showZernike(beta=beta)
         pl.colorbar()
         pl.title(colnames[i])
         print '--- R2_adj of the fit is: '+str(R2_adj) +'---'
-    return beta
+    betaAll = np.array(betaAll)
+    R2adjAll = np.array(R2adjAll)
+    return betaAll, R2adjAll
 
 
 if __name__ == '__main__':
