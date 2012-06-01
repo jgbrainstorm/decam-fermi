@@ -802,7 +802,8 @@ def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
     beta,SSE,rank,sing = np.linalg.lstsq(dataX,z[ok])# SSE is the residual sum square
     SST = np.var(z[ok])*(len(z[ok])-1)# SST is the sum((z_i - mean(z))^2)
     R2 = 1 - SSE/SST
-    return beta,R2
+    R2_adj = 1-(1-R2)*(len(z[ok])-1)/((len(z[ok])-max_order)
+    return beta,R2_adj
 
 def dispZernike(beta=1.,j=0,gridsize = 10, max_rad = 10):
     x,y = np.meshgrid(np.arange(-gridsize,gridsize,0.01),np.arange(-gridsize,gridsize,0.01))
@@ -854,11 +855,11 @@ def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0.,
     pl.figure(figsize=(15,15))
     for i in range(2,9):
         pl.subplot(3,3,i-1)
-        beta,R2 = zernikeFit(data[:,0],data[:,1],data[:,i],max_order=zernike_max_order)
+        beta,R2_adj = zernikeFit(data[:,0],data[:,1],data[:,i],max_order=zernike_max_order)
         znk=showZernike(beta=beta)
         pl.colorbar()
         pl.title(colnames[i])
-        print '--- R^2 of the fit is: '+str(R2) +'---'
+        print '--- R2_adj of the fit is: '+str(R2_adj) +'---'
     return beta
 
 
