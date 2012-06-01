@@ -50,7 +50,7 @@ def wr(x,y,xcen,ycen,sigma):
     """
     Returns a gaussian weight function with the given parameters
     """
-    res=np.exp(-((x-xcen)**2+(y-ycen)**2)/(2.*np.pi*sigma**2))/2.*np.pi/sigma 
+    res=np.exp(-((x-xcen)**2+(y-ycen)**2)/(2.*sigma**2))/(2.*np.pi*sigma**2) 
     return res
 
 def amoments(data,rowmean=None,colmean=None,sigma=None):
