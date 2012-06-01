@@ -14,7 +14,7 @@ try:
     #from scipy.optimize import leastsq
     #import mahotas as mh
     import scipy.ndimage as nd
-    #import healpy as hp
+    import healpy as hp
     import glob as gl
     from scipy.misc import factorial as fac
 except ImportError:
@@ -168,7 +168,7 @@ seeing=0.9  # in arcseconds, fwhm
 
 def decamspot(xmm=None,ymm=None,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     #---generating the .par file------
-    dir = os.getcwd()+'/'
+    dir ='/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/'
     file = open(dir+'temp.par','w')
     file.write('RAYPATTERN '+str(raypattern) +'\n')
     file.write('NPIX '+str(npix) +'\n')
@@ -210,8 +210,9 @@ def decamspot(xmm=None,ymm=None,seeing=0.9,npix=40,zenith=0,filter='r', theta=0.
         sgmy = sgmx
         b=nd.filters.gaussian_filter(b,(sgmx,sgmy))
     hdr = pf.getheader('temp.fit')
+    ypstamp,xpstamp = nd.center_of_mass(b) # y -> row, x-> col
     bb = b.reshape(npix*npix)
-    pos = np.array([hdr['xcen'],hdr['ycen']])
+    pos = np.array([hdr['xcen'],hdr['ycen'],xpstamp,ypstamp])
     os.system('rm '+dir+'temp.fit temp.par')
     return np.concatenate((pos,bb)),hdr
 
@@ -246,18 +247,21 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='
         data = np.array(datalist)
     if filename is not None:
         hdu = pf.PrimaryHDU(data)
-        hdu.header.update('RAYPATTERN: '+str(raypattern))
-        hdu.header.update('NPIX: '+str(npix))
-        hdu.header.update('SCALE: '+str(scale))
-        hdu.header.update('FWHM: '+str(fwhm))
-        hdu.header.update('ZENITH: '+str(zenith))
-        hdu.header.update('FILTER: '+filter)
-        hdu.header.update('THETA: '+str(theta))
-        hdu.header.update('CORRECTOR: '+str(corrector))
-        hdu.header.update('X: '+str(x))
-        hdu.header.update('Y: '+str(y))
-        hdu.header.update('Z: '+str(z))
-        hdu.header.update('Seeing: '+str(seeing))
+        hdu.header.update('RAYPATT',raypattern)
+        hdu.header.update('NPIX',npix)
+        hdu.header.update('SCALE',scale)
+        hdu.header.update('FWHM',fwhm)
+        hdu.header.update('ZENITH',zenith)
+        hdu.header.update('FILTER',filter)
+        hdu.header.update('THETA',theta)
+        hdu.header.update('CORRT',corrector)
+        if x != None:
+            hdu.header.update('X',x)
+        if y != None:
+            hdu.header.update('Y',y)
+        if z != None:
+            hdu.header.update('Z',z)
+        hdu.header.update('Seeing',seeing)
         if os.path.exists(filename):
             os.system('rm '+filename)
             hdu.writeto(filename)
@@ -283,18 +287,21 @@ def genImgVfixedPos(filename=None,seeing=0,npix=40,zenith=0,filter='r', theta=0.
     data = np.array(datalist)
     if filename is not None:
         hdu = pf.PrimaryHDU(data)
-        hdu.header.update('RAYPATTERN: '+str(raypattern))
-        hdu.header.update('NPIX: '+str(npix))
-        hdu.header.update('SCALE: '+str(scale))
-        hdu.header.update('FWHM: '+str(fwhm))
-        hdu.header.update('ZENITH: '+str(zenith))
-        hdu.header.update('FILTER: '+filter)
-        hdu.header.update('THETA: '+str(theta))
-        hdu.header.update('CORRECTOR: '+str(corrector))
-        hdu.header.update('X: '+str(x))
-        hdu.header.update('Y: '+str(y))
-        hdu.header.update('Z: '+str(z))
-        hdu.header.update('Seeing: '+str(seeing))
+        hdu.header.update('RAYPATT',raypattern)
+        hdu.header.update('NPIX',npix)
+        hdu.header.update('SCALE',scale)
+        hdu.header.update('FWHM',fwhm)
+        hdu.header.update('ZENITH',zenith)
+        hdu.header.update('FILTER',filter)
+        hdu.header.update('THETA',theta)
+        hdu.header.update('CORRT',corrector)
+        if x != None:
+            hdu.header.update('X',x)
+        if y != None:
+            hdu.header.update('Y',y)
+        if z != None:
+            hdu.header.update('Z',z)
+        hdu.header.update('Seeing',seeing)
         if os.path.exists(filename):
             os.system('rm '+filename)
             hdu.writeto(filename)
@@ -484,7 +491,7 @@ def psfSizeAllZernike(Nstar=None,filter='r',npix=40,seeing=0,theta=0., zenith = 
     coeff=[]
     Nstar = len(x)
     for i in range(Nstar):
-        img = imgV[i,2:].reshape(npix,npix)
+        img = imgV[i,4:].reshape(npix,npix)
         coeff.append(mh.zernike.zernike_moments(img,30,degree = 3, cm=mh.center_of_mass(img)))
     return x, y, np.array(coeff)
 
@@ -645,10 +652,11 @@ def measuredataM7(filename):
     Mccc=np.zeros(Nobj)
     Mrrc=np.zeros(Nobj)
     Mrcc=np.zeros(Nobj)
+    
     colnames = ['x','y','Mrr','Mcc','Mrc','Mrrr','Mccc','Mrrc','Mrcc']
     sigma = 1.1/0.27
     for i in range(Nobj):
-        Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(b[i][2:].reshape(40,40),sigma=sigma)
+        Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(b[i][4:].reshape(40,40),sigma=sigma)
         x[i]=b[i][0]
         y[i]=b[i][1]
         data = [x,y,Mrr, Mcc, Mrc, Mrrr, Mccc, Mrrc, Mrcc]
@@ -660,7 +668,8 @@ def measureDataM7_multiext(filename):
     hdu=pf.open(filename)
     nn = len(hdu)
     data = []
-    colnames = ['x','y','Mrr','Mcc','Mrc','Mrrr','Mccc','Mrrc','Mrcc']
+    colnames = ['x','y','Myy','Mxx','Myx','Myyy','Mxxx','Myyx','Myxx']
+    #colnames = ['x','y','Mrr','Mcc','Mrc','Mrrr','Mccc','Mrrc','Mrcc']
     for hdui in hdu[1:]:
         Nobj = hdui.data.shape[0]
         Mrr=np.zeros(Nobj)
@@ -672,7 +681,7 @@ def measureDataM7_multiext(filename):
         Mrcc=np.zeros(Nobj)
         sigma = 1.1/0.27
         for i in range(Nobj):
-            Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(hdui.data[i][2:].reshape(40,40),sigma=sigma)
+            Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(hdui.data[i][4:].reshape(40,40),sigma=sigma)
         x=hdui.header['ccdXcen']
         y=hdui.header['ccdYcen']
         data.append([x,y,np.median(Mrr), np.median(Mcc), np.median(Mrc), np.median(Mrrr), np.median(Mccc),np.median(Mrrc), np.median(Mrcc)])
@@ -683,24 +692,27 @@ def measureDataM7_multiext(filename):
 
 
 
-def genImgVallCCD(filename=None,Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+def genImgVallCCD(filename=None,Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=0.,y=0.,z=0.,suband=None):
     """
     Nstar is the number of stars on each CCD
     """
     hduList = pf.HDUList()
     hdu = pf.PrimaryHDU(np.array([0]))
-    hdu.header.update('RAYPATTERN: '+str(raypattern))
-    hdu.header.update('NPIX: '+str(npix))
-    hdu.header.update('SCALE: '+str(scale))
-    hdu.header.update('FWHM: '+str(fwhm))
-    hdu.header.update('ZENITH: '+str(zenith))
-    hdu.header.update('FILTER: '+filter)
-    hdu.header.update('THETA: '+str(theta))
-    hdu.header.update('CORRECTOR: '+str(corrector))
-    hdu.header.update('X: '+str(x))
-    hdu.header.update('Y: '+str(y))
-    hdu.header.update('Z: '+str(z))
-    hdu.header.update('Seeing: '+str(seeing))
+    hdu.header.update('RAYPATT',raypattern)
+    hdu.header.update('NPIX',npix)
+    hdu.header.update('SCALE',scale)
+    hdu.header.update('FWHM',fwhm)
+    hdu.header.update('ZENITH',zenith)
+    hdu.header.update('FILTER',filter)
+    hdu.header.update('THETA',theta)
+    hdu.header.update('CORRT',corrector)
+    if x != None:
+        hdu.header.update('X',x)
+    if y != None:
+        hdu.header.update('Y',y)
+    if z != None:
+        hdu.header.update('Z',z)
+    hdu.header.update('Seeing',seeing)
     hduList.append(hdu)
     for ccd in N[1:]+S[1:]:
         print ccd
@@ -834,7 +846,7 @@ def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0.,
         Mrcc=np.zeros(Nobj)
         sigma = 1.1/0.27
         for i in range(Nobj):
-            Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(hdui.data[i][2:].reshape(npix,npix),sigma=sigma)
+            Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
         x=hdui.header['ccdXcen']
         y=hdui.header['ccdYcen']
         data.append([x,y,np.median(Mrr), np.median(Mcc), np.median(Mrc), np.median(Mrrr), np.median(Mccc),np.median(Mrrc), np.median(Mrcc)])
@@ -953,3 +965,8 @@ if __name__ == '__main__':
     genImgVallCCD(filename=filename,Nstar=20,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
     filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar20_tilt_100arecse_nodefocus_multi_ext.fit'
     genImgVallCCD(filename=filename,Nstar=20,seeing=0.9,npix=40,zenith=0,filter='r', theta=100., corrector='corrector',x=None,y=None,z=None,suband=None)
+    #-------one psf per ccd-----
+    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar1_notilt_nodefocus_multi_ext.fit'
+    genImgVallCCD(filename=filename,Nstar=1,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
+    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar1_tilt_100arecse_nodefocus_multi_ext.fit'
+    genImgVallCCD(filename=filename,Nstar=1,seeing=0.9,npix=40,zenith=0,filter='r', theta=100., corrector='corrector',x=None,y=None,z=None,suband=None)
