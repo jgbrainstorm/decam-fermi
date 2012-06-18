@@ -3,6 +3,7 @@
 # the zernike polynomial definition codes is adopted from:
 #http://www.staff.science.uu.nl/~werkh108/docs/teach/2011b_python/python102/examples/py102-example2-zernike.py
 # J Hao 3/28/2012 @ FNAL
+# This is copied from decamspotPY on 6/18/2012 to delete those unnecessary routines. 
 
 try:
     import numpy as np
@@ -10,13 +11,11 @@ try:
     import pylab as pl
     import os
     from DECamCCD_def import *
-    #from sklearn.decomposition import PCA
-    #from scipy.optimize import leastsq
-    #import mahotas as mh
     import scipy.ndimage as nd
     import healpy as hp
     import glob as gl
     from scipy.misc import factorial as fac
+    from scipy.signal import convolve2d
 except ImportError:
     print 'the required packages are: numpy, pyfits,pylab,scikit,scipy,mahotas'
     raise
@@ -60,7 +59,7 @@ def gauss_seeing(npix = None,fwhm=None,e1=None,e2=None):
     scale = 0.27
     fwhm = fwhm/scale
     M20 = (fwhm/2.35482)**2
-    row,col = np.mgrid[-npix/2:npix/2+1,-npix/2:npix/2+1]
+    row,col = np.mgrid[-npix/2:npix/2,-npix/2:npix/2]
     rowc = row.mean()
     colc = col.mean()
     Mcc = 0.5*M20*(1+e1)
@@ -70,14 +69,12 @@ def gauss_seeing(npix = None,fwhm=None,e1=None,e2=None):
     img = np.exp(-0.5/(1-rho**2)*(row**2/Mrr + col**2/Mcc - 2*rho*row*col/np.sqrt(Mrr*Mcc)))
     res = img/img.sum()
     return res
-
-
                  
    
 def amoments(data,rowmean=None,colmean=None,sigma=None):
     """
     This codes calcualte the moments with/without a Gaussian weight.
-    the sigma is the weight the Gaussian weights. It is the sqrt(sigma_x**2+sigma_y**2)
+    the sigma is the weight the Gaussian weights, in unit of pixels. It is the sqrt(sigma_x**2+sigma_y**2)
     col : x direction
     row : y direction
     """
@@ -105,7 +102,6 @@ def amoments(data,rowmean=None,colmean=None,sigma=None):
         wrrowsum = np.sum(Irow*wrrow)
         rowvar = np.sum((rowgrid-rowmean)**2*Irow*wrrow)/(wrrowsum)
         colvar = np.sum((colgrid-colmean)**2*Icol*wrcol)/(wrcolsum)
-        #rowcolcov = np.sum((rowgrid-rowmean)*(colgrid-colmean)*IWmat)/np.sum(IWmat)
         rowcolcov = np.sum(np.outer((rowgrid-rowmean),(colgrid-colmean))*IWmat)/np.sum(IWmat)
     return rowmean,colmean,rowvar,colvar,rowcolcov
 
@@ -113,10 +109,9 @@ def amoments(data,rowmean=None,colmean=None,sigma=None):
 def AdaptM(data=None,sigma=None):
     """
     Calculate the adaptive moements e1 and e2 and the variances in row and col
+    sigma is the std of the kernel size in pixel unit, not fwhm
     """
     rowmean,colmean,rowvar,colvar,rowcolcov = amoments(data,sigma=sigma)
-    #rowmean,colmean,rowvar,colvar,rowcolcov = amoments(data,rowmean,colmean,sigma=sigma)
-    #rowmean,colmean,rowvar,colvar,rowcolcov = amoments(data,rowmean,colmean,sigma=sigma)
     mrrcc = rowvar + colvar
     me1 = (colvar - rowvar)/mrrcc
     me2 = 2.*rowcolcov/mrrcc
@@ -124,48 +119,13 @@ def AdaptM(data=None,sigma=None):
     fwhm = np.sqrt(rowvar+colvar)*2.35482*0.27
     return me1,me2,fwhm
 
-def moments7(data=None,sigma=None,rowmean=None,colmean=None):
-    """
-    This one calcualte the 3 2nd moments and 4 thrid moments with the Gaussian weights.
-    col : x direction
-    row : y direction
-    """
-    nrow,ncol=data.shape
-    Isum = data.sum()
-    Icol = data.sum(axis=0) # sum over all rows
-    Irow = data.sum(axis=1) # sum over all cols
-    IcolSum = np.sum(Icol)
-    IrowSum = np.sum(Irow)
-    colgrid = np.arange(ncol)
-    rowgrid = np.arange(nrow)
-    if rowmean == None:
-        rowmean=np.sum(rowgrid*Irow)/IrowSum
-        colmean=np.sum(colgrid*Icol)/IcolSum
-    if sigma == None:
-        rowvar = np.sum((rowgrid-rowmean)**2*Irow)/(IrowSum)
-        colvar = np.sum((colgrid-colmean)**2*Icol)/(IcolSum)
-    else:
-        ROW,COL=np.indices((nrow,ncol))
-        wrmat = wr(ROW,COL,rowmean,colmean,sigma)
-        IWmat = data*wrmat
-        wrcol = wrmat.sum(axis=0)
-        wrrow = wrmat.sum(axis=1)
-        wrcolsum = np.sum(Icol*wrcol)
-        wrrowsum = np.sum(Irow*wrrow)
-        Mrr = np.sum((rowgrid-rowmean)**2*Irow*wrrow)/(wrrowsum)
-        Mcc = np.sum((colgrid-colmean)**2*Icol*wrcol)/(wrcolsum)
-        Mrc = np.sum(np.outer((rowgrid-rowmean),(colgrid-colmean))*IWmat)/np.sum(IWmat)
-        Mrrr = np.sum((rowgrid-rowmean)**3*Irow*wrrow)/(wrrowsum)
-        Mccc = np.sum((colgrid-colmean)**3*Icol*wrcol)/(wrcolsum)
-        Mrrc = np.sum(np.outer((rowgrid-rowmean)**2,(colgrid-colmean))*IWmat)/np.sum(IWmat)
-        Mrcc = np.sum(np.outer((rowgrid-rowmean),(colgrid-colmean)**2)*IWmat)/np.sum(IWmat)
-        return Mrr, Mcc, Mrc, Mrrr, Mccc, Mrrc, Mrcc
 
 def complexMoments(data=None,sigma=None):
     """
     This one calcualte the 3 2nd moments and 4 thrid moments with the Gaussian weights.
     col : x direction
     row : y direction
+    sigma is the stand deviation of the measurement kernel in pixel
     """
     nrow,ncol=data.shape
     Isum = data.sum()
@@ -203,15 +163,6 @@ def complexMoments(data=None,sigma=None):
     M33 = complex(Mccc-3*Mrrc, 3.*Mrcc - Mrrr)
     return M20, M22, M31, M33
 
-
-
-def gaussianMoments(data):
-    """Returns (height, x, y, width_x, width_y)
-    the gaussian parameters of a 2D distribution found by a fit"""
-    params = moments(data)
-    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
-    p, success = leastsq(errorfunction, params)
-    return p
 
 #-----define the parameters --------
 # this parameter will be written into the header
@@ -389,7 +340,6 @@ def disImg(data=None,colorbar=False):
     """
     data is a vector with first, second as the center position, then is an image vector.
     """
-    #pl.figure()
     size = np.sqrt(len(data[2:]))
     xmm = data[0]
     ymm = data[1]
@@ -400,7 +350,6 @@ def disImg(data=None,colorbar=False):
     pl.ylim(0,size-1)
     pl.xlabel('Pixels')
     pl.ylabel('Pixels')
-    #pl.title('x ='+str(round(xmm,4)) +', y = '+str(round(ymm,4)) + ' (mm)')
     pl.grid(color='yellow')
 
 
@@ -481,7 +430,7 @@ def fitPCAimg(coef=None, data = None, maxcomp = None):
     pca = PCA(n_components=20)
     imgBasis = pca.fit_transform(img)
     nimg = img.shape[1]
-    #def residule(basis=None,maxcomp=None):
+
 
 def centroidChange(ccd=None, filter=None, suband=None):
     res = genImgV(Nstar=1,ccd=ccd,filter=filter,suband=suband)
@@ -496,19 +445,11 @@ def centroidChange(ccd=None, filter=None, suband=None):
     return xcentroid, ycentroid, xcen, ycen
 
 def addseeing(imgV=None,seeing=None):
-    img = imgV[0]
+    npsf = len(imgV)
+    for i in range(npsf):
+        return 0
 
-    
-def decompZernike(ccd=None,seeing=0.,theta=0.,x=0.,y=0.,z=0.,filter='g'):
-    imgV=genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta = theta,filter=filter,x=x,y=y,z=z)[0]
-    size = np.sqrt(len(imgV[0][2:]))
-    img = imgV[0][2:].reshape(size,size)        
-    coeff = mh.zernike.zernike_moments(img,30,degree = 3, cm=mh.center_of_mass(img))
-    coeff = coeff
-    names = ['piston','tilt','defocus','astigmatism','coma','trefoil']
-    res = dict(zip(names,coeff))
-    disImgCCD(imgV,ccd)
-    return res
+
 
 def gaussian(height, center_x, center_y, width_x, width_y):
     """Returns a gaussian function with the given parameters"""
@@ -569,112 +510,6 @@ def psfSizeAllZernike(Nstar=None,filter='r',npix=40,seeing=0,theta=0., zenith = 
         coeff.append(mh.zernike.zernike_moments(img,30,degree = 3, cm=mh.center_of_mass(img)))
     return x, y, np.array(coeff)
 
-def centroidChangeband(side=None):
-    """
-    This code calculate the centroid change of stars at different positions of the FP as the band filter changes
-    """
-    Nccd = len(side)
-    xmmg = np.zeros(Nccd)
-    ymmg = np.zeros(Nccd)
-    xceng = np.zeros(Nccd)
-    yceng = np.zeros(Nccd)
-    xmmr = np.zeros(Nccd)
-    ymmr = np.zeros(Nccd)
-    xcenr = np.zeros(Nccd)
-    ycenr = np.zeros(Nccd)
-    xmmi = np.zeros(Nccd)
-    ymmi = np.zeros(Nccd)
-    xceni = np.zeros(Nccd)
-    yceni = np.zeros(Nccd)
-    xmmz = np.zeros(Nccd)
-    ymmz = np.zeros(Nccd)
-    xcenz = np.zeros(Nccd)
-    ycenz = np.zeros(Nccd)
-    ccdname = []
-    for i in range(Nccd):
-        print i
-        xmmg[i],ymmg[i],xceng[i],yceng[i] = centroidChange(ccd=side[i], filter='g')
-        xmmr[i],ymmr[i],xcenr[i],ycenr[i] = centroidChange(ccd=side[i], filter='r')
-        xmmi[i],ymmi[i],xceni[i],yceni[i] = centroidChange(ccd=side[i], filter='i')
-        xmmz[i],ymmz[i],xcenz[i],ycenz[i] = centroidChange(ccd=side[i], filter='z')
-        ccdname.append(side[i][0])
-    xrg = xcenr - xceng
-    xig = xceni - xceng
-    xzg = xcenz - xceng
-    yrg = ycenr - yceng
-    yig = yceni - yceng
-    yzg = ycenz - yceng
-    pl.subplot(2,1,1)
-    pl.plot(xrg*1000./15.,'b.',label='r-band vs. g-band')
-    pl.plot(xig*1000./15.,'r.',label='i-band vs. g-band')
-    pl.plot(xzg*1000./15.,'g.',label='z-band vs. g-band')
-    pl.xticks(np.arange(Nccd),ccdname)
-    pl.xlabel('CCD position')
-    pl.ylabel('x centroid difference (Pixels)')
-    pl.legend(loc='best')
-    pl.hlines(0,-1,31,linestyle='dashed',colors='k')
-    pl.xlim(-1,31)
-    pl.ylim(-1.5,1.5)
-    pl.subplot(2,1,2)
-    pl.plot(yrg*1000./15.,'b.',label='r-band vs. g-band')
-    pl.plot(yig*1000./15.,'r.',label='i-band vs. g-band')
-    pl.plot(yzg*1000./15.,'g.',label='z-band vs. g-band')
-    pl.xticks(np.arange(Nccd),ccdname)
-    pl.xlabel('CCD position')
-    pl.ylabel('y centroid difference (Pixels)')
-    pl.legend(loc='best')
-    pl.hlines(0,-1,31,linestyle='dashed',colors='k')
-    pl.xlim(-1,31)
-    pl.ylim(-1.5,1.5)
-    return '--- done!---'
-
-def centroidChangeFP(filter='g',suband=None):
-    xmm,ymm = np.meshgrid([-230,-180,-120,-40,0,40,120,180,230],[-230,-180,-120,-40,0,40,120,180,230])
-    xmm = xmm.flatten()
-    ymm = ymm.flatten()
-    Nstar = len(xmm)
-    xcen = np.zeros(Nstar)
-    ycen = np.zeros(Nstar)
-    for i in range(Nstar):
-        res=decamspot(xmm=xmm[i],ymm=ymm[i],seeing=0,npix=40,zenith=0,filter=filter, theta=0., corrector='corrector',x=None,y=None,z=None,suband=suband)
-        xcen[i] = res[1]['xcen']
-        ycen[i] = res[1]['ycen']
-    return xcen,ycen
-
-
-def centroidSuband(filter=None):
-    """
-    This code calcualte the centroid change in each subband. 
-    """
-    xceng1,yceng1 = centroidChangeFP(filter=filter,suband = 1)
-    xceng2,yceng2 = centroidChangeFP(filter=filter,suband = 2)
-    xceng3,yceng3 = centroidChangeFP(filter=filter,suband = 3)
-    xceng4,yceng4 = centroidChangeFP(filter=filter,suband = 4)
-    xceng5,yceng5 = centroidChangeFP(filter=filter,suband = 5)
-    r = np.sqrt(xceng1**2 + yceng1**2)
-    pl.figure(figsize=(10,7))
-    pl.subplot(2,1,1)
-    pl.plot(r,(xceng2-xceng1)*1000./15.,'b.',label='sub2 - sub1')
-    pl.plot(r,(xceng3-xceng1)*1000./15.,'r.',label='sub3 - sub1')
-    pl.plot(r,(xceng4-xceng1)*1000./15.,'g.',label='sub4 - sub1')
-    pl.plot(r,(xceng5-xceng1)*1000./15.,'c.',label='sub5 - sub1')
-    pl.legend(loc='lower left')
-    pl.hlines(0,0,300,color='k',linestyle='dashed')
-    pl.xlim(0,300)
-    pl.xlabel('distance to the FP center (mm)')
-    pl.ylabel('x centroid difference (pixel)')
-    pl.title('Centroid Change for subands of filter: '+filter)
-    pl.subplot(2,1,2)
-    pl.plot(r,(yceng2-yceng1)*1000./15.,'b.',label='sub2 - sub1')
-    pl.plot(r,(yceng3-yceng1)*1000./15.,'r.',label='sub3 - sub1')
-    pl.plot(r,(yceng4-yceng1)*1000./15.,'g.',label='sub4 - sub1')
-    pl.plot(r,(yceng5-yceng1)*1000./15.,'c.',label='sub5 - sub1')
-    pl.legend(loc='lower left')
-    pl.hlines(0,0,300,color='k',linestyle='dashed')
-    pl.xlim(0,300)
-    pl.xlabel('distance to the FP center (mm)')
-    pl.ylabel('y centroid difference (pixel)')
-    return xceng1, yceng1, xceng2, yceng2,xceng3,yceng3,xceng4,yceng4,xceng5,yceng5
 
 
 def genPSFimage(filename=None,dir=None):
@@ -694,96 +529,28 @@ def genPSFimage(filename=None,dir=None):
         h.writeto(dir+'psf_'+str(i)+'.fit')
 
 
-def measuredata(filename):
-    b=pf.getdata(filename)
-    Nobj = len(b)
-    x=np.zeros(Nobj)
-    y=np.zeros(Nobj)
-    e1=np.zeros(Nobj)
-    e2=np.zeros(Nobj)
-    rowvar=np.zeros(Nobj)
-    colvar=np.zeros(Nobj)
-    colnames = ['x','y','e1','e2','rowvar','colvar']
-    sigma = 1.1/0.27
-    for i in range(Nobj):
-        e1[i],e2[i],rowvar[i],colvar[i]=AdaptM(b[i][2:].reshape(40,40),sigma=sigma)
-        x[i]=b[i][0]
-        y[i]=b[i][1]
-        data = [x,y,e1,e2,rowvar,colvar]
-    hp.mwrfits(filename[:-4]+'_moments_gausswt_11.fit',data,colnames=colnames)
-    return 0
-
-
-def measuredataM7(filename):
-    b=pf.getdata(filename)
-    Nobj = len(b)
-    x=np.zeros(Nobj)
-    y=np.zeros(Nobj)
-    Mrr=np.zeros(Nobj)
-    Mcc=np.zeros(Nobj)
-    Mrc=np.zeros(Nobj)
-    Mrrr=np.zeros(Nobj)
-    Mccc=np.zeros(Nobj)
-    Mrrc=np.zeros(Nobj)
-    Mrcc=np.zeros(Nobj)
-    
-    colnames = ['x','y','Mrr','Mcc','Mrc','Mrrr','Mccc','Mrrc','Mrcc']
-    sigma = 1.1/0.27
-    for i in range(Nobj):
-        Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(b[i][4:].reshape(40,40),sigma=sigma)
-        x[i]=b[i][0]
-        y[i]=b[i][1]
-        data = [x,y,Mrr, Mcc, Mrc, Mrrr, Mccc, Mrrc, Mrcc]
-    hp.mwrfits(filename[:-4]+'_moments7_gausswt_11.fit',data,colnames=colnames)
-    return 0
-
-
-def measureDataM7_multiext(filename):
-    hdu=pf.open(filename)
-    nn = len(hdu)
-    data = []
-    colnames = ['x','y','Myy','Mxx','Myx','Myyy','Mxxx','Myyx','Myxx']
-    #colnames = ['x','y','Mrr','Mcc','Mrc','Mrrr','Mccc','Mrrc','Mrcc']
-    for hdui in hdu[1:]:
-        Nobj = hdui.data.shape[0]
-        Mrr=np.zeros(Nobj)
-        Mcc=np.zeros(Nobj)
-        Mrc=np.zeros(Nobj)
-        Mrrr=np.zeros(Nobj)
-        Mccc=np.zeros(Nobj)
-        Mrrc=np.zeros(Nobj)
-        Mrcc=np.zeros(Nobj)
-        sigma = 1.1/0.27
-        for i in range(Nobj):
-            Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(hdui.data[i][4:].reshape(40,40),sigma=sigma)
-        x=hdui.header['ccdXcen']
-        y=hdui.header['ccdYcen']
-        data.append([x,y,np.median(Mrr), np.median(Mcc), np.median(Mrc), np.median(Mrrr), np.median(Mccc),np.median(Mrrc), np.median(Mrcc)])
-    data=np.array(data)
-    hp.mwrfits(filename[:-7]+'_moments7_gausswt_11.fit',data.T,colnames=colnames)
-    return '---done !-----'
-
-
-def measureDataComplexM_multiext(filename):
+def measureDataComplexM_multiext(filename,sigma = 1.1,scale=0.27):
+    """
+    Note that here, the sigma is not fwhm. Sigma is given in arcsec
+    """
     hdu=pf.open(filename)
     nn = len(hdu)
     data = []
     colnames = ['x','y','M20','M22','M31','M33']
+    sigma = sigma/scale
     for hdui in hdu[1:]:
         Nobj = hdui.data.shape[0]
         M20=np.zeros(Nobj)
         M22=np.zeros(Nobj).astype(complex)
         M31=np.zeros(Nobj).astype(complex)
         M33=np.zeros(Nobj).astype(complex)
-        #sigma = 1.1/0.27
-        sigma = 1.08/0.27
         for i in range(Nobj):
             M20[i],M22[i],M31[i],M33[i]=complexMoments(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
         x=hdui.header['ccdXcen']
         y=hdui.header['ccdYcen']
         data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
     data=np.array(data)
-    hp.mwrfits(filename[:-7]+'_complexMoments_gausswt_'+str(sigma*0.27)+'.fit',data.T,colnames=colnames)
+    hp.mwrfits(filename[:-7]+'_complexMoments_gausswt_'+str(sigma*scale)+'.fit',data.T,colnames=colnames)
     return '---done !-----'
 
 
@@ -889,7 +656,7 @@ def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
 
 
 
-def dispZernike(beta=1.,j=0,gridsize = 10, max_rad = 10):
+def dispZernike(beta=1.,j=0,gridsize = 1, max_rad = 1):
     x,y = np.meshgrid(np.arange(-gridsize,gridsize,0.01),np.arange(-gridsize,gridsize,0.01))
     rho = np.sqrt(x**2+y**2)
     phi = np.arctan2(y,x)
@@ -994,115 +761,4 @@ def rowcol2XY(row,col,CCD):
 
 if __name__ == '__main__':
     import healpy as hp
-    # ----the centroid change for different filters -----
-    """
-    S=[S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13,S14,S15,S16,S17,S18,S19,S20,S21,S22,S23,S24,S25,S26,S27,S28,S29,S30,S31]
-
-    N=[N1,N2,N3,N4,N5,N6,N7,N8,N9,N10,N11,N12,N13,N14,N15,N16,N17,N18,N19,N20,N21,N22,N23,N24,N25,N26,N27,N28,N29,N30,N31]
-    
-    pl.figure(figsize=(15,10))
-    centroidChangeband(S)
-    pl.savefig('/home/jghao/research/decamFocus/figures/Scentroid_band.png')
-    pl.figure(figsize=(15,10))
-    centroidChangeband(N)
-    pl.savefig('/home/jghao/research/decamFocus/figures/Ncentroid_band.png')
-
-
-    #-----as function of radial -----
-    # ----different suband ----
-    colnames = ['xcen_sub1','ycen_sub1','xcen_sub2','ycen_sub2','xcen_sub3','ycen_sub3','xcen_sub4','ycen_sub4','xcen_sub5','ycen_sub5']
-    
-    res = centroidSuband(filter='g')
-    pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_suband_g.png')
-    hp.mwrfits('/home/jghao/research/decamFocus/data_g.fit',res,colnames = colnames)
-    res = 0
-    pl.close()
-
-    res=centroidSuband(filter='r')
-    pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_suband_r.png')
-    hp.mwrfits('/home/jghao/research/decamFocus/data_r.fit',res,colnames = colnames)
-    res = 0
-    pl.close()
-
-   
-    res=centroidSuband(filter='i')
-    pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_suband_i.png')
-    hp.mwrfits('/home/jghao/research/decamFocus/data_i.fit',res,colnames = colnames)
-    res = 0
-    pl.close()
-    
-  
-    res=centroidSuband(filter='z')
-    pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_suband_z.png')
-    hp.mwrfits('/home/jghao/research/decamFocus/data_z.fit',res,colnames = colnames)
-    res = 0
-    pl.close()
-    
-    
-    #----for different band----
-    xceng,yceng = centroidChangeFP(filter='g')
-    xcenr,ycenr = centroidChangeFP(filter='r')
-    xceni,yceni = centroidChangeFP(filter='i')
-    xcenz,ycenz = centroidChangeFP(filter='z')
-   
-    r = np.sqrt(xceng**2 + yceng**2)
-    pl.figure(figsize=(10,7))
-    pl.subplot(2,1,1)
-    pl.plot(r,(xcenr - xceng)*1000./15.,'b.',label = 'r - g')
-    pl.plot(r,(xceni - xceng)*1000./15.,'g.',label = 'i - g')
-    pl.plot(r,(xcenz - xceng)*1000./15.,'r.',label = 'z - g')
-    pl.xlabel('distance to the FP center (mm)')
-    pl.ylabel('x centroid difference (pixel)')
-    pl.legend(loc='best')
-    pl.hlines(0,0,300,color='k',linestyle='dashed')
-    pl.xlim(0,300)
-    pl.subplot(2,1,2)
-    pl.plot(r,(ycenr - yceng)*1000./15.,'b.',label = 'r - g')
-    pl.plot(r,(yceni - yceng)*1000./15.,'g.',label = 'i - g')
-    pl.plot(r,(ycenz - yceng)*1000./15.,'r.',label = 'z - g')
-    pl.xlabel('distance to the FP center (mm)')
-    pl.ylabel('y centroid difference (pixel)')
-    pl.legend(loc='best')
-    pl.hlines(0,0,300,color='k',linestyle='dashed')
-    pl.xlim(0,300)
-    pl.savefig('/home/jghao/research/decamFocus/figures/centroid_change_fp.png')
-
-#----generate the data ------
-    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar1000_notilt_nodefocus.fit',Nstar=1000,seeing=0.9)
-    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_notilt_z0.01mm.fit',Nstar=1000,z=0.01,seeing=0.9)
-    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_notilt_z0.1mm.fit',Nstar=1000,z=0.1,seeing=0.9)
-    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_tilt_10arcsec_nodefocus.fit',Nstar=1000,theta=10.,seeing=0.9)
-    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_tilt_100arcsec_nodefocus.fit',Nstar=1000,theta=100.,seeing=0.9)
-
-    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_tilt_xshift_0.01mm_nodefocus_notilt.fit',Nstar=1000,theta=0.,x=0.01,seeing=0.9)
-    genImgV(filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_nstar_1000_tilt_xshift_0.1mm_nodefocus_notilt.fit',Nstar=1000,theta=0.,x=0.1,seeing=0.9)
-  
-
-    
-    #-----analyzing the generated data -------------
  
- 
-    filenameAll = gl.glob('/home/jghao/research/decamFocus/PSF_seeing_*xshift*.fit')
-    Nfile=len(filenameAll)
-
-    for j in range(Nfile):
-        measuredataM7(filenameAll[j])
-    
-    """
-
-    #--generate multi extension data -----
-    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar20_notilt_nodefocus_multi_ext.fit'
-    genImgVallCCD(filename=filename,Nstar=20,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
-    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar20_tilt_100arecse_nodefocus_multi_ext.fit'
-    genImgVallCCD(filename=filename,Nstar=20,seeing=0.9,npix=40,zenith=0,filter='r', theta=100., corrector='corrector',x=None,y=None,z=None,suband=None)
-    #-------one psf per ccd-----
-    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar1_notilt_nodefocus_multi_ext.fit'
-    genImgVallCCD(filename=filename,Nstar=1,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
-    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar1_tilt_100arecse_nodefocus_multi_ext.fit'
-    genImgVallCCD(filename=filename,Nstar=1,seeing=0.9,npix=40,zenith=0,filter='r', theta=100., corrector='corrector',x=None,y=None,z=None,suband=None)
-
-    #--generate multi extension data with regular grid on each CCD -----
-    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar16_regular_notilt_nodefocus_multi_ext.fit'
-    genImgVallCCD(filename=filename,Nstar=16,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None,regular=True)
-    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar16_regular_tilt_100arecse_nodefocus_multi_ext.fit'
-    genImgVallCCD(filename=filename,Nstar=16,seeing=0.9,npix=40,zenith=0,filter='r', theta=100., corrector='corrector',x=None,y=None,z=None,suband=None,regular=True)
