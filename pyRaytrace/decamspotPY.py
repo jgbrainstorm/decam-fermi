@@ -138,6 +138,48 @@ def moments7(data=None,sigma=None,rowmean=None,colmean=None):
         Mrcc = np.sum(np.outer((rowgrid-rowmean),(colgrid-colmean)**2)*IWmat)/np.sum(IWmat)
         return Mrr, Mcc, Mrc, Mrrr, Mccc, Mrrc, Mrcc
 
+def complexMoments(data=None,sigma=None):
+    """
+    This one calcualte the 3 2nd moments and 4 thrid moments with the Gaussian weights.
+    col : x direction
+    row : y direction
+    """
+    nrow,ncol=data.shape
+    Isum = data.sum()
+    Icol = data.sum(axis=0) # sum over all rows
+    Irow = data.sum(axis=1) # sum over all cols
+    IcolSum = np.sum(Icol)
+    IrowSum = np.sum(Irow)
+    colgrid = np.arange(ncol)
+    rowgrid = np.arange(nrow)
+    ROW,COL=np.indices((nrow,ncol))
+    rowmean=np.sum(rowgrid*Irow)/IrowSum
+    colmean=np.sum(colgrid*Icol)/IcolSum
+    wrmat = wr(ROW,COL,rowmean,colmean,sigma)
+    IWmat = data*wrmat
+    wrcol = wrmat.sum(axis=0)
+    wrrow = wrmat.sum(axis=1)
+    wrcolsum = np.sum(Icol*wrcol)
+    wrrowsum = np.sum(Irow*wrrow)
+    rowmean = np.sum(rowgrid*Irow*wrrow)/wrrowsum
+    colmean = np.sum(colgrid*Icol*wrcol)/wrcolsum
+    rowgrid = rowgrid - rowmean # centered
+    colgrid = colgrid - colmean
+    Mr = np.sum(rowgrid*Irow*wrrow)/wrrowsum
+    Mc = np.sum(colgrid*Icol*wrcol)/wrcolsum
+    Mrr = np.sum(rowgrid**2*Irow*wrrow)/(wrrowsum)
+    Mcc = np.sum(colgrid**2*Icol*wrcol)/(wrcolsum)
+    Mrc = np.sum(np.outer(rowgrid,colgrid)*IWmat)/np.sum(IWmat)
+    Mrrr = np.sum(rowgrid**3*Irow*wrrow)/(wrrowsum)
+    Mccc = np.sum(colgrid**3*Icol*wrcol)/(wrcolsum)
+    Mrrc = np.sum(np.outer(rowgrid**2,colgrid)*IWmat)/np.sum(IWmat)
+    Mrcc = np.sum(np.outer(rowgrid,colgrid**2)*IWmat)/np.sum(IWmat)
+    M20 = Mrr + Mcc
+    M22 = complex(Mcc - Mrr,2*Mrc)
+    M31 = complex(3*Mc - (Mccc+Mrrc)/sigma**2, 3*Mr - (Mrcc + Mrrr)/sigma**2)
+    M33 = complex(Mccc-3*Mrrc, 3.*Mrcc - Mrrr)
+    return M20, M22, M31, M33
+
 
 
 def gaussianMoments(data):
@@ -217,11 +259,16 @@ def decamspot(xmm=None,ymm=None,seeing=0.9,npix=40,zenith=0,filter='r', theta=0.
     return np.concatenate((pos,bb)),hdr
 
 
-def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None,regular=False):
     """
     seeing is the rms in arcseconds
     syntax: genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
     """
+    if regular == True:
+        Nstar = 16
+        regridx,regridy = np.meshgrid(np.array([-13., -6.5, 6.5, 13]), np.array([-28., -14., 14., 28.]))
+        regridx = regridx.flatten()
+        regridy = regridy.flatten()
     datalist = []
     hdrlist = []
     randfactor=np.array([-1,1])
@@ -235,12 +282,16 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='
         data = np.array(datalist)
     else:
         for i in range(Nstar):
-            if i == 0:
+            if i == 0 and regular == False:
                 xmm = ccd[1]
                 ymm = ccd[2]
             else:
-                xmm = np.random.rand()*13*randfactor[np.random.randint(0,2)] + ccd[1]
-                ymm = np.random.rand()*28*randfactor[np.random.randint(0,2)] + ccd[2]
+                if regular == False:
+                    xmm = np.random.rand()*13*randfactor[np.random.randint(0,2)] + ccd[1]
+                    ymm = np.random.rand()*28*randfactor[np.random.randint(0,2)] + ccd[2]
+                else:
+                    xmm = regridx[i]+ccd[1]
+                    ymm = regridy[i]+ccd[2]
             res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband)
             datalist.append(res[0])
             hdrlist.append(res[1])
@@ -690,9 +741,33 @@ def measureDataM7_multiext(filename):
     return '---done !-----'
 
 
+def measureDataComplexM_multiext(filename):
+    hdu=pf.open(filename)
+    nn = len(hdu)
+    data = []
+    colnames = ['x','y','M20','M22','M31','M33']
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        M20=np.zeros(Nobj)
+        M22=np.zeros(Nobj).astype(complex)
+        M31=np.zeros(Nobj).astype(complex)
+        M33=np.zeros(Nobj).astype(complex)
+        #sigma = 1.1/0.27
+        sigma = 1.08/0.27
+        for i in range(Nobj):
+            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
+        x=hdui.header['ccdXcen']
+        y=hdui.header['ccdYcen']
+        data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
+    data=np.array(data)
+    hp.mwrfits(filename[:-7]+'_complexMoments_gausswt_'+str(sigma*0.27)+'.fit',data.T,colnames=colnames)
+    return '---done !-----'
 
 
-def genImgVallCCD(filename=None,Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=0.,y=0.,z=0.,suband=None):
+
+
+
+def genImgVallCCD(filename=None,Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False):
     """
     Nstar is the number of stars on each CCD
     """
@@ -716,7 +791,7 @@ def genImgVallCCD(filename=None,Nstar=None,seeing=0,npix=40,zenith=0,filter='g',
     hduList.append(hdu)
     for ccd in N[1:]+S[1:]:
         print ccd
-        res = genImgV(filename=filename,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband)
+        res = genImgV(filename=filename,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband,regular=regular)
         hdu = pf.PrimaryHDU(res[0])
         hdu.header.update('ccdPos',ccd[0])
         hdu.header.update('ccdXcen',ccd[1])
@@ -770,11 +845,10 @@ def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
     Fit a set of x, y, z data to a zernike polynomial with the least square fitting. Note that here x, y, z are all 1 dim array. Here the max_rad is by default equal to 225 mm, the size of the decam focal plane.
     It will return the beta and the adjusted R2
     """
-    if len(x.shape) == 2 or len(y.shape) == 2 or len(z.shape) == 2:
-        print 'array must be 1 dim'
-        exit()
     x = x - cm[0]
     y = y - cm[1]
+    n = len(x)
+    p = max_order
     rho = np.sqrt(x**2+y**2)/max_rad #normalize to unit circle.
     phi = np.arctan2(y,x)
     dataX = []
@@ -783,10 +857,12 @@ def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
         dataX.append(zernikel(j,rho[ok],phi[ok]))
     dataX=np.array(dataX).T
     beta,SSE,rank,sing = np.linalg.lstsq(dataX,z[ok])# SSE is the residual sum square
+    sigma = np.sqrt(SSE/(n-p))
+    betaErr = sigma/np.dot(dataX.T,dataX).diagonal()
     SST = np.var(z[ok])*(len(z[ok])-1)# SST is the sum((z_i - mean(z))^2)
     R2 = 1 - SSE/SST
-    R2adj = 1-(1-R2)*(len(z[ok])-1)/(len(z[ok])-max_order)                
-    return beta, R2adj
+    R2adj = 1-(1-R2)*(len(z[ok])-1)/(len(z[ok])-max_order)# adjusted R2 for quality of fit.             
+    return beta,betaErr, R2adj
 
 
 
@@ -812,46 +888,85 @@ def showZernike(beta=None,gridsize = 1, max_rad = 1):
     return znk
 
 
-def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,zernike_max_order=20):
+def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,zernike_max_order=20,regular=False):
     """
     This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
     """
-    hdu = genImgVallCCD(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z)
+    hdu = genImgVallCCD(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,regular=regular)
     nn = len(hdu)
     data = []
-    colnames = ['x','y','Myy','Mxx','Myx','Myyy','Mxxx','Myyx','Myxx']
-    #colnames = ['x','y','Mrr','Mcc','Mrc','Mrrr','Mccc','Mrrc','Mrcc']
+    colnames = ['x','y','M20','M22','M31','M33']
     for hdui in hdu[1:]:
         Nobj = hdui.data.shape[0]
-        Mrr=np.zeros(Nobj)
-        Mcc=np.zeros(Nobj)
-        Mrc=np.zeros(Nobj)
-        Mrrr=np.zeros(Nobj)
-        Mccc=np.zeros(Nobj)
-        Mrrc=np.zeros(Nobj)
-        Mrcc=np.zeros(Nobj)
-        sigma = 1.1/0.27
+        M20=np.zeros(Nobj)
+        M22=np.zeros(Nobj).astype(complex)
+        M31=np.zeros(Nobj).astype(complex)
+        M33=np.zeros(Nobj).astype(complex)
+        #sigma = 1.1/0.27
+        sigma = 1.08/0.27
         for i in range(Nobj):
-            Mrr[i],Mcc[i],Mrc[i],Mrrr[i],Mccc[i],Mrrc[i],Mrcc[i]=moments7(hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
+            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
         x=hdui.header['ccdXcen']
         y=hdui.header['ccdYcen']
-        data.append([x,y,np.median(Mrr), np.median(Mcc), np.median(Mrc), np.median(Mrrr), np.median(Mccc),np.median(Mrrc), np.median(Mrcc)])
+        data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
     data=np.array(data)
     pl.figure(figsize=(15,15))
     betaAll=[]
+    betaErrAll=[]
     R2adjAll=[]
-    for i in range(2,9):
-        pl.subplot(3,3,i-1)
-        beta,R2_adj = zernikeFit(data[:,0],data[:,1],data[:,i],max_order=zernike_max_order)
+    pl.subplot(3,3,1)
+    beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,2].real,max_order=zernike_max_order)
+    betaAll.append(beta)
+    betaErrAll.append(betaErr)
+    R2adjAll.append(R2_adj)
+    znk=showZernike(beta=beta)
+    pl.colorbar()
+    pl.title(colnames[2])
+    for i in range(3,6):
+        pl.subplot(3,3,2*i-4)
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].real,max_order=zernike_max_order)
         betaAll.append(beta)
+        betaErrAll.append(betaErr)
         R2adjAll.append(R2_adj)
         znk=showZernike(beta=beta)
         pl.colorbar()
-        pl.title(colnames[i])
+        pl.title(colnames[i]+'_real')
+        print '--- R2_adj of the fit is: '+str(R2_adj) +'---'
+        pl.subplot(3,3,2*i-3)
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].imag,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+        znk=showZernike(beta=beta)
+        pl.colorbar()
+        pl.title(colnames[i]+'_imag')
         print '--- R2_adj of the fit is: '+str(R2_adj) +'---'
     betaAll = np.array(betaAll)
+    betaErrAll = np.array(betaErrAll)
     R2adjAll = np.array(R2adjAll)
-    return betaAll, R2adjAll
+    return betaAll,betaErrAll, R2adjAll
+
+def rowcol2XY(row,col,CCD):
+    """
+    This code convert the row/col [in pixels] of a given CCD to the x, y
+    of the Focal plane [in mm]. Assuming a constant pixel scale 0.015mm/pix
+    Input: row, col of the object, the CCD name in a way (S1, S2, etc)
+    The current convention is:
+    each ccd, the origin of row and col is the south east corner.
+    the direction row increase is West
+    the direction col increase is North.
+    In my Focal Plane definition file,
+        positive X is South
+        positive Y is East
+    So, the row increase as -Y direction.
+        the col increase as -X direction.
+    """
+    pixscale = 0.015 #mm/pix
+    X = CCD[1]+1024*pixscale-(col*pixscale+pixscale/2.)
+    Y = CCD[2]+2048*pixscale-(row*pixscale+pixscale/2.)
+    return X,Y
+    
+    
 
 
 if __name__ == '__main__':
@@ -962,3 +1077,9 @@ if __name__ == '__main__':
     genImgVallCCD(filename=filename,Nstar=1,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
     filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar1_tilt_100arecse_nodefocus_multi_ext.fit'
     genImgVallCCD(filename=filename,Nstar=1,seeing=0.9,npix=40,zenith=0,filter='r', theta=100., corrector='corrector',x=None,y=None,z=None,suband=None)
+
+    #--generate multi extension data with regular grid on each CCD -----
+    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar16_regular_notilt_nodefocus_multi_ext.fit'
+    genImgVallCCD(filename=filename,Nstar=16,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None,regular=True)
+    filename='/home/jghao/research/decamFocus/PSF_seeing_0.9_rband_nstar16_regular_tilt_100arecse_nodefocus_multi_ext.fit'
+    genImgVallCCD(filename=filename,Nstar=16,seeing=0.9,npix=40,zenith=0,filter='r', theta=100., corrector='corrector',x=None,y=None,z=None,suband=None,regular=True)
