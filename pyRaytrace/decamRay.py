@@ -222,7 +222,8 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=40,zenith=0,filter='r', 
     os.system(install_dir+'raytrace-3.13/decamspot '+dir+'temp.par')
     #---output the result as an image vector
     b=pf.getdata(dir+'temp.fit')
-    b=addseeingImg(b,fwhm=seeing[0],e1=seeing[1],e2=seeing[2])
+    if seeing != 0.:
+        b=addseeingImg(b,fwhm=seeing[0],e1=seeing[1],e2=seeing[2])
     hdr = pf.getheader(dir+'temp.fit')
     ypstamp,xpstamp = nd.center_of_mass(b) # y -> row, x-> col
     bb = b.reshape(npix*npix)
@@ -284,9 +285,10 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=40,zenith=
             hdu.header.update('Y',y)
         if z != None:
             hdu.header.update('Z',z)
-        hdu.header.update('s_fwhm',seeing[0])
-        hdu.header.update('e1',seeing[1])
-        hdu.header.update('e2',seeing[2])
+        if seeing != 0.:
+            hdu.header.update('s_fwhm',seeing[0])
+            hdu.header.update('e1',seeing[1])
+            hdu.header.update('e2',seeing[2])
         if os.path.exists(filename):
             os.system('rm '+filename)
             hdu.writeto(filename)
@@ -326,7 +328,10 @@ def genImgVfixedPos(filename=None,seeing=0,npix=40,zenith=0,filter='r', theta=0.
             hdu.header.update('Y',y)
         if z != None:
             hdu.header.update('Z',z)
-        hdu.header.update('Seeing',seeing)
+        if seeing != 0.:
+            hdu.header.update('s_fwhm',seeing[0])
+            hdu.header.update('e1',seeing[1])
+            hdu.header.update('e2',seeing[2])
         if os.path.exists(filename):
             os.system('rm '+filename)
             hdu.writeto(filename)
@@ -599,9 +604,10 @@ def genImgVallCCD(filename=None,Nstar=None,seeing=[0.9,0.,0.],npix=40,zenith=0,f
         hdu.header.update('Y',y)
     if z != None:
         hdu.header.update('Z',z)
-    hdu.header.update('s_fwhm',seeing[0])
-    hdu.header.update('e1',seeing[1])
-    hdu.header.update('e2',seeing[2])
+    if seeing != 0.:
+        hdu.header.update('s_fwhm',seeing[0])
+        hdu.header.update('e1',seeing[1])
+        hdu.header.update('e2',seeing[2])
     hduList.append(hdu)
     for ccd in N[1:]+S[1:]:
         print ccd
@@ -835,5 +841,15 @@ def rowcol2XY(row,col,CCD):
 
 
 if __name__ == '__main__':
-    import healpy as hp
- 
+    #import healpy as hp
+    tiltrange = [-100,-80,-50,-20,0,50,80,100]
+    xshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    yshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    defocusrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    for tlt in tiltrange:
+        for xsft in xshiftrange:
+            for ysft in yshiftrange:
+                for defo in defocusrange:
+                    filename='psf_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
+                    #filename = '/data/des07.b/data/jiangang/PSF_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
+                    t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=40,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
