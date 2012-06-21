@@ -55,6 +55,7 @@ def wr(x,y,xcen,ycen,sigma):
 def gauss_seeing(npix = None,fwhm=None,e1=None,e2=None):
     """
     generate a seeing PSF of given fwhm and e1 and e2
+    fwhm in the unit of arcsec
     """
     scale = 0.27
     fwhm = fwhm/scale
@@ -126,6 +127,7 @@ def complexMoments(data=None,sigma=None):
     col : x direction
     row : y direction
     sigma is the stand deviation of the measurement kernel in pixel
+    The output is in pixel coordinate
     """
     nrow,ncol=data.shape
     Isum = data.sum()
@@ -182,9 +184,10 @@ output='temp.fit'
 seeing=0.9  # in arcseconds, fwhm
 #------------------------------
 
-def decamspot(xmm=None,ymm=None,seeing=0.9,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     #---generating the .par file------
-    dir ='/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/'
+    install_dir ='/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/'
+    dir = os.getcwd()+'/'
     file = open(dir+'temp.par','w')
     file.write('RAYPATTERN '+str(raypattern) +'\n')
     file.write('NPIX '+str(npix) +'\n')
@@ -216,16 +219,11 @@ def decamspot(xmm=None,ymm=None,seeing=0.9,npix=40,zenith=0,filter='r', theta=0.
     file.write('OUTPUT '+output+'\n')
     file.close()
     #---execute the raytrace code ------
-    os.system(dir+'raytrace-3.13/decamspot '+dir+'temp.par')
+    os.system(install_dir+'raytrace-3.13/decamspot '+dir+'temp.par')
     #---output the result as an image vector
     b=pf.getdata(dir+'temp.fit')
-    if seeing !=0:
-        seeing = seeing/scale # convert arcseconds to pixel
-        sgm = seeing/2.35482  # convert fwhm to sigma
-        sgmx = np.sqrt(sgm**2/2.)
-        sgmy = sgmx
-        b=nd.filters.gaussian_filter(b,(sgmx,sgmy))
-    hdr = pf.getheader('temp.fit')
+    b=addseeingImg(b,fwhm=seeing[0],e1=seeing[1],e2=seeing[2])
+    hdr = pf.getheader(dir+'temp.fit')
     ypstamp,xpstamp = nd.center_of_mass(b) # y -> row, x-> col
     bb = b.reshape(npix*npix)
     pos = np.array([hdr['xcen'],hdr['ycen'],xpstamp,ypstamp])
@@ -233,7 +231,7 @@ def decamspot(xmm=None,ymm=None,seeing=0.9,npix=40,zenith=0,filter='r', theta=0.
     return np.concatenate((pos,bb)),hdr
 
 
-def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None,regular=False):
+def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None,regular=False):
     """
     seeing is the rms in arcseconds
     syntax: genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
@@ -286,7 +284,9 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='
             hdu.header.update('Y',y)
         if z != None:
             hdu.header.update('Z',z)
-        hdu.header.update('Seeing',seeing)
+        hdu.header.update('s_fwhm',seeing[0])
+        hdu.header.update('e1',seeing[1])
+        hdu.header.update('e2',seeing[2])
         if os.path.exists(filename):
             os.system('rm '+filename)
             hdu.writeto(filename)
@@ -444,10 +444,32 @@ def centroidChange(ccd=None, filter=None, suband=None):
     xcentroid,ycentroid = nd.center_of_mass(img)
     return xcentroid, ycentroid, xcen, ycen
 
-def addseeing(imgV=None,seeing=None):
+def addseeingImg(img = None,fwhm=1.,e1=0.,e2=0.):
+    """
+    fwhm input in the unit of the arcsec
+    """
+    kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
+    covimg = convolve2d(img,kern,mode='same')
+    covimg = covimg/covimg.sum()
+    return covimg
+
+
+
+def addseeing(imgV=None,fwhm=1.,e1=0.,e2=0.):
+    """
+    fwhm input in the unit of the arcsec
+    """
     npsf = len(imgV)
     for i in range(npsf):
-        return 0
+        img=imgV[0][i][4:].reshape(npix,npix)
+        kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
+        covimg = convolve2d(img,kern,mode='same')
+        covimg = covimg/covimg.sum()
+        imgV[0][i][4:] = covimg.flatten()
+        imgV[1][i].update('s_fwhm',fwhm)
+        imgV[1][i].update('e1',e1)
+        imgV[1][i].update('e2',e2)
+    return imgV
 
 
 
@@ -557,7 +579,7 @@ def measureDataComplexM_multiext(filename,sigma = 1.1,scale=0.27):
 
 
 
-def genImgVallCCD(filename=None,Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False):
+def genImgVallCCD(filename=None,Nstar=None,seeing=[0.9,0.,0.],npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False):
     """
     Nstar is the number of stars on each CCD
     """
@@ -577,7 +599,9 @@ def genImgVallCCD(filename=None,Nstar=None,seeing=0,npix=40,zenith=0,filter='g',
         hdu.header.update('Y',y)
     if z != None:
         hdu.header.update('Z',z)
-    hdu.header.update('Seeing',seeing)
+    hdu.header.update('s_fwhm',seeing[0])
+    hdu.header.update('e1',seeing[1])
+    hdu.header.update('e2',seeing[2])
     hduList.append(hdu)
     for ccd in N[1:]+S[1:]:
         print ccd
@@ -735,6 +759,57 @@ def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0.,
     betaErrAll = np.array(betaErrAll)
     R2adjAll = np.array(R2adjAll)
     return betaAll,betaErrAll, R2adjAll
+
+def zernike_diff(Nstar=1,seeing=[0.9,0.,0.],npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,zernike_max_order=20,regular=False):
+    """
+    This function produce zernike coefficients and compare the difference
+    """
+    hdu = genImgVallCCD(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,regular=regular)
+    nn = len(hdu)
+    data = []
+    colnames = ['x','y','M20','M22','M31','M33']
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        M20=np.zeros(Nobj)
+        M22=np.zeros(Nobj).astype(complex)
+        M31=np.zeros(Nobj).astype(complex)
+        M33=np.zeros(Nobj).astype(complex)
+        #sigma = 1.1/0.27
+        sigma = 1.08/0.27
+        for i in range(Nobj):
+            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
+        x=hdui.header['ccdXcen']
+        y=hdui.header['ccdYcen']
+        data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
+    data=np.array(data)
+    betaAll=[]
+    betaErrAll=[]
+    R2adjAll=[]
+    beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,2].real,max_order=zernike_max_order)
+    betaAll.append(beta)
+    betaErrAll.append(betaErr)
+    R2adjAll.append(R2_adj)
+    for i in range(3,6):
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].real,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].imag,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+    betaAll = np.array(betaAll)
+    betaErrAll = np.array(betaErrAll)
+    R2adjAll = np.array(R2adjAll)
+    return betaAll,betaErrAll, R2adjAll
+
+def comp_zernike(beta1=None,betaErr1=None,beta2=None,betaErr2=None):
+    nmoments = 7
+    chi2 = np.zeros(7)
+    for i in range(nmoments):
+        chi2[i] = np.sum((beta1[i,:] - beta2[i,:])**2/(betaErr1**2+betaErr2**2))
+    return chi2
+
 
 def rowcol2XY(row,col,CCD):
     """
