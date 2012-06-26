@@ -460,21 +460,25 @@ def addseeingImg(img = None,fwhm=1.,e1=0.,e2=0.):
 
 
 
-def addseeing(imgV=None,fwhm=1.,e1=0.,e2=0.):
+def addseeing(filename=None,fwhm=1.,e1=0.,e2=0.):
     """
     fwhm input in the unit of the arcsec
     """
-    npsf = len(imgV)
-    for i in range(npsf):
-        img=imgV[0][i][4:].reshape(npix,npix)
+    hdu = pf.open(filename)
+    n = len(hdu)
+    hdu[0].header.update('s_fwhm',fwhm)
+    hdu[0].header.update('e1',e1)
+    hdu[0].header.update('e2',e2)
+    for i in range(1,n):
+        img=hdu[i].data[0][4:].reshape(npix,npix)
         kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
         covimg = convolve2d(img,kern,mode='same')
         covimg = covimg/covimg.sum()
-        imgV[0][i][4:] = covimg.flatten()
-        imgV[1][i].update('s_fwhm',fwhm)
-        imgV[1][i].update('e1',e1)
-        imgV[1][i].update('e2',e2)
-    return imgV
+        hdu[i].data[0][4:] = covimg.flatten()
+    newfname = filename[:-7]+'_fwhm_'+str(fwhm)+'_e1_'+str(e1)+'_e2_'+str(e2)+'.fit'
+    hdu.writeto(newfname)
+    os.system('gzip '+newfname)
+    return 'done'
 
 
 
@@ -610,7 +614,7 @@ def genImgVallCCD(filename=None,Nstar=None,seeing=[0.9,0.,0.],npix=40,zenith=0,f
         hdu.header.update('e2',seeing[2])
     hduList.append(hdu)
     for ccd in N[1:]+S[1:]:
-        print ccd
+        #print ccd
         res = genImgV(filename=filename,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband,regular=regular)
         hdu = pf.PrimaryHDU(res[0])
         hdu.header.update('ccdPos',ccd[0])
@@ -842,14 +846,30 @@ def rowcol2XY(row,col,CCD):
 
 if __name__ == '__main__':
     #import healpy as hp
+    """
     tiltrange = [-100,-80,-50,-20,0,50,80,100]
     xshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
     yshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
     defocusrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    counter=0.
     for tlt in tiltrange:
         for xsft in xshiftrange:
             for ysft in yshiftrange:
                 for defo in defocusrange:
-                    filename='psf_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
+                    counter = counter +1
+                    print '----'+str(counter)+'----'
+                    filename='/home/jghao/research/decamFocus/psf_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
                     #filename = '/data/des07.b/data/jiangang/PSF_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
                     t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=40,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
+    """
+    fwhm = [0.6, 0.8, 1.0, 1.2, 1.4]
+    e1 = [-0.08,-0.04,0,0.04,0.08]
+    e2 = [-0.08,-0.04,0,0.04,0.08]
+    allfile = gl.glob('/home/jghao/research/decamFocus/psf_noseeing/*.gz')
+    for fname in allfile:
+        for fw in fwhm:
+            for e11 in e1:
+                for e22 in e2:
+                    t = addseeing(filename=fname,fwhm = fw,e1=e11,e2=e22)
+
+                
