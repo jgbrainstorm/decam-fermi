@@ -15,7 +15,9 @@ try:
     import healpy as hp
     import glob as gl
     from scipy.misc import factorial as fac
-    from scipy.signal import convolve2d
+    #from scipy.signal import convolve2d
+    #from scipy.signal import fftconvole
+    import scipy.signal as sg
 except ImportError:
     print 'the required packages are: numpy, pyfits,pylab,scikit,scipy,mahotas'
     raise
@@ -57,7 +59,6 @@ def gauss_seeing(npix = None,fwhm=None,e1=None,e2=None):
     generate a seeing PSF of given fwhm and e1 and e2
     fwhm in the unit of arcsec
     """
-    scale = 0.27
     fwhm = fwhm/scale
     M20 = (fwhm/2.35482)**2
     row,col = np.mgrid[-npix/2:npix/2,-npix/2:npix/2]
@@ -171,7 +172,7 @@ def complexMoments(data=None,sigma=None):
 
 raypattern = 18
 npix = 40
-scale = 0.27
+scale = 0.27/4.
 fwhm = 0.5
 zenith = 0.
 filter = 'g'
@@ -223,7 +224,7 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=40,zenith=0,filter='r', 
     #---output the result as an image vector
     b=pf.getdata(dir+'temp.fit')
     if seeing != 0.:
-        b=addseeingImg(b,fwhm=seeing[0],e1=seeing[1],e2=seeing[2])
+        b=addseeingImgFFT(b,fwhm=seeing[0],e1=seeing[1],e2=seeing[2])
     hdr = pf.getheader(dir+'temp.fit')
     ypstamp,xpstamp = nd.center_of_mass(b) # y -> row, x-> col
     bb = b.reshape(npix*npix)
@@ -442,23 +443,32 @@ def centroidChange(ccd=None, filter=None, suband=None):
     data = res[0]
     xcen = res[1][0]['xcen']
     ycen = res[1][0]['ycen']
-    size = np.sqrt(len(data[0][2:]))
-    img = data[0][2:].reshape(size,size)
+    size = np.sqrt(len(data[0][4:]))
+    img = data[0][4:].reshape(size,size)
     xmm = data[0][0]
     ymm = data[0][1]
     xcentroid,ycentroid = nd.center_of_mass(img)
     return xcentroid, ycentroid, xcen, ycen
 
-def addseeingImg(img = None,fwhm=1.,e1=0.,e2=0.):
+def addseeingImgFFT(img = None,fwhm=1.,e1=0.,e2=0.):
     """
     fwhm input in the unit of the arcsec
     """
     kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
-    covimg = convolve2d(img,kern,mode='same')
+    img = img.astype('f') # required for the fftconvolve
+    covimg = sg.fftconvolve(img,kern,mode='same')
     covimg = covimg/covimg.sum()
     return covimg
 
-
+def addseeingImg(img = None,fwhm=1.,e1=0.,e2=0.):
+    """
+    fwhm input in the unit of the arcsec
+    """
+    img = img.astype('f')
+    kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
+    covimg = sg.convolve2d(img,kern,mode='same')
+    covimg = covimg/covimg.sum()
+    return covimg
 
 def addseeing(filename=None,fwhm=1.,e1=0.,e2=0.):
     """
@@ -471,8 +481,10 @@ def addseeing(filename=None,fwhm=1.,e1=0.,e2=0.):
     hdu[0].header.update('e2',e2)
     for i in range(1,n):
         img=hdu[i].data[0][4:].reshape(npix,npix)
+        img = img.astype('f')
         kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
-        covimg = convolve2d(img,kern,mode='same')
+        #covimg = sg.convolve2d(img,kern,mode='same')
+        covimg = sg.fftconvolve(img,kern,mode='same')
         covimg = covimg/covimg.sum()
         hdu[i].data[0][4:] = covimg.flatten()
     newfname = filename[:-7]+'_fwhm_'+str(fwhm)+'_e1_'+str(e1)+'_e2_'+str(e2)+'.fit'
@@ -712,7 +724,7 @@ def showZernike(beta=None,gridsize = 1, max_rad = 1):
     return znk
 
 
-def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,zernike_max_order=20,regular=False):
+def zernike_diagnosis(Nstar=None,seeing=0,npix=npix,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,zernike_max_order=20,regular=False):
     """
     This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
     """
@@ -770,7 +782,69 @@ def zernike_diagnosis(Nstar=None,seeing=0,npix=40,zenith=0,filter='g', theta=0.,
     R2adjAll = np.array(R2adjAll)
     return betaAll,betaErrAll, R2adjAll
 
-def zernike_diff(Nstar=1,seeing=[0.9,0.,0.],npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,zernike_max_order=20,regular=False):
+
+def zernike_file(filename=None,zernike_max_order=20):
+    """
+    This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
+    """
+    hdu = pf.open(filename)
+    nn = len(hdu)
+    data = []
+    colnames = ['x','y','M20','M22','M31','M33']
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        M20=np.zeros(Nobj)
+        M22=np.zeros(Nobj).astype(complex)
+        M31=np.zeros(Nobj).astype(complex)
+        M33=np.zeros(Nobj).astype(complex)
+        #sigma = 1.1/0.27
+        sigma = 1.08/0.27
+        for i in range(Nobj):
+            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
+        x=hdui.header['ccdXcen']
+        y=hdui.header['ccdYcen']
+        data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
+    data=np.array(data)
+    pl.figure(figsize=(15,15))
+    betaAll=[]
+    betaErrAll=[]
+    R2adjAll=[]
+    pl.subplot(3,3,1)
+    beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,2].real,max_order=zernike_max_order)
+    betaAll.append(beta)
+    betaErrAll.append(betaErr)
+    R2adjAll.append(R2_adj)
+    znk=showZernike(beta=beta)
+    pl.colorbar()
+    pl.title(colnames[2])
+    for i in range(3,6):
+        pl.subplot(3,3,2*i-4)
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].real,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+        znk=showZernike(beta=beta)
+        pl.colorbar()
+        pl.title(colnames[i]+'_real')
+        print '--- R2_adj of the fit is: '+str(R2_adj) +'---'
+        pl.subplot(3,3,2*i-3)
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].imag,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+        znk=showZernike(beta=beta)
+        pl.colorbar()
+        pl.title(colnames[i]+'_imag')
+        print '--- R2_adj of the fit is: '+str(R2_adj) +'---'
+    betaAll = np.array(betaAll)
+    betaErrAll = np.array(betaErrAll)
+    R2adjAll = np.array(R2adjAll)
+    return betaAll,betaErrAll, R2adjAll
+
+
+
+
+def zernike_diff(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,zernike_max_order=20,regular=False):
     """
     This function produce zernike coefficients and compare the difference
     """
@@ -841,7 +915,25 @@ def rowcol2XY(row,col,CCD):
     Y = CCD[2]+2048*pixscale-(row*pixscale+pixscale/2.)
     return X,Y
     
-    
+def mutlimachine_addseeing(computer=None):
+    machine = np.array(['des04','des05','des06','des07','des08','des09','des10'])
+    fwhm = [0.6, 0.8, 1.0, 1.2, 1.4]
+    e1 = [-0.08,-0.04,0,0.04,0.08]
+    e2 = [-0.08,-0.04,0,0.04,0.08]
+    allfile = gl.glob('/home/jghao/research/decamFocus/psf_noseeing/*.gz')
+    allfile.sort()
+    nfile=len(allfile)
+    nmachine = len(machine)
+    machineIdx = np.arange(nmachine)
+    mid = machineIdx[computer == machine]
+    idx = np.arange(mid[0]*nfile/nmachine:(mid[0]+1)*nfile/nmachine)
+    for fname in allfile[idx]:
+        for fw in fwhm:
+            for e11 in e1:
+                for e22 in e2:
+                    t = addseeing(filename=fname,fwhm = fw,e1=e11,e2=e22)
+
+
 
 
 if __name__ == '__main__':
@@ -860,16 +952,8 @@ if __name__ == '__main__':
                     print '----'+str(counter)+'----'
                     filename='/home/jghao/research/decamFocus/psf_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
                     #filename = '/data/des07.b/data/jiangang/PSF_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
-                    t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=40,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
+                    t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=npix,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
     """
-    fwhm = [0.6, 0.8, 1.0, 1.2, 1.4]
-    e1 = [-0.08,-0.04,0,0.04,0.08]
-    e2 = [-0.08,-0.04,0,0.04,0.08]
-    allfile = gl.glob('/home/jghao/research/decamFocus/psf_noseeing/*.gz')
-    for fname in allfile:
-        for fw in fwhm:
-            for e11 in e1:
-                for e22 in e2:
-                    t = addseeing(filename=fname,fwhm = fw,e1=e11,e2=e22)
-
+    computer = sys.argv[1]
+    multimachine_addseeing(computer)
                 
