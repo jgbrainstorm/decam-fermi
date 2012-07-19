@@ -12,7 +12,7 @@ try:
     import os,sys
     from DECamCCD_def import *
     import scipy.ndimage as nd
-    import healpy as hp
+    #import healpy as hp
     import glob as gl
     from scipy.misc import factorial as fac
     #from scipy.signal import convolve2d
@@ -21,6 +21,25 @@ try:
 except ImportError:
     print 'the required packages are: numpy, pyfits,pylab,scikit,scipy,mahotas'
     raise
+
+#-----define the parameters ----------------------------------
+# this parameter will be written into the header
+install_dir ='/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/'
+raypattern = 18
+npix = 40
+#scale = 0.27/4.
+scale = 0.27
+fwhm = 0.5
+zenith = 0.
+filter = 'r'
+theta = 0.
+corrector = 'corrector'
+x = None
+y = None
+z = None
+output='temp.fit'
+#----------------------------------------------------------------
+
 
 #---------------calcuate moments ---------------
 def moments(data):
@@ -167,27 +186,11 @@ def complexMoments(data=None,sigma=None):
     return M20, M22, M31, M33
 
 
-#-----define the parameters --------
-# this parameter will be written into the header
 
-raypattern = 18
-npix = 40
-#scale = 0.27/4.
-scale = 0.27
-fwhm = 0.5
-zenith = 0.
-filter = 'r'
-theta = 0.
-corrector = 'corrector'
-x = None
-y = None
-z = None
-output='temp.fit'
 #------------------------------
 
 def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=256,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     #---generating the .par file------
-    install_dir ='/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/'
     dir = os.getcwd()+'/'
     file = open(dir+'temp.par','w')
     file.write('RAYPATTERN '+str(raypattern) +'\n')
