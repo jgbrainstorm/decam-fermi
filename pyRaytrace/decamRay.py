@@ -9,7 +9,7 @@ try:
     import numpy as np
     import pyfits as pf
     import pylab as pl
-    import os
+    import os,sys
     from DECamCCD_def import *
     import scipy.ndimage as nd
     import healpy as hp
@@ -115,11 +115,11 @@ def AdaptM(data=None,sigma=None):
     """
     rowmean,colmean,rowvar,colvar,rowcolcov = amoments(data,sigma=sigma)
     mrrcc = rowvar + colvar
-    me1 = (colvar - rowvar)/mrrcc
-    me2 = 2.*rowcolcov/mrrcc
+    e1 = (colvar - rowvar)/mrrcc
+    e2 = 2.*rowcolcov/mrrcc
     scale = 0.27
     fwhm = np.sqrt(rowvar+colvar)*2.35482*0.27
-    return me1,me2,fwhm
+    return e1,e2,fwhm
 
 
 def complexMoments(data=None,sigma=None):
@@ -172,20 +172,20 @@ def complexMoments(data=None,sigma=None):
 
 raypattern = 18
 npix = 40
-scale = 0.27/4.
+#scale = 0.27/4.
+scale = 0.27
 fwhm = 0.5
 zenith = 0.
-filter = 'g'
+filter = 'r'
 theta = 0.
 corrector = 'corrector'
 x = None
 y = None
-z = 0.1
+z = None
 output='temp.fit'
-seeing=0.9  # in arcseconds, fwhm
 #------------------------------
 
-def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=256,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     #---generating the .par file------
     install_dir ='/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/'
     dir = os.getcwd()+'/'
@@ -229,7 +229,7 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=40,zenith=0,filter='r', 
     ypstamp,xpstamp = nd.center_of_mass(b) # y -> row, x-> col
     bb = b.reshape(npix*npix)
     pos = np.array([hdr['xcen'],hdr['ycen'],xpstamp,ypstamp])
-    os.system('rm '+dir+'temp.fit temp.par')
+    #os.system('rm '+dir+'temp.fit temp.par')
     return np.concatenate((pos,bb)),hdr
 
 
@@ -346,10 +346,10 @@ def disImg(data=None,colorbar=False):
     """
     data is a vector with first, second as the center position, then is an image vector.
     """
-    size = np.sqrt(len(data[2:]))
+    size = np.sqrt(len(data[4:]))
     xmm = data[0]
     ymm = data[1]
-    pl.matshow(data[2:].reshape(size,size),fignum=0)
+    pl.matshow(data[4:].reshape(size,size),fignum=0)
     if colorbar == True:
         pl.colorbar()
     pl.xlim(0,size-1)
@@ -364,7 +364,7 @@ def disImgAll(imgV=None):
     for i in range(nrow):
         x=imgV[i,0]*1000./15.
         y=imgV[i,1]*1000./15.
-        size = np.sqrt(len(imgV[i,2:]))
+        size = np.sqrt(len(imgV[i,4:]))
         img = imgV[i,2:].reshape(size,size)
         xm = np.round(np.arange(size) - x,3)
         ym = np.round(np.arange(size) - y,3)
@@ -396,26 +396,26 @@ def disImgCCD(imgV=None,ccd=None):
     return 'The image is done!'
 
   
-def imgCCDctr(ccd=None,filter='g',seeing=0,z=0.,theta=0.,contour=False):
+def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,contour=False,npix=256):
     xmm = ccd[1]
     ymm = ccd[2]
-    res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,z=z)
+    res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,x=x,y=y,z=z,npix=npix)
     data = res[0]
     disImgCCD(data,ccd)
     if contour is True:
-        pl.contourf(data[0][2:].reshape(npix,npix),n=100)
-    e1,e2, rowvar,colvar =AdaptM(data[0][2:].reshape(npix,npix),sigma=1.1)
+        pl.contourf(data[0][4:].reshape(npix,npix),n=100)
+    e1,e2,fwhm =AdaptM(data[0][4:].reshape(npix,npix),sigma=1.1)
     xcen = res[1][0]['xcen']
     ycen = res[1][0]['ycen']
     pl.figtext(0.2,0.84,'CCD: '+ccd[0] +',   '+'Filter: '+filter, color='r')
     pl.figtext(0.2,0.8, 'e1: '+str(round(e1,3)) + ',  e2: '+str(round(e2,3)), color='r')
     pl.figtext(0.2,0.75, 'xcen: '+str(xcen) + ',  ycen: '+str(ycen), color='r')
-    pl.figtext(0.2,0.7, 'seeing: '+str(seeing)+'" (fwhm)', color='r')
+    pl.figtext(0.2,0.7, 'seeing: '+str(seeing)+'(fwhm)', color='r')
     if z:
         pl.figtext(0.2,0.65, 'defocus: '+str(z)+' (mm)', color='r')
     if theta:
         pl.figtext(0.2,0.6,'tilt: '+str(theta)+' (arcsec)', color='r')
-    return e1,e2, rowvar,colvar
+    return e1,e2,fwhm
 
 def decompPCA(data=None,comp=None):
     img = data[:,2:].T
@@ -470,26 +470,30 @@ def addseeingImg(img = None,fwhm=1.,e1=0.,e2=0.):
     covimg = covimg/covimg.sum()
     return covimg
 
-def addseeing(filename=None,fwhm=1.,e1=0.,e2=0.):
+def addseeing(filename=None,fwhm=1.,e1=0.,e2=0.,fft=True):
     """
-    fwhm input in the unit of the arcsec
+    fwhm is in the unit of the arcsec
     """
     hdu = pf.open(filename)
     n = len(hdu)
     hdu[0].header.update('s_fwhm',fwhm)
     hdu[0].header.update('e1',e1)
     hdu[0].header.update('e2',e2)
+    kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
     for i in range(1,n):
+        print i
         img=hdu[i].data[0][4:].reshape(npix,npix)
         img = img.astype('f')
-        kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
-        #covimg = sg.convolve2d(img,kern,mode='same')
-        covimg = sg.fftconvolve(img,kern,mode='same')
+        if fft == False:
+            covimg = sg.convolve2d(img,kern,mode='same')
+            newfname = 'PSF_withseeing'+filename[12:-7]+'_fwhm_'+str(fwhm)+'_e1_'+str(e1)+'_e2_'+str(e2)+'.fit'
+        else:
+            covimg = sg.fftconvolve(img,kern,mode='same')
+            newfname = 'PSF_withseeing'+filename[12:-7]+'_fwhm_'+str(fwhm)+'_e1_'+str(e1)+'_e2_'+str(e2)+'_fftconvolve.fit'
         covimg = covimg/covimg.sum()
         hdu[i].data[0][4:] = covimg.flatten()
-    newfname = filename[:-7]+'_fwhm_'+str(fwhm)+'_e1_'+str(e1)+'_e2_'+str(e2)+'.fit'
     hdu.writeto(newfname)
-    os.system('gzip '+newfname)
+    #os.system('gzip '+newfname)
     return 'done'
 
 
@@ -555,22 +559,21 @@ def psfSizeAllZernike(Nstar=None,filter='r',npix=40,seeing=0,theta=0., zenith = 
 
 
 
-def genPSFimage(filename=None,dir=None):
+def genPSFimage(filename=None):
     """
     convert the PSF image vector file to the set of PSF images
     """
-    b=pf.getdata(filename)
-    nn = len(b)
-    npix = int(np.sqrt(len(b[0][2:])))
-    for i in range(nn):
-        img = b[i][2:].reshape(npix,npix)
+    hdu=pf.open(filename)
+    nn = len(hdu)
+    for i in range(1,nn):
+        img = hdu[i].data[0][4:].reshape(npix,npix)
         img = img/img.sum()
-        h = pf.PrimaryHDU(img)
-        h.header.update('xmm',b[i][0])
-        h.header.update('ymm',b[i][1])
-        h.scale('int16', '', bzero=32768)
-        h.writeto(dir+'psf_'+str(i)+'.fit')
-
+        hdu[i].data = img
+    #hdu.scale('int16', '', bzero=32768)
+    newfilename = filename[:-7]+'_stamp.fits'
+    hdu.writeto(newfilename)
+    os.system('gzip '+newfilename)    
+        
 
 def measureDataComplexM_multiext(filename,sigma = 1.1,scale=0.27):
     """
@@ -626,7 +629,7 @@ def genImgVallCCD(filename=None,Nstar=None,seeing=[0.9,0.,0.],npix=40,zenith=0,f
         hdu.header.update('e2',seeing[2])
     hduList.append(hdu)
     for ccd in N[1:]+S[1:]:
-        #print ccd
+        print ccd
         res = genImgV(filename=filename,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband,regular=regular)
         hdu = pf.PrimaryHDU(res[0])
         hdu.header.update('ccdPos',ccd[0])
@@ -711,11 +714,17 @@ def dispZernike(beta=1.,j=0,gridsize = 1, max_rad = 1):
     pl.imshow(znk)
     return znk
     
-def showZernike(beta=None,gridsize = 1, max_rad = 1):
+def showZernike(beta=None,betaErr=None,gridsize = 1, max_rad = 1,significance=False):
+    """
+    significance shows how significant the coefficients are constrained. 
+    """
     x,y = np.meshgrid(np.arange(-gridsize,gridsize,0.01),np.arange(-gridsize,gridsize,0.01))
     rho = np.sqrt(x**2+y**2)
     phi = np.arctan2(y,x)
     ok = rho < max_rad
+    if significance != False:
+        sigIdx = np.abs(beta)/betaErr >= significance
+        beta = beta[sigIdx]
     nn = len(beta)
     znk=0
     for j in range(nn):
@@ -724,7 +733,7 @@ def showZernike(beta=None,gridsize = 1, max_rad = 1):
     return znk
 
 
-def zernike_diagnosis(Nstar=None,seeing=0,npix=npix,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,zernike_max_order=20,regular=False):
+def zernike_diagnosis(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,zernike_max_order=20,regular=False):
     """
     This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
     """
@@ -739,7 +748,7 @@ def zernike_diagnosis(Nstar=None,seeing=0,npix=npix,zenith=0,filter='r', theta=0
         M31=np.zeros(Nobj).astype(complex)
         M33=np.zeros(Nobj).astype(complex)
         #sigma = 1.1/0.27
-        sigma = 1.08/0.27
+        sigma = 1.08/scale
         for i in range(Nobj):
             M20[i],M22[i],M31[i],M33[i]=complexMoments(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
         x=hdui.header['ccdXcen']
@@ -783,7 +792,7 @@ def zernike_diagnosis(Nstar=None,seeing=0,npix=npix,zenith=0,filter='r', theta=0
     return betaAll,betaErrAll, R2adjAll
 
 
-def zernike_file(filename=None,zernike_max_order=20):
+def zernike_file(filename=None,zernike_max_order=20,significance=False):
     """
     This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
     """
@@ -798,14 +807,14 @@ def zernike_file(filename=None,zernike_max_order=20):
         M31=np.zeros(Nobj).astype(complex)
         M33=np.zeros(Nobj).astype(complex)
         #sigma = 1.1/0.27
-        sigma = 1.08/0.27
+        sigma = 1.08/scale
         for i in range(Nobj):
             M20[i],M22[i],M31[i],M33[i]=complexMoments(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
         x=hdui.header['ccdXcen']
         y=hdui.header['ccdYcen']
         data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
     data=np.array(data)
-    pl.figure(figsize=(15,15))
+    pl.figure(figsize=(10,10))
     betaAll=[]
     betaErrAll=[]
     R2adjAll=[]
@@ -823,7 +832,7 @@ def zernike_file(filename=None,zernike_max_order=20):
         betaAll.append(beta)
         betaErrAll.append(betaErr)
         R2adjAll.append(R2_adj)
-        znk=showZernike(beta=beta)
+        znk=showZernike(beta=beta,betaErr=betaErr,significance=significance)
         pl.colorbar()
         pl.title(colnames[i]+'_real')
         print '--- R2_adj of the fit is: '+str(R2_adj) +'---'
@@ -832,7 +841,7 @@ def zernike_file(filename=None,zernike_max_order=20):
         betaAll.append(beta)
         betaErrAll.append(betaErr)
         R2adjAll.append(R2_adj)
-        znk=showZernike(beta=beta)
+        znk=showZernike(beta=beta,betaErr=betaErr,significance=significance)
         pl.colorbar()
         pl.title(colnames[i]+'_imag')
         print '--- R2_adj of the fit is: '+str(R2_adj) +'---'
@@ -894,6 +903,49 @@ def comp_zernike(beta1=None,betaErr1=None,beta2=None,betaErr2=None):
         chi2[i] = np.sum((beta1[i,:] - beta2[i,:])**2/(betaErr1**2+betaErr2**2))
     return chi2
 
+def zernike_coeff(filename=None,zernike_max_order=20):
+    """
+    measure the zernike coefficients and errors
+    """
+    hdu = pf.open(filename)
+    nn = len(hdu)
+    data = []
+    colnames = ['x','y','M20','M22','M31','M33']
+    sigma = 1.08/scale
+    for hdui in hdu[1:]:
+        M20,M22,M31,M33=complexMoments(data=hdui.data[0][4:].reshape(npix,npix),sigma=sigma)
+        x=hdui.header['ccdXcen']
+        y=hdui.header['ccdYcen']
+        data.append([x,y,M20,M22,M31,M33])
+    data=np.array(data)
+    betaAll=[]
+    betaErrAll=[]
+    R2adjAll=[]
+    beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,2].real,max_order=zernike_max_order)
+    betaAll.append(beta)
+    betaErrAll.append(betaErr)
+    R2adjAll.append(R2_adj)
+    for i in range(3,6):
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].real,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].imag,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+    betaAll = np.array(betaAll)
+    betaErrAll = np.array(betaErrAll)
+    R2adjAll = np.array(R2adjAll)
+    x=hdu[0].header['x']
+    y=hdu[0].header['y']
+    z=hdu[0].header['z']
+    theta=hdu[0].header['theta']
+    s_fwhm=hdu[0].header['s_fwhm']
+    e1=hdu[0].header['e1']
+    e2=hdu[0].header['e2']
+    return x,y,z,theta,s_fwhm,e1,e2,betaAll,betaErrAll, R2adjAll
+
 
 def rowcol2XY(row,col,CCD):
     """
@@ -915,24 +967,44 @@ def rowcol2XY(row,col,CCD):
     Y = CCD[2]+2048*pixscale-(row*pixscale+pixscale/2.)
     return X,Y
     
-def mutlimachine_addseeing(computer=None):
+def multimachine_addseeing(computer=None):
     machine = np.array(['des04','des05','des06','des07','des08','des09','des10'])
     fwhm = [0.6, 0.8, 1.0, 1.2, 1.4]
     e1 = [-0.08,-0.04,0,0.04,0.08]
     e2 = [-0.08,-0.04,0,0.04,0.08]
-    allfile = gl.glob('/home/jghao/research/decamFocus/psf_noseeing/*.gz')
+    allfile = gl.glob('/home/jghao/research/decamFocus/psf_noseeing/higres/*.gz')
+    allfile=np.array(allfile)
     allfile.sort()
     nfile=len(allfile)
     nmachine = len(machine)
     machineIdx = np.arange(nmachine)
     mid = machineIdx[computer == machine]
-    idx = np.arange(mid[0]*nfile/nmachine:(mid[0]+1)*nfile/nmachine)
+    idx = np.arange(mid[0]*nfile/nmachine,(mid[0]+1)*nfile/nmachine)
     for fname in allfile[idx]:
         for fw in fwhm:
             for e11 in e1:
                 for e22 in e2:
                     t = addseeing(filename=fname,fwhm = fw,e1=e11,e2=e22)
 
+
+def multimachine_psfgen(computer=None):
+    machine = np.array(['des04','des05','des06','des07','des08','des09','des10'])
+    tiltrange = [-100,-80,-50,-20,0,50,80,100]
+    xshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    yshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    defocusrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    nmachine = len(machine)
+    machineIdx = np.arange(nmachine)
+    mid = machineIdx[computer == machine]
+    #tlt = tiltrange[mid]
+    tlt = 100.
+    for xsft in xshiftrange:
+        for ysft in yshiftrange:
+            for defo in defocusrange:
+                filename='/home/jghao/research/decamFocus/psf_noseeing/highres_smallsize/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
+                    #filename = '/data/des07.b/data/jiangang/PSF_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
+                t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=npix,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
+ 
 
 
 
@@ -955,5 +1027,5 @@ if __name__ == '__main__':
                     t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=npix,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
     """
     computer = sys.argv[1]
-    multimachine_addseeing(computer)
-                
+    #multimachine_addseeing(computer)
+    multimachine_psfgen(computer)            
