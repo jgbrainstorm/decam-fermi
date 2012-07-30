@@ -4,7 +4,7 @@ sys.path.append('/home/jghao/fmccd')
 if len(sys.argv) == 1:
     print 'syntax: oscanCCD imagefile extension'
 else:
-    from fermiMCCD import *
+    from DECamCCD import *
     hdu=pf.open(sys.argv[1])
     i=int(sys.argv[2])
     col0=hdu[i].header['biasseca'].split('[')[1].split(']')[0].split(',')[0].split(':')[0]

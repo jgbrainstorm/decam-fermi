@@ -271,7 +271,7 @@ def mode_gauss(x,binsize=None,range=None,crit_f=None):
 #-----scale CCD image to int16-------
 """
 Calling: newHDU=scaleHDU(HDU)
-
+Note, this should not be used anymore. July 30, 2012
 """
 
 def scaleHDU(x):
@@ -333,7 +333,7 @@ def median_Img(dir=None,fileHEAD=None,medianName=None):
             totalIMG[j,:,:] =pf.getdata(imagName[j],i)
         medianHDU[i].data = np.median(totalIMG,axis=0)
         print 'extension: ', i
-    HDU = scaleHDU(medianHDU)
+    #HDU = scaleHDU(medianHDU)
     if medianName:
         HDU.writeto(dir+medianName)
     else:
@@ -359,7 +359,7 @@ def Img_sub(imageName=None,biasName=None,subName=None):
         imageHDU.verify('silentfix')
         for i in extidx:
             imageHDU[i].data=pf.getdata(imageName,i)-pf.getdata(biasName,i)
-        imageHDU=scaleHDU(imageHDU)
+        #imageHDU=scaleHDU(imageHDU)
         imageHDU.writeto(subName)
     else:
         imageHDU=pf.open(imageName,mode='update')
@@ -367,7 +367,7 @@ def Img_sub(imageName=None,biasName=None,subName=None):
         NChannel = len(imageHDU)
         for i in extidx:
             imageHDU[i].data=pf.getdata(imageName,i)-pf.getdata(biasName,i)
-        imageHDU=scaleHDU(imageHDU)
+        #imageHDU=scaleHDU(imageHDU)
         imageHDU.flush()    
         return(0)
 
@@ -419,7 +419,7 @@ def master_bias(dir=None,fileHEAD=None,medianName=None):
             totalIMG[j,:,:] = imagHDU[i].data
         medianHDU[i].data = np.median(totalIMG,axis=0)
         print 'extension: ', i
-    HDU = scaleHDU(medianHDU)
+    #HDU = scaleHDU(medianHDU)
     if medianName:
         HDU.writeto(dir+medianName)
     else:
@@ -449,7 +449,7 @@ def image_reduction_oscan(dir=None,biasName=None):
         print i
         for j in range(1,NChannel):
             img[j].data=img[j].data-bias[j].data
-        img=scaleHDU(img)
+        #img=scaleHDU(img)
         #img.writeto(imagName[i][:-5]+'_bias_sub.fits')
         img.flush()
 
@@ -475,7 +475,7 @@ def image_reduction(dir=None,biasName=None):
         print i
         for j in range(1,NChannel):
             img[j].data=img[j].data-bias[j].data
-        img=scaleHDU(img)
+        #img=scaleHDU(img)
         #img.writeto(imagName[i][:-5]+'_bias_sub.fits')
         img.flush()
 
