@@ -18,6 +18,7 @@ try:
     #from scipy.signal import convolve2d
     #from scipy.signal import fftconvole
     import scipy.signal as sg
+    import binplot as bp
 except ImportError:
     print 'the required packages are: numpy, pyfits,pylab,scikit,scipy,mahotas'
     raise
@@ -26,10 +27,10 @@ except ImportError:
 # this parameter will be written into the header
 install_dir ='/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/'
 raypattern = 18
-npix = 40
-#scale = 0.27/4.
-scale = 0.27
-fwhm = 0.5
+npix = 160
+scale = 0.27/4.  # arcseconds/pix
+#scale = 0.27
+diffusionfwhm = 0.4
 zenith = 0.
 filter = 'r'
 theta = 0.
@@ -42,6 +43,21 @@ output='temp.fit'
 
 
 #---------------calcuate moments ---------------
+
+def rebin(a, new_shape):
+    """
+    example:
+    c = rebin(b, (2, 3))
+    """
+    M, N = a.shape
+    m, n = new_shape
+    if m<M:
+        return a.reshape((m,M/m,n,N/n)).mean(3).mean(1)
+    else:
+        return np.repeat(np.repeat(a, m/M, axis=0), n/N, axis=1)
+
+
+
 def moments(data):
     """
     Returns (height, x, y, width_x, width_y)
@@ -136,9 +152,53 @@ def AdaptM(data=None,sigma=None):
     mrrcc = rowvar + colvar
     e1 = (colvar - rowvar)/mrrcc
     e2 = 2.*rowcolcov/mrrcc
-    scale = 0.27
-    fwhm = np.sqrt(rowvar+colvar)*2.35482*0.27
+    fwhm = np.sqrt(rowvar+colvar)*2.35482*scale
     return e1,e2,fwhm
+
+def convolveH(image=None,kernel=None):
+    """
+    using the fft convolve full mode and then trim the size to the original size. This is because if use the same mode, the centroid will change due to edge effects.
+    """
+    res = sg.fftconvolve(image,kernel,mode='full')
+    res = res/res.sum()
+    rowM,colM = nd.center_of_mass(res)
+    size = image.shape[0]/2
+    resnew = res[int(rowM)-size:int(rowM)+size,int(colM)-size:int(colM)+size]
+    return resnew
+
+def adaptiveCentroid(data=None,sigma=None):
+    """
+    calculate the centroid using the adaptive approach
+    """
+    nrow,ncol=data.shape
+    Isum = data.sum()
+    Icol = data.sum(axis=0) # sum over all rows
+    Irow = data.sum(axis=1) # sum over all cols
+    IcolSum = np.sum(Icol)
+    IrowSum = np.sum(Irow)
+    colgrid = np.arange(ncol)
+    rowgrid = np.arange(nrow)
+    ROW,COL=np.indices((nrow,ncol))
+    rowmean=np.sum(rowgrid*Irow)/IrowSum
+    colmean=np.sum(colgrid*Icol)/IcolSum
+    maxItr = 50
+    EP = 0.0001
+    for i in range(maxItr):
+        wrmat = wr(ROW,COL,rowmean,colmean,sigma)
+        IWmat = data*wrmat
+        wrcol = wrmat.sum(axis=0)
+        wrrow = wrmat.sum(axis=1)
+        wrcolsum = np.sum(Icol*wrcol)
+        wrrowsum = np.sum(Irow*wrrow)
+        drowmean = np.sum((rowgrid-rowmean)*Irow*wrrow)/wrrowsum
+        dcolmean = np.sum((colgrid-colmean)*Icol*wrcol)/wrcolsum
+        rowmean = rowmean+2.*drowmean
+        colmean = colmean+2.*dcolmean
+        if drowmean**2+dcolmean**2 <= EP:
+            break
+    return rowmean,colmean
+
+        
 
 
 def complexMoments(data=None,sigma=None):
@@ -146,6 +206,7 @@ def complexMoments(data=None,sigma=None):
     This one calcualte the 3 2nd moments and 4 thrid moments with the Gaussian weights.
     col : x direction
     row : y direction
+    the centroid is using the adpative centroid.
     sigma is the stand deviation of the measurement kernel in pixel
     The output is in pixel coordinate
     """
@@ -160,14 +221,21 @@ def complexMoments(data=None,sigma=None):
     ROW,COL=np.indices((nrow,ncol))
     rowmean=np.sum(rowgrid*Irow)/IrowSum
     colmean=np.sum(colgrid*Icol)/IcolSum
-    wrmat = wr(ROW,COL,rowmean,colmean,sigma)
-    IWmat = data*wrmat
-    wrcol = wrmat.sum(axis=0)
-    wrrow = wrmat.sum(axis=1)
-    wrcolsum = np.sum(Icol*wrcol)
-    wrrowsum = np.sum(Irow*wrrow)
-    rowmean = np.sum(rowgrid*Irow*wrrow)/wrrowsum
-    colmean = np.sum(colgrid*Icol*wrcol)/wrcolsum
+    maxItr = 50
+    EP = 0.0001 # start getting the adaptive centroid
+    for i in range(maxItr):  
+        wrmat = wr(ROW,COL,rowmean,colmean,sigma)
+        IWmat = data*wrmat
+        wrcol = wrmat.sum(axis=0)
+        wrrow = wrmat.sum(axis=1)
+        wrcolsum = np.sum(Icol*wrcol)
+        wrrowsum = np.sum(Irow*wrrow)
+        drowmean = np.sum((rowgrid-rowmean)*Irow*wrrow)/wrrowsum
+        dcolmean = np.sum((colgrid-colmean)*Icol*wrcol)/wrcolsum
+        rowmean = rowmean+2.*drowmean
+        colmean = colmean+2.*dcolmean
+        if drowmean**2+dcolmean**2 <= EP:
+            break
     rowgrid = rowgrid - rowmean # centered
     colgrid = colgrid - colmean
     Mr = np.sum(rowgrid*Irow*wrrow)/wrrowsum
@@ -189,14 +257,14 @@ def complexMoments(data=None,sigma=None):
 
 #------------------------------
 
-def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=256,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     #---generating the .par file------
     dir = os.getcwd()+'/'
     file = open(dir+'temp.par','w')
     file.write('RAYPATTERN '+str(raypattern) +'\n')
     file.write('NPIX '+str(npix) +'\n')
     file.write('SCALE '+str(scale)+'\n')
-    file.write('FWHM '+str(fwhm)+'\n')
+    file.write('FWHM '+str(diffusionfwhm)+'\n')
     file.write('ZENITH '+str(zenith)+'\n')
     file.write('FILTER '+filter +'\n')
     file.write('XMM '+str(xmm)+'\n')
@@ -236,7 +304,7 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=256,zenith=0,filter='r',
     return np.concatenate((pos,bb)),hdr
 
 
-def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None,regular=False):
+def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None,regular=False):
     """
     seeing is the rms in arcseconds
     syntax: genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
@@ -301,7 +369,7 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=40,zenith=
     return data,hdrlist
 
 
-def genImgVfixedPos(filename=None,seeing=0,npix=40,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+def genImgVfixedPos(filename=None,seeing=0,npix=None,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
     """
     seeing is the rms in arcseconds
     """
@@ -352,7 +420,7 @@ def disImg(data=None,colorbar=False):
     size = np.sqrt(len(data[4:]))
     xmm = data[0]
     ymm = data[1]
-    pl.matshow(data[4:].reshape(size,size),fignum=0)
+    pl.matshow(data[4:].reshape(size,size),fignum=False)
     if colorbar == True:
         pl.colorbar()
     pl.xlim(0,size-1)
@@ -399,26 +467,66 @@ def disImgCCD(imgV=None,ccd=None):
     return 'The image is done!'
 
   
-def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,contour=False,npix=256):
+def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,contour=False,npix=None,sigma=1.1/scale):
     xmm = ccd[1]
     ymm = ccd[2]
     res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,x=x,y=y,z=z,npix=npix)
     data = res[0]
-    disImgCCD(data,ccd)
+    img = data[0][4:].reshape(npix,npix)
+    pl.figure(figsize=(12,6))
+    pl.subplot(1,2,1)
+    pl.matshow(img,fignum=False)
+    pl.xlabel('Pixel')
+    pl.ylabel('Pixel')
+    pl.grid(color='y')
     if contour is True:
-        pl.contourf(data[0][4:].reshape(npix,npix),n=100)
-    e1,e2,fwhm =AdaptM(data[0][4:].reshape(npix,npix),sigma=1.1)
+        pl.contourf(img,n=100)
+    rowCen,colCen= adaptiveCentroid(data=img,sigma=sigma)
+    M20, M22, M31, M33 =complexMoments(img,sigma=sigma)
+    e1 = M22.real/M20.real
+    e2 = M22.imag/M20.real
+    whiskerLength = np.sqrt(np.abs(M22))*scale
+    fwhm = np.sqrt(M20)*2.35482*scale
     xcen = res[1][0]['xcen']
     ycen = res[1][0]['ycen']
-    pl.figtext(0.2,0.84,'CCD: '+ccd[0] +',   '+'Filter: '+filter, color='r')
-    pl.figtext(0.2,0.8, 'e1: '+str(round(e1,3)) + ',  e2: '+str(round(e2,3)), color='r')
-    pl.figtext(0.2,0.75, 'xcen: '+str(xcen) + ',  ycen: '+str(ycen), color='r')
-    pl.figtext(0.2,0.7, 'seeing: '+str(seeing)+'(fwhm)', color='r')
+    pl.figtext(0.15,0.8,'CCD: '+ccd[0] +',   '+'Filter: '+filter, color='r')
+    pl.figtext(0.15,0.75, 'e1: '+str(round(e1,3)) + ',  e2: '+str(round(e2,3)), color='r')
+    pl.figtext(0.15,0.7, 'xcen: '+str(xcen) + ',  ycen: '+str(ycen), color='r')
+    pl.figtext(0.15,0.65, 'seeing: '+str(seeing)+'(fwhm,arcsec)', color='r')
+    pl.figtext(0.15,0.6, 'PSF whisker: '+str(whiskerLength)+'(arcsec)', color='r')
+    pl.figtext(0.15,0.55, 'PSF fwhm: '+str(fwhm)+'(arcsec)', color='r')
     if z:
-        pl.figtext(0.2,0.65, 'defocus: '+str(z)+' (mm)', color='r')
+        pl.figtext(0.15,0.4, 'defocus: '+str(z)+' (mm)', color='r')
+    if x:
+        pl.figtext(0.15,0.35,'x: '+str(x)+' (mm)', color='r')
+    if y:
+        pl.figtext(0.15,0.3,'y: '+str(y)+' (mm)', color='r')
     if theta:
-        pl.figtext(0.2,0.6,'tilt: '+str(theta)+' (arcsec)', color='r')
-    return e1,e2,fwhm
+        pl.figtext(0.15,0.4,'tilt: '+str(theta)+' (arcsec)', color='r')
+    pl.subplot(1,2,2)
+    row,col = np.mgrid[0:npix,0:npix]
+    row = row - rowCen
+    col = col - colCen
+    radius = np.sqrt(row**2+col**2)
+    #r,y, yerr=bp.bin_scatter_logx(radius,img,nbins=200,fmt='b.',xrange=[0.001,np.max(radius)],alpha=1)
+    img = img.flatten()
+    radius = radius.flatten()
+    idx = np.argsort(radius)
+    img = img[idx]
+    radius = radius[idx]
+    rad,im,imerr=bp.bin_scatter(radius,img,binsize=1,fmt='b.',plot=False)
+    halfmax = max(im)/2.
+    pl.plot(radius,img,'b.')
+    pl.grid(color='g')
+    pl.hlines(halfmax,0,radius.max(),linestyle='solid',colors='r')
+    pl.vlines(fwhm/scale/2.,0, halfmax*2+halfmax*0.2,linestyle='solid',colors='r')
+    pl.ylim(0,halfmax*2+halfmax*0.2)
+    pl.xlim(0,npix/4.) 
+    pl.xlabel('Radius [pixels]')
+    pl.ylabel('Mean counts [ADU]')
+    pl.title('Radial profile')
+    pl.figtext(0.6,0.7,'Gaussian Weight '+r'$\sigma$: '+str(round(sigma*scale,3))+ ' arcsec')
+    return e1,e2,fwhm,whiskerLength,img
 
 def decompPCA(data=None,comp=None):
     img = data[:,2:].T
@@ -459,23 +567,15 @@ def addseeingImgFFT(img = None,fwhm=1.,e1=0.,e2=0.):
     """
     kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
     img = img.astype('f') # required for the fftconvolve
-    covimg = sg.fftconvolve(img,kern,mode='same')
+    covimg = convolveH(img,kern)
     covimg = covimg/covimg.sum()
     return covimg
 
-def addseeingImg(img = None,fwhm=1.,e1=0.,e2=0.):
-    """
-    fwhm input in the unit of the arcsec
-    """
-    img = img.astype('f')
-    kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
-    covimg = sg.convolve2d(img,kern,mode='same')
-    covimg = covimg/covimg.sum()
-    return covimg
 
 def addseeing(filename=None,fwhm=1.,e1=0.,e2=0.,fft=True):
     """
     fwhm is in the unit of the arcsec
+    rebinfactor is an integer to indicate how much the image will be scaled down
     """
     hdu = pf.open(filename)
     n = len(hdu)
@@ -484,15 +584,42 @@ def addseeing(filename=None,fwhm=1.,e1=0.,e2=0.,fft=True):
     hdu[0].header.update('e2',e2)
     kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
     for i in range(1,n):
-        print i
         img=hdu[i].data[0][4:].reshape(npix,npix)
         img = img.astype('f')
         if fft == False:
             covimg = sg.convolve2d(img,kern,mode='same')
-            newfname = 'PSF_withseeing'+filename[12:-7]+'_fwhm_'+str(fwhm)+'_e1_'+str(e1)+'_e2_'+str(e2)+'.fit'
+            newfname = filename.replace('_noseeing_','_withseeing_')+'_fwhm_'+str(fwhm)+'_e1_'+str(e1)+'_e2_'+str(e2)+'.fit'
+        else:
+            covimg = convolveH(img,kern)
+            newfname = filename.replace('_noseeing_','_withseeing_')+'_fwhm_'+str(fwhm)+'_e1_'+str(e1)+'_e2_'+str(e2)+'_fftconvolve.fit'
+        covimg = covimg/covimg.sum()
+        hdu[i].data[0][4:] = covimg.flatten()
+    hdu.writeto(newfname)
+    #os.system('gzip '+newfname)
+    return 'done'
+
+def imageRebin(dir=None,rebinsize=(40,40)):
+    """
+    rebin the size of the image
+    """
+    if dir == None:
+        dir = os.getcwd()+'/'
+    filenameAll = gl.glob(dir+'*.fit*')
+    filenameAll.sort()
+    for filename in filenameAll:
+        hdu = pf.open(filename)
+        n = len(hdu)
+        hdu[0].header.update('npix',rebinsize[0])
+        hdu[0].header.update('scale',hdu[0].header.update('scale')*hdu[0].header.update('npix')/rebinsize[0])
+        for i in range(1,n):
+            img=hdu[i].data[0][4:].reshape(npix,npix)
+            img = img.astype('f')
+        if fft == False:
+            covimg = sg.convolve2d(img,kern,mode='same')
+            newfname = filename.replace('_noseeing_','_withseeing_')+'_fwhm_'+str(fwhm)+'_e1_'+str(e1)+'_e2_'+str(e2)+'.fit'
         else:
             covimg = sg.fftconvolve(img,kern,mode='same')
-            newfname = 'PSF_withseeing'+filename[12:-7]+'_fwhm_'+str(fwhm)+'_e1_'+str(e1)+'_e2_'+str(e2)+'_fftconvolve.fit'
+            newfname = filename.replace('_noseeing_','_withseeing_')+'_fwhm_'+str(fwhm)+'_e1_'+str(e1)+'_e2_'+str(e2)+'_fftconvolve.fit'
         covimg = covimg/covimg.sum()
         hdu[i].data[0][4:] = covimg.flatten()
     hdu.writeto(newfname)
@@ -533,7 +660,7 @@ def bfplane(x, y, z):
     res = np.linalg.solve(A,B)
     return res
 
-def psfSizeAll(Nstar=None,filter='r',npix=40,seeing=0,theta=0., zenith = 0.,corrector='corrector', x=None, y=None,z=None):
+def psfSizeAll(Nstar=None,filter='r',npix=None,seeing=0,theta=0., zenith = 0.,corrector='corrector', x=None, y=None,z=None):
     res = genImgV(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z)
     imgV = res[0]
     x = imgV[:,0]
@@ -545,7 +672,7 @@ def psfSizeAll(Nstar=None,filter='r',npix=40,seeing=0,theta=0., zenith = 0.,corr
         hight,xtmp,tmp, x_width[i],y_width[i] = moments(img)
     return x, y, x_width, y_width, np.sqrt(x_width**2+y_width**2)
 
-def psfSizeAllZernike(Nstar=None,filter='r',npix=40,seeing=0,theta=0., zenith = 0.,corrector='corrector', x=None, y=None,z=None,rand=False):
+def psfSizeAllZernike(Nstar=None,filter='r',npix=None,seeing=0,theta=0., zenith = 0.,corrector='corrector', x=None, y=None,z=None,rand=False):
     if rand is False:
         res = genImgVfixedPos(seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z)
     else:
@@ -602,11 +729,21 @@ def measureDataComplexM_multiext(filename,sigma = 1.1,scale=0.27):
     hp.mwrfits(filename[:-7]+'_complexMoments_gausswt_'+str(sigma*scale)+'.fit',data.T,colnames=colnames)
     return '---done !-----'
 
+def wisker(data=None, sigma = None):
+    """
+    This code calculate the wisker length defined as sqrt(e1^2+e2^2)
+    input: 
+         data: 2d stamp image
+         sigma: std of the Gaussian weight Kernel in pixel
+    """
+    M20, M22, M31, M33 = complexMoments(data=data,sigma=sigma)
+    wisker_length = np.sqrt(M22.real**2+M22.imag**2)
+    return wisker_length
 
 
 
 
-def genImgVallCCD(filename=None,Nstar=None,seeing=[0.9,0.,0.],npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False):
+def genImgVallCCD(filename=None,Nstar=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='g', theta=0., corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False):
     """
     Nstar is the number of stars on each CCD
     """
@@ -848,6 +985,17 @@ def zernike_file(filename=None,zernike_max_order=20,significance=False):
         pl.colorbar()
         pl.title(colnames[i]+'_imag')
         print '--- R2_adj of the fit is: '+str(R2_adj) +'---'
+    pl.figtext(0.4,0.32,'------- optics/seeing parameters --------')
+    pl.figtext(0.5,0.29,str(hdu[0].header.items()[6]))
+    pl.figtext(0.5,0.27,str(hdu[0].header.items()[7]))
+    pl.figtext(0.5,0.25,str(hdu[0].header.items()[10]))
+    pl.figtext(0.5,0.23,str(hdu[0].header.items()[11]))
+    pl.figtext(0.5,0.21,str(hdu[0].header.items()[13]))
+    pl.figtext(0.5,0.19,str(hdu[0].header.items()[14]))
+    pl.figtext(0.5,0.17,str(hdu[0].header.items()[15]))
+    pl.figtext(0.5,0.15,str(hdu[0].header.items()[16]))
+    pl.figtext(0.5,0.13,str(hdu[0].header.items()[17]))
+    pl.figtext(0.5,0.11,str(hdu[0].header.items()[18]))
     betaAll = np.array(betaAll)
     betaErrAll = np.array(betaErrAll)
     R2adjAll = np.array(R2adjAll)
@@ -990,6 +1138,27 @@ def multimachine_addseeing(computer=None):
                     t = addseeing(filename=fname,fwhm = fw,e1=e11,e2=e22)
 
 
+def singlemachine_addseeing(dir=None):
+    if dir == None:
+        dir = os.getcwd()+'/'
+    fwhm = [0.6, 0.8, 1.0, 1.2, 1.4]
+    e1 = [-0.08,-0.04,0,0.04,0.08]
+    e2 = [-0.08,-0.04,0,0.04,0.08]
+    allfile = gl.glob(dir+'*.gz')
+    allfile=np.array(allfile)
+    allfile.sort()
+    nfile=len(allfile)
+    filecount = 0.
+    for fname in allfile:
+        filecount = filecount +1
+        print 'file:'+str(filecount)
+        for fw in fwhm:
+            for e11 in e1:
+                for e22 in e2:
+                    t = addseeing(filename=fname,fwhm = fw,e1=e11,e2=e22)
+    return ' ----- done ! -----'
+
+
 def multimachine_psfgen(computer=None):
     machine = np.array(['des04','des05','des06','des07','des08','des09','des10'])
     tiltrange = [-100,-80,-50,-20,0,50,80,100]
@@ -1029,6 +1198,15 @@ if __name__ == '__main__':
                     #filename = '/data/des07.b/data/jiangang/PSF_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
                     t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=npix,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
     """
-    computer = sys.argv[1]
+    #computer = sys.argv[1]
     #multimachine_addseeing(computer)
-    multimachine_psfgen(computer)            
+    #multimachine_psfgen(computer)            
+    allfile=gl.glob('*fftconvolve.fit')
+    count = 0
+    for filename in allfile:
+        count = count +1
+        print count
+        t = zernike_file(filename)
+        pngname = filename[:-3]+'png'
+        pl.savefig(pngname)
+        pl.close()
