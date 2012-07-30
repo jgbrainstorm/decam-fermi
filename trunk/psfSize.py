@@ -29,16 +29,17 @@ def findbstr(filename):
     data = pf.getdata(filename)
     hdr = pf.getheader(filename)
     saturate = hdr['saturate']
-    bsIDX = (data >= 0.2*saturate)* (data <= 0.8*saturate)
+    bsIDX = (data >= 0.5*saturate)* (data <= 0.8*saturate)
     good=nd.binary_opening(bsIDX,structure=np.ones((3,3)))  
     objData = data*good
     seg,nseg=nd.label(good,structure=np.ones((3,3)))  
     coords=nd.center_of_mass(objData,seg,range(1,nseg+1))
-    xcoords=np.array([x[1] for x in coords])
-    ycoords=np.array([x[0] for x in coords])
+    xcoord=np.array([x[1] for x in coords])
+    ycoord=np.array([x[0] for x in coords])
     obj = nd.find_objects(seg, nseg)
     
 
 dir = '/home/jghao/research/data/des_optics_psf/dc6b_image/'
 
-filename = dir+'decam-34-0-r-0_02.fits'
+imgname = dir+'decam-34-0-r-0_01.fits'
+bkgname = dir+'decam-34-0-r-0_01_bkg.fits'
