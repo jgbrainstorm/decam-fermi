@@ -27,9 +27,9 @@ except ImportError:
 # this parameter will be written into the header
 install_dir ='/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/'
 raypattern = 18
-npix = 160
-scale = 0.27/4.  # arcseconds/pix
-#scale = 0.27
+npix = 40
+#scale = 0.27/4.  # arcseconds/pix
+scale = 0.27
 diffusionfwhm = 0.4
 zenith = 0.
 filter = 'r'
@@ -108,52 +108,6 @@ def gauss_seeing(npix = None,fwhm=None,e1=None,e2=None):
     return res
                  
    
-def amoments(data,rowmean=None,colmean=None,sigma=None):
-    """
-    This codes calcualte the moments with/without a Gaussian weight.
-    the sigma is the weight the Gaussian weights, in unit of pixels. It is the sqrt(sigma_x**2+sigma_y**2)
-    col : x direction
-    row : y direction
-    """
-    nrow,ncol=data.shape
-    Isum = data.sum()
-    Icol = data.sum(axis=0) # sum over all rows
-    Irow = data.sum(axis=1) # sum over all cols
-    IcolSum = np.sum(Icol)
-    IrowSum = np.sum(Irow)
-    colgrid = np.arange(ncol)
-    rowgrid = np.arange(nrow)
-    if rowmean == None:
-        rowmean=np.sum(rowgrid*Irow)/IrowSum
-        colmean=np.sum(colgrid*Icol)/IcolSum
-    if sigma == None:
-        rowvar = np.sum((rowgrid-rowmean)**2*Irow)/(IrowSum)
-        colvar = np.sum((colgrid-colmean)**2*Icol)/(IcolSum)
-    else:
-        ROW,COL=np.indices((nrow,ncol))
-        wrmat = wr(ROW,COL,rowmean,colmean,sigma)
-        IWmat = data*wrmat
-        wrcol = wrmat.sum(axis=0)
-        wrrow = wrmat.sum(axis=1)
-        wrcolsum = np.sum(Icol*wrcol)
-        wrrowsum = np.sum(Irow*wrrow)
-        rowvar = np.sum((rowgrid-rowmean)**2*Irow*wrrow)/(wrrowsum)
-        colvar = np.sum((colgrid-colmean)**2*Icol*wrcol)/(wrcolsum)
-        rowcolcov = np.sum(np.outer((rowgrid-rowmean),(colgrid-colmean))*IWmat)/np.sum(IWmat)
-    return rowmean,colmean,rowvar,colvar,rowcolcov
-
-
-def AdaptM(data=None,sigma=None):
-    """
-    Calculate the adaptive moements e1 and e2 and the variances in row and col
-    sigma is the std of the kernel size in pixel unit, not fwhm
-    """
-    rowmean,colmean,rowvar,colvar,rowcolcov = amoments(data,sigma=sigma)
-    mrrcc = rowvar + colvar
-    e1 = (colvar - rowvar)/mrrcc
-    e2 = 2.*rowcolcov/mrrcc
-    fwhm = np.sqrt(rowvar+colvar)*2.35482*scale
-    return e1,e2,fwhm
 
 def convolveH(image=None,kernel=None):
     """
@@ -467,7 +421,7 @@ def disImgCCD(imgV=None,ccd=None):
     return 'The image is done!'
 
   
-def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,contour=False,npix=None,sigma=1.1/scale):
+def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,contour=False,sigma=1.1/scale,npix=None):
     xmm = ccd[1]
     ymm = ccd[2]
     res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,x=x,y=y,z=z,npix=npix)
@@ -485,8 +439,11 @@ def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,conto
     M20, M22, M31, M33 =complexMoments(img,sigma=sigma)
     e1 = M22.real/M20.real
     e2 = M22.imag/M20.real
+    lambdap = 0.5*(M20 + abs(M22))
+    lambdam = 0.5*(M20 - abs(M22))
     whiskerLength = np.sqrt(np.abs(M22))*scale
-    fwhm = np.sqrt(M20)*2.35482*scale
+    #fwhm = np.sqrt(M20/2.)*2.35482*scale
+    fwhm = np.sqrt(2.*np.log(2.))*(np.sqrt(lambdap)+np.sqrt(lambdam))*scale
     xcen = res[1][0]['xcen']
     ycen = res[1][0]['ycen']
     pl.figtext(0.15,0.8,'CCD: '+ccd[0] +',   '+'Filter: '+filter, color='r')
@@ -526,7 +483,7 @@ def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,conto
     pl.ylabel('Mean counts [ADU]')
     pl.title('Radial profile')
     pl.figtext(0.6,0.7,'Gaussian Weight '+r'$\sigma$: '+str(round(sigma*scale,3))+ ' arcsec')
-    return e1,e2,fwhm,whiskerLength,img
+    return M20*scale**2,M22*scale**2,M31*scale**2,M33*scale**2
 
 def decompPCA(data=None,comp=None):
     img = data[:,2:].T
@@ -1198,15 +1155,16 @@ if __name__ == '__main__':
                     #filename = '/data/des07.b/data/jiangang/PSF_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
                     t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=npix,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
     """
+    t=singlemachine_addseeing()
     #computer = sys.argv[1]
     #multimachine_addseeing(computer)
     #multimachine_psfgen(computer)            
-    allfile=gl.glob('*fftconvolve.fit')
-    count = 0
-    for filename in allfile:
-        count = count +1
-        print count
-        t = zernike_file(filename)
-        pngname = filename[:-3]+'png'
-        pl.savefig(pngname)
-        pl.close()
+    #allfile=gl.glob('*fftconvolve.fit')
+    #count = 0
+    #for filename in allfile:
+    #    count = count +1
+    #    print count
+    #    t = zernike_file(filename)
+    #    pngname = filename[:-3]+'png'
+    #    pl.savefig(pngname)
+    #    pl.close()
