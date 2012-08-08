@@ -19,6 +19,7 @@ try:
     #from scipy.signal import fftconvole
     import scipy.signal as sg
     import binplot as bp
+    from scipy.optimize import leastsq
 except ImportError:
     print 'the required packages are: numpy, pyfits,pylab,scikit,scipy,mahotas'
     raise
@@ -27,9 +28,9 @@ except ImportError:
 # this parameter will be written into the header
 install_dir ='/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/'
 raypattern = 18
-npix = 40
-#scale = 0.27/4.  # arcseconds/pix
-scale = 0.27
+npix = 160
+scale = 0.27/4.  # arcseconds/pix
+#scale = 0.27
 diffusionfwhm = 0.4
 zenith = 0.
 filter = 'r'
@@ -56,6 +57,150 @@ def rebin(a, new_shape):
     else:
         return np.repeat(np.repeat(a, m/M, axis=0), n/N, axis=1)
 
+def sech(x,width,height):
+    """
+    hyperbolic secant function
+    """
+    z = x/width
+    res = height*2./(np.exp(z)+np.exp(-z))
+    return res
+
+def s2profile(r,r0,A,B):
+    """
+    hyperbolic secant square function
+    """
+    x = r/r0
+    res = A*4./(np.exp(x)+np.exp(-x))**2 + B
+    return res
+
+def gprofile(r,sig,A,B):
+    """
+    Fit the binned distribution to a gaussian profile with a constant
+    """
+    res = A*np.exp(-0.5*(r/sig)**2)+B
+    return res
+
+def mprofile(r, alpha, beta,A,B):
+    """
+    Fit the light distribution to a Moffat profile
+    """
+    res = A*(1+(r/alpha)**2)**(-beta)+B
+    return res
+
+def gfwhm(img):
+    npix = img.shape[0]
+    rowCen,colCen = adaptiveCentroid(img,1.1/scale)
+    row,col = np.mgrid[0:npix,0:npix]
+    row = row - rowCen
+    col = col - colCen
+    A0,sig0 = moments(img)
+    radius = np.sqrt(row**2+col**2)
+    img = img.flatten()
+    ok = img >0
+    img = img[ok]
+    radius = radius.flatten()
+    radius = radius[ok]
+    def residualg(p,r,I):
+        sig,A,B = p
+        Ierr = np.sqrt(abs(I))
+        res = (gprofile(radius,sig,A,B) - I)/Ierr
+        return res 
+    B0 = 0.
+    p0=np.array([sig0,A0,B0])
+    p = leastsq(residualg,p0,args=(radius,img))[0]
+    sig,A,B = p
+    fwhm_gauss= 2. * sig * np.sqrt(2. * np.log(2.))
+    return sig,A,B,fwhm_gauss
+
+def s2fwhm(img):
+    npix = img.shape[0]
+    rowCen,colCen = adaptiveCentroid(img,1.1/scale)
+    row,col = np.mgrid[0:npix,0:npix]
+    row = row - rowCen
+    col = col - colCen
+    A0,r0_0 = moments(img)
+    radius = np.sqrt(row**2+col**2)
+    img = img.flatten()
+    ok = img >0
+    img = img[ok]
+    radius = radius.flatten()
+    radius = radius[ok]
+    def residuals2(p,r,I):
+        r0,A,B = p
+        Ierr = np.sqrt(abs(I))
+        res = (s2profile(radius,r0,A,B) - I)/Ierr
+        return res 
+    B0 = 0.
+    p0=np.array([r0_0,A0,B0])
+    p = leastsq(residuals2,p0,args=(radius,img))[0]
+    r0,A,B = p
+    fwhm_sech2= 1.7627471*r0 # obtained by solving the equation
+    return r0,A,B,fwhm_sech2
+
+def gaussian2d(x,y,xc,yc,sigmax,sigmay,rho,A,B):
+    res = A*np.exp(-0.5/(1-rho**2)*(x**2/sigmax**2+y**2/sigmay**2-2.*rho*x*y/(sigmax*sigmay)))
+    return res
+
+def g2dfwhm(img):
+    """
+    x is col, y is row
+    sigmax - sigmac, sigmay - sigmar
+    """
+    npix = img.shape[0]
+    rowCen,colCen = adaptiveCentroid(img,1.1/scale)
+    row,col = np.mgrid[0:npix,0:npix]
+    row = row - rowCen
+    col = col - colCen
+    A0,sigmac0 = moments(img)
+    sigmar0 = sigmac0
+    rho0 = 0.
+    B0 = 0.
+    p0=np.array([sigmac0,sigmar0,rho0,A0, B0])
+    def residualg2d(p,x,y,xc,yc,I):
+        sigmax,sigmay,rho,A,B = p
+        Ierr = np.sqrt(abs(I))+0.00001 # to avoid those = 0, add a small number 
+        res = (gaussian2d(x,y,xc,yc,sigmax,sigmay,rho,A,B) - I)/Ierr
+        return res.flatten()
+    p = leastsq(residualg2d,p0,args=(col,row,colCen,rowCen,img))[0]
+    sigmac,sigmar,rho,A,B = p
+    Mcc = sigmac**2
+    Mrr = sigmar**2
+    Mrc = rho**2*Mcc*Mrr
+    M20 = Mrr + Mcc
+    M22 = complex(Mcc - Mrr,2*Mrc)
+    whiskerLength = np.sqrt(np.abs(M22))
+    lambdap = 0.5*(M20 + abs(M22))
+    lambdam = 0.5*(M20 - abs(M22))
+    fwhm_g2d = np.sqrt(2.*np.log(2.))*(np.sqrt(lambdap)+np.sqrt(lambdam))
+    #fwhm = np.sqrt(M20/2.)*2.35482*scale
+    return A, B, whiskerLength, fwhm_g2d
+
+def mfwhm(img):
+    npix = img.shape[0]
+    rowCen,colCen = adaptiveCentroid(img,1.1/scale)
+    row,col = np.mgrid[0:npix,0:npix]
+    row = row - rowCen
+    col = col - colCen
+    radius = np.sqrt(row**2+col**2)
+    A0,alpha0 = moments(img)
+    beta0=1.5
+    B0 = 0.
+    p0=np.array([alpha0,beta0,A0, B0])
+    img = img.flatten()
+    ok = img >0
+    img = img[ok]
+    radius = radius.flatten()
+    radius = radius[ok]
+    def residualm(p,r,I):
+        alpha,beta,A,B = p
+        Ierr = np.sqrt(abs(I))
+        res = (mprofile(radius,alpha,beta,A,B) - I)/Ierr
+        return res 
+    p = leastsq(residualm,p0,args=(radius,img))[0]
+    #rad,im,imerr=bp.bin_scatter(radius,img,binsize=1,fmt='b.',plot=False)
+    alpha,beta,A,B = p
+    fwhm_moffat= 2. * abs(alpha) * np.sqrt(2.**(1./beta)-1)
+    return alpha,beta,A,B,fwhm_moffat
 
 
 def moments(data):
@@ -80,7 +225,7 @@ def moments(data):
         y=0
         width_x=0
         width_y=0
-    return height, x, y, width_x, width_y
+    return height,np.sqrt(width_x**2 + width_y**2)
 
 def wr(x,y,xcen,ycen,sigma):
     """
@@ -427,62 +572,73 @@ def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,conto
     res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,x=x,y=y,z=z,npix=npix)
     data = res[0]
     img = data[0][4:].reshape(npix,npix)
-    pl.figure(figsize=(12,6))
-    pl.subplot(1,2,1)
+    #npix = npix/4
+    #scale = 0.27
+    img = rebin(img,(npix,npix))
+    mfit = mfwhm(img)
+    gfit = gfwhm(img)
+    s2fit = s2fwhm(img)
+    g2dfit = g2dfwhm(img)
+    pl.figure(figsize=(18,6))
+    pl.subplot(1,3,1)
     pl.matshow(img,fignum=False)
     pl.xlabel('Pixel')
     pl.ylabel('Pixel')
     pl.grid(color='y')
-    if contour is True:
-        pl.contourf(img,n=100)
-    rowCen,colCen= adaptiveCentroid(data=img,sigma=sigma)
+    rowCen,colCen = adaptiveCentroid(data=img,sigma=sigma)
     M20, M22, M31, M33 =complexMoments(img,sigma=sigma)
     e1 = M22.real/M20.real
     e2 = M22.imag/M20.real
+    whiskerLength = np.sqrt(np.abs(M22))*scale
     lambdap = 0.5*(M20 + abs(M22))
     lambdam = 0.5*(M20 - abs(M22))
-    whiskerLength = np.sqrt(np.abs(M22))*scale
+    #fwhm = np.sqrt(2.*np.log(2.))*(np.sqrt(lambdap)+np.sqrt(lambdam))*scale
     #fwhm = np.sqrt(M20/2.)*2.35482*scale
-    fwhm = np.sqrt(2.*np.log(2.))*(np.sqrt(lambdap)+np.sqrt(lambdam))*scale
-    xcen = res[1][0]['xcen']
-    ycen = res[1][0]['ycen']
-    pl.figtext(0.15,0.8,'CCD: '+ccd[0] +',   '+'Filter: '+filter, color='r')
-    pl.figtext(0.15,0.75, 'e1: '+str(round(e1,3)) + ',  e2: '+str(round(e2,3)), color='r')
-    pl.figtext(0.15,0.7, 'xcen: '+str(xcen) + ',  ycen: '+str(ycen), color='r')
-    pl.figtext(0.15,0.65, 'seeing: '+str(seeing)+'(fwhm,arcsec)', color='r')
-    pl.figtext(0.15,0.6, 'PSF whisker: '+str(whiskerLength)+'(arcsec)', color='r')
-    pl.figtext(0.15,0.55, 'PSF fwhm: '+str(fwhm)+'(arcsec)', color='r')
-    if z:
-        pl.figtext(0.15,0.4, 'defocus: '+str(z)+' (mm)', color='r')
-    if x:
-        pl.figtext(0.15,0.35,'x: '+str(x)+' (mm)', color='r')
-    if y:
-        pl.figtext(0.15,0.3,'y: '+str(y)+' (mm)', color='r')
-    if theta:
-        pl.figtext(0.15,0.4,'tilt: '+str(theta)+' (arcsec)', color='r')
-    pl.subplot(1,2,2)
+    fwhm = (1./(M20/2.) - 1./sigma**2)**(-0.5)*2.35482*scale
+    pl.figtext(0.15,0.8, 'e1: '+str(round(e1,3)) + ',  e2: '+str(round(e2,3)), color='r')
+    pl.figtext(0.15,0.75, 'rowCen: '+str(round(rowCen,4)) + ',  colCen: '+str(round(colCen,4)), color='r')
+    pl.figtext(0.15,0.7, 'PSF whisker_Wmoments: '+str(round(whiskerLength,4))+' [arcsec]', color='r')
+    pl.figtext(0.15,0.65, 'PSF whisker_Amoments: '+str(round(g2dfit[2]*scale,4))+' [arcsec]', color='r')
+    pl.figtext(0.15,0.6, 'CCD Position: '+ccd[0] +',   filter: '+filter, color='r')
+    pl.subplot(1,3,2)
     row,col = np.mgrid[0:npix,0:npix]
     row = row - rowCen
     col = col - colCen
     radius = np.sqrt(row**2+col**2)
-    #r,y, yerr=bp.bin_scatter_logx(radius,img,nbins=200,fmt='b.',xrange=[0.001,np.max(radius)],alpha=1)
     img = img.flatten()
     radius = radius.flatten()
     idx = np.argsort(radius)
     img = img[idx]
     radius = radius[idx]
-    rad,im,imerr=bp.bin_scatter(radius,img,binsize=1,fmt='b.',plot=False)
-    halfmax = max(im)/2.
-    pl.plot(radius,img,'b.')
-    pl.grid(color='g')
-    pl.hlines(halfmax,0,radius.max(),linestyle='solid',colors='r')
-    pl.vlines(fwhm/scale/2.,0, halfmax*2+halfmax*0.2,linestyle='solid',colors='r')
-    pl.ylim(0,halfmax*2+halfmax*0.2)
+    rad,im,imerr=bp.bin_scatter(radius,img,binsize=1,fmt='bo',plot=False)
+    halfmax = np.median(img[0:10])/2.
+    pl.plot(radius,img,'k.')
+    pl.grid(color='y')
+    pl.hlines(halfmax,0,radius.max(),linestyle='solid',colors='b')
+    pl.hlines(mfit[2]/2.,0,radius.max(),linestyle='solid',colors='r')
+    pl.hlines(gfit[1]/2.,0,radius.max(),linestyle='solid',colors='g')
+    pl.hlines(s2fit[1]/2.,0,radius.max(),linestyle='solid',colors='m')
+    pl.hlines(g2dfit[0]/2.,0,radius.max(),linestyle='solid',colors='c',label='Adaptive Moments')
+    pl.vlines(fwhm/scale/2.,0, halfmax*4,linestyle='solid',colors='b',label='Weighted Moments')
+    pl.vlines(mfit[4]/2.,0, halfmax*4,linestyle='solid',colors='r')
+    pl.vlines(gfit[3]/2.,0, halfmax*4,linestyle='solid',colors='g')
+    pl.vlines(s2fit[3]/2.,0, halfmax*4,linestyle='solid',colors='m')
+    pl.vlines(g2dfit[3]/2.,0, halfmax*4,linestyle='solid',colors='c')
+    pl.plot(radius,mprofile(radius,mfit[0],mfit[1],mfit[2],mfit[3]),'r-',label='Moffat Fit')
+    pl.plot(radius,gprofile(radius,gfit[0],gfit[1],gfit[2]),'g-',label='Gaussian Fit')
+    pl.plot(radius,s2profile(radius,s2fit[0],s2fit[1],s2fit[2]),'m-',label='Sech2 Fit')
+    pl.legend(loc='best')
+    pl.ylim(0,halfmax*4)
     pl.xlim(0,npix/4.) 
     pl.xlabel('Radius [pixels]')
     pl.ylabel('Mean counts [ADU]')
     pl.title('Radial profile')
-    pl.figtext(0.6,0.7,'Gaussian Weight '+r'$\sigma$: '+str(round(sigma*scale,3))+ ' arcsec')
+    pl.figtext(0.65,0.7,'Gaussian Weight '+r'$\sigma$: '+str(round(sigma*scale,3))+ ' arcsec',color='r')
+    pl.figtext(0.65,0.6,'FWHM_Gaussian: '+str(round(gfit[3]*scale,3))+ ' arcsec')
+    pl.figtext(0.65,0.55,'FWHM_Moffat: '+str(round(mfit[4]*scale,3))+ ' arcsec')
+    pl.figtext(0.65,0.5,'FWHM_Sech2: '+str(round(s2fit[3]*scale,3))+ ' arcsec')
+    pl.figtext(0.65,0.45,'FWHM_Wmoments: '+str(round(fwhm,3))+ ' arcsec') 
+    pl.figtext(0.65,0.4,'FWHM_Amoments: '+str(round(g2dfit[3]*scale,3))+ ' arcsec') 
     return M20*scale**2,M22*scale**2,M31*scale**2,M33*scale**2
 
 def decompPCA(data=None,comp=None):
