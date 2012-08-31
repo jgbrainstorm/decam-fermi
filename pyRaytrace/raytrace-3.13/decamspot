@@ -59,13 +59,18 @@ proc usage {} {
 	{    WEIGHTS Weighting by wavelength across a filter bandpass}
    puts stderr \
 	{    OUTPUT  Name of output file (default is spot-r.fit)}
+   puts stderr \
+	{    C4MAP   1 (use C4 asphere surface error map? 0=no  1=yes)}
+   puts stderr \
+	{    STOPCHK   1 (Check stops if 1 - default)}
    puts stderr ""
    puts stderr {    X <surf> <offset>	(mm)}
    puts stderr {    Y <surf> <offset>	(mm)}
    puts stderr {    Z <surf> <offset>	(mm)}
-   puts stderr {    THETA <surf> offset	(arcsec)}
+   puts stderr {    THETA <surf> offset	(arcsec)  Tilt lens}
+   puts stderr {    PHI   <surf> offset	(deg) Position angle of tilt}
    puts stderr \
-	{       <surf>: {primary C1 C2 C3 filter C4 C5 Focal corrector}}
+	{       <surf>: {primary C1 C2 C3 filter C4 C5 focal corrector}}
    puts stderr ""
    exit 1
    }
@@ -88,6 +93,8 @@ set XMM 0
 set YMM 0
 set ZENITH 0.
 set WEIGHTS "1 1"
+set C4MAP 0
+set STOPCHK 1
 
 #Valid filters
 set filterlist() "g r i z"
@@ -143,13 +150,14 @@ while {1} {
 	exit 1
 	}
    set param [string toupper [lindex $line 0]]
-   foreach name "SCALE NPIX FWHM FILTER XMM YMM RAYPATTERN OUTPUT ZENITH" {
+   foreach name "SCALE NPIX FWHM FILTER XMM YMM RAYPATTERN OUTPUT \
+	   ZENITH C4MAP STOPCHK" {
 	if {$param == "$name"} {
 	   set val [lindex $line 1]
 	   set $name $val
 
 #Validate value
-	   foreach option "NPIX RAYPATTERN" {
+	   foreach option "NPIX RAYPATTERN CMAP STOPCHK" {
 		if {$param == "$option"} {
 		   if {![ctype digit $val]} {
 			close $fid
@@ -188,8 +196,8 @@ echo floating option $param value $val
 		}
 
 #Convert angular items to radians.  PHI is input in deg.
+#It is only used by lensSpin, which wants degrees, so don't do anything.
 	   if {$name == "PHI"} {
-		set val [expr $val/57.296]
 		}
 
 #THETA is only used by lensRotate and wants to be in degrees.
@@ -219,8 +227,15 @@ echo WEIGHTS $WEIGHTS
    }
 close $fid
 
+#Output file name.  Default is now simply the root of the parameter file
+#name appended with .fit
 if {![info exists OUTPUT]} {
-   set OUTPUT spot-$FILTER.fit
+   set root [file tail [file root $paramfile]]
+   if {$root != ""} {
+	set OUTPUT $root.fit
+   } else {
+	set OUTPUT spot-$FILTER.fit
+	}
    }
 
 #Convert FILTER to internal icolors, since each filter has 2 wavelengths
@@ -239,6 +254,13 @@ if {![file writable $dir]} {
 
 #Read the DECam design
 set optic [lensRead decam]
+
+#Use C4 surface height error map?
+if {$C4MAP == 1} {
+   global env
+   set zern [zernikeRead $env(CRAY_DIR)/cray/data/decam/c4clear5.dat]
+   zsetfromz $optic 25 $zern
+   }
 
 #Dense grid of points
 rayPattern $optic $RAYPATTERN 2
@@ -267,6 +289,76 @@ foreach name "THETA" {
 	   set param [string tolower $name]
 echo Rotating lens surfaces $surfids amount [set ${name}($surf)]
 	   lensRotate $optic $surfids [set ${name}($surf)]
+	   }
+	}
+   }
+
+#####################################################################
+#Spin lens about the Z axis.  This code should eventually move to lens.tcl
+
+proc surfSpin {hndl fsurfs xpivot ypivot rot} {
+   foreach fsurf $fsurfs {
+	foreach param {x y phi theta} {
+	   set $param [showSurf $hndl $fsurf $param]
+	   }
+	set PI 3.14159265358979
+	set RADIAN [expr $PI/180.]
+	set rrot [expr $rot*$RADIAN]
+
+#First, orientation angles.  Just increment phi
+	set phi [expr $phi + $rrot]
+	if {$phi > $PI/2.} {
+	   set phi [expr $phi-$PI]
+	   set theta [expr -1.*$theta]
+	   }
+	if {$phi < -1.*$PI/2.} {
+	   set phi [expr $phi+$PI]
+	   set theta [expr -1.*$theta]
+	   }
+
+#Rotate vertex - needed when I am tilting a lens.
+        set x1 [expr $xpivot + ($x-$xpivot)*cos($rrot) - \
+	    ($y-$ypivot)*sin($rrot)]
+        set y1 [expr $ypivot + ($y-$ypivot)*cos($rrot) + \
+	    ($x-$xpivot)*sin($rrot)]
+        set x $x1
+        set y $y1
+	foreach param {x y phi theta} {
+	   setSurf $hndl $fsurf $param [set $param]
+	   }
+	}
+   return
+   }
+
+###################################################################
+#Spin a lens.  Assume center of rotation is average of all x and y values.
+
+proc lensSpin {hndl fsurfs rot} {
+   if {$fsurfs == ""} return
+   set xavg 0.
+   set yavg 0.
+   foreach fsurf $fsurfs {
+        set xavg [expr $xavg + [showSurf $hndl $fsurf x]]
+        set yavg [expr $yavg + [showSurf $hndl $fsurf y]]
+        }
+   set xavg [expr 1.*$xavg/[llength $fsurfs]]
+   set yavg [expr 1.*$yavg/[llength $fsurfs]]
+   surfSpin $hndl $fsurfs $xavg $yavg $rot
+   return
+   }
+
+###################################################################
+
+#Phi parameter requires calling lensSpin.  This only rotates about the
+#Z axis.
+
+foreach name "PHI" {
+   foreach surf "primary c1 c2 c3 filter c4 c5 focal corrector" {
+	if {[info exists ${name}($surf)]} {
+	   set surfids $surfs($surf,$FILTER)
+	   set param [string tolower $name]
+echo Spinning surfaces $surfids about Z axis amount [set ${name}($surf)]
+	   lensSpin $optic $surfids [set ${name}($surf)]
 	   }
 	}
    }
@@ -343,7 +435,7 @@ echo refract $refract
 #filter wavelengths and the proper weights and the proper refraction settings.
 #Now I am ready to make a spot diagram.
 
-spotMap $optic $XMM $YMM $icolors
+spotMap $optic $XMM $YMM $icolors $STOPCHK
 set tempfile spot.fit
 
 #Read in image, add more params to header
@@ -354,6 +446,15 @@ hdrInsWithAscii $reg.hdr FILTER $FILTER "Filter"
 hdrInsWithAscii $reg.hdr OUTPUT $OUTPUT "Ouput file name"
 hdrInsWithDbl $reg.hdr ZENITH $ZENITH "Zenith Angle (deg)"
 hdrInsWithInt $reg.hdr RAYPTRN $RAYPATTERN "Radial steps in ray pattern"
+if {$C4MAP == "y"} {
+   set yn 1
+} else {
+   set yn 0
+   }
+hdrInsWithInt $reg.hdr C4MAP $yn \
+   "Use C4 surface height error map (1 = yes)"
+hdrInsWithInt $reg.hdr STOPCHK $STOPCHK \
+   "Check for stops (1 = yes)"
 
 foreach name "X Y Z" {
    foreach surf "primary c1 c2 c3 filter c4 c5 focal corrector" {
@@ -363,6 +464,7 @@ foreach name "X Y Z" {
 	   }
 	}
    }
+
 foreach name "THETA" {
    foreach surf "primary c1 c2 c3 filter c4 c5 focal corrector" {
 	if {[info exists ${name}($surf)]} {
@@ -373,6 +475,17 @@ foreach name "THETA" {
 	   }
 	}
    }
+foreach name "PHI" {
+   foreach surf "primary c1 c2 c3 filter c4 c5 focal corrector" {
+	if {[info exists ${name}($surf)]} {
+
+#Keep in degrees.
+	   set deg [format %.1f [set ${name}($surf)]]
+	   hdrInsWithDbl $reg.hdr $name $deg "Z-axis spin of $surf (deg)"
+	   }
+	}
+   }
+
 regWriteAsFits $reg $OUTPUT
 echo $OUTPUT
 exit 0
