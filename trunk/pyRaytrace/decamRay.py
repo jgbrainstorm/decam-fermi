@@ -20,6 +20,9 @@ try:
     import scipy.signal as sg
     import binplot as bp
     from scipy.optimize import leastsq
+    import cPickle as p
+    import sklearn.neighbors as nb
+    from sklearn.svm import SVR
 except ImportError:
     print 'the required packages are: numpy, pyfits,pylab,scikit,scipy,mahotas'
     raise
@@ -202,6 +205,55 @@ def mfwhm(img):
     fwhm_moffat= 2. * abs(alpha) * np.sqrt(2.**(1./beta)-1)
     return alpha,beta,A,B,fwhm_moffat
 
+def wfwhm(img,sigma):
+    """
+    calculate the fwhm using the weighted moments after subtracting the weights.
+    This is using the corrected moments calcualtion, i.e., adaptiveMomentsNew
+    """
+    nrow,ncol=img.shape
+    Isum = img.sum()
+    Icol = img.sum(axis=0) # sum over all rows
+    Irow = img.sum(axis=1) # sum over all cols
+    colgrid = np.arange(ncol)
+    rowgrid = np.arange(nrow)
+    rowmean=np.sum(rowgrid*Irow)/Isum
+    colmean=np.sum(colgrid*Icol)/Isum
+    ROW,COL=np.indices((nrow,ncol))
+    maxItr = 50
+    EP = 0.0001
+    for i in range(maxItr):
+        wrmat = wr(ROW,COL,rowmean,colmean,sigma)
+        IWmat = img*wrmat
+        IWcol = IWmat.sum(axis=0)
+        IWrow = IWmat.sum(axis=1)
+        IWsum = IWmat.sum()
+        drowmean = np.sum((rowgrid-rowmean)*IWrow)/IWsum
+        dcolmean = np.sum((colgrid-colmean)*IWcol)/IWsum
+        rowmean = rowmean+2.*drowmean
+        colmean = colmean+2.*dcolmean
+        if drowmean**2+dcolmean**2 <= EP:
+            break
+    rowgrid = rowgrid - rowmean # centered
+    colgrid = colgrid - colmean
+    Mrr = np.sum(rowgrid**2*IWrow)/IWsum
+    Mcc = np.sum(colgrid**2*IWcol)/IWsum
+    Mrc = np.sum(np.outer(rowgrid,colgrid)*IWmat)/IWsum
+    Cm = np.matrix([[Mcc,Mrc],[Mrc,Mrr]])
+    Cw = np.matrix([[sigma**2,0.],[0.,sigma**2]])
+    Cimg = (Cm.I - Cw.I).I
+    Mcc = Cimg[0,0]
+    Mrr = Cimg[1,1]
+    Mrc = Cimg[0,1]
+    M20 = Mrr + Mcc
+    M22 = complex(Mcc - Mrr,2*Mrc)
+    e1 = M22.real/M20.real
+    e2 = M22.imag/M20.real
+    whiskerLength = np.sqrt(np.abs(M22))
+    lambdap = 0.5*(M20 + abs(M22))
+    lambdam = 0.5*(M20 - abs(M22))
+    fwhmw = np.sqrt(2.*np.log(2.))*(np.sqrt(lambdap)+np.sqrt(lambdam))
+    return e1,e2,whiskerLength,fwhmw 
+
 
 def moments(data):
     """
@@ -265,6 +317,7 @@ def convolveH(image=None,kernel=None):
     resnew = res[int(rowM)-size:int(rowM)+size,int(colM)-size:int(colM)+size]
     return resnew
 
+
 def adaptiveCentroid(data=None,sigma=None):
     """
     calculate the centroid using the adaptive approach
@@ -273,31 +326,29 @@ def adaptiveCentroid(data=None,sigma=None):
     Isum = data.sum()
     Icol = data.sum(axis=0) # sum over all rows
     Irow = data.sum(axis=1) # sum over all cols
-    IcolSum = np.sum(Icol)
-    IrowSum = np.sum(Irow)
     colgrid = np.arange(ncol)
     rowgrid = np.arange(nrow)
+    rowmean=np.sum(rowgrid*Irow)/Isum
+    colmean=np.sum(colgrid*Icol)/Isum
     ROW,COL=np.indices((nrow,ncol))
-    rowmean=np.sum(rowgrid*Irow)/IrowSum
-    colmean=np.sum(colgrid*Icol)/IcolSum
     maxItr = 50
     EP = 0.0001
     for i in range(maxItr):
         wrmat = wr(ROW,COL,rowmean,colmean,sigma)
         IWmat = data*wrmat
-        wrcol = wrmat.sum(axis=0)
-        wrrow = wrmat.sum(axis=1)
-        wrcolsum = np.sum(Icol*wrcol)
-        wrrowsum = np.sum(Irow*wrrow)
-        drowmean = np.sum((rowgrid-rowmean)*Irow*wrrow)/wrrowsum
-        dcolmean = np.sum((colgrid-colmean)*Icol*wrcol)/wrcolsum
+        IWcol = IWmat.sum(axis=0)
+        IWrow = IWmat.sum(axis=1)
+        drowmean = np.sum((rowgrid-rowmean)*IWrow)/np.sum(IWrow)
+        dcolmean = np.sum((colgrid-colmean)*IWcol)/np.sum(IWcol)
         rowmean = rowmean+2.*drowmean
         colmean = colmean+2.*dcolmean
         if drowmean**2+dcolmean**2 <= EP:
             break
+
     return rowmean,colmean
 
-        
+         
+
 
 
 def complexMoments(data=None,sigma=None):
@@ -313,39 +364,36 @@ def complexMoments(data=None,sigma=None):
     Isum = data.sum()
     Icol = data.sum(axis=0) # sum over all rows
     Irow = data.sum(axis=1) # sum over all cols
-    IcolSum = np.sum(Icol)
-    IrowSum = np.sum(Irow)
     colgrid = np.arange(ncol)
     rowgrid = np.arange(nrow)
+    rowmean=np.sum(rowgrid*Irow)/Isum
+    colmean=np.sum(colgrid*Icol)/Isum
     ROW,COL=np.indices((nrow,ncol))
-    rowmean=np.sum(rowgrid*Irow)/IrowSum
-    colmean=np.sum(colgrid*Icol)/IcolSum
     maxItr = 50
-    EP = 0.0001 # start getting the adaptive centroid
-    for i in range(maxItr):  
+    EP = 0.0001
+    for i in range(maxItr):
         wrmat = wr(ROW,COL,rowmean,colmean,sigma)
         IWmat = data*wrmat
-        wrcol = wrmat.sum(axis=0)
-        wrrow = wrmat.sum(axis=1)
-        wrcolsum = np.sum(Icol*wrcol)
-        wrrowsum = np.sum(Irow*wrrow)
-        drowmean = np.sum((rowgrid-rowmean)*Irow*wrrow)/wrrowsum
-        dcolmean = np.sum((colgrid-colmean)*Icol*wrcol)/wrcolsum
+        IWcol = IWmat.sum(axis=0)
+        IWrow = IWmat.sum(axis=1)
+        IWsum = IWmat.sum()
+        drowmean = np.sum((rowgrid-rowmean)*IWrow)/IWsum
+        dcolmean = np.sum((colgrid-colmean)*IWcol)/IWsum
         rowmean = rowmean+2.*drowmean
         colmean = colmean+2.*dcolmean
         if drowmean**2+dcolmean**2 <= EP:
             break
     rowgrid = rowgrid - rowmean # centered
     colgrid = colgrid - colmean
-    Mr = np.sum(rowgrid*Irow*wrrow)/wrrowsum
-    Mc = np.sum(colgrid*Icol*wrcol)/wrcolsum
-    Mrr = np.sum(rowgrid**2*Irow*wrrow)/(wrrowsum)
-    Mcc = np.sum(colgrid**2*Icol*wrcol)/(wrcolsum)
-    Mrc = np.sum(np.outer(rowgrid,colgrid)*IWmat)/np.sum(IWmat)
-    Mrrr = np.sum(rowgrid**3*Irow*wrrow)/(wrrowsum)
-    Mccc = np.sum(colgrid**3*Icol*wrcol)/(wrcolsum)
-    Mrrc = np.sum(np.outer(rowgrid**2,colgrid)*IWmat)/np.sum(IWmat)
-    Mrcc = np.sum(np.outer(rowgrid,colgrid**2)*IWmat)/np.sum(IWmat)
+    Mr = np.sum(rowgrid*IWrow)/IWsum
+    Mc = np.sum(colgrid*IWcol)/IWsum
+    Mrr = np.sum(rowgrid**2*IWrow)/IWsum
+    Mcc = np.sum(colgrid**2*IWcol)/IWsum
+    Mrc = np.sum(np.outer(rowgrid,colgrid)*IWmat)/IWsum
+    Mrrr = np.sum(rowgrid**3*IWrow)/IWsum
+    Mccc = np.sum(colgrid**3*IWcol)/IWsum
+    Mrrc = np.sum(np.outer(rowgrid**2,colgrid)*IWmat)/IWsum
+    Mrcc = np.sum(np.outer(rowgrid,colgrid**2)*IWmat)/IWsum
     M20 = Mrr + Mcc
     M22 = complex(Mcc - Mrr,2*Mrc)
     M31 = complex(3*Mc - (Mccc+Mrrc)/sigma**2, 3*Mr - (Mrcc + Mrrr)/sigma**2)
@@ -356,7 +404,9 @@ def complexMoments(data=None,sigma=None):
 
 #------------------------------
 
-def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None):
+def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,phi=0,suband=None):
+    # phi = 0 deg: X direction tilt
+    # phi = 90 deg: Y direction tilt
     #---generating the .par file------
     dir = os.getcwd()+'/'
     file = open(dir+'temp.par','w')
@@ -366,6 +416,7 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r'
     file.write('FWHM '+str(diffusionfwhm)+'\n')
     file.write('ZENITH '+str(zenith)+'\n')
     file.write('FILTER '+filter +'\n')
+    file.write('PHI '+corrector+' '+str(phi) +'\n')
     file.write('XMM '+str(xmm)+'\n')
     file.write('YMM '+str(ymm)+'\n')
     if suband is None:
@@ -387,7 +438,7 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r'
         file.write('Y '+corrector+' '+str(y)+'\n')
     if z is not None:
         file.write('Z '+corrector+' '+str(z)+'\n')
-    file.write('OUTPUT '+output+'\n')
+    file.write('OUTPUT '+dir+output+'\n')
     file.close()
     #---execute the raytrace code ------
     os.system(install_dir+'raytrace-3.13/decamspot '+dir+'temp.par')
@@ -399,11 +450,11 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r'
     ypstamp,xpstamp = nd.center_of_mass(b) # y -> row, x-> col
     bb = b.reshape(npix*npix)
     pos = np.array([hdr['xcen'],hdr['ycen'],xpstamp,ypstamp])
-    #os.system('rm '+dir+'temp.fit temp.par')
+    os.system('rm '+dir+'temp.fit temp.par')
     return np.concatenate((pos,bb)),hdr
 
 
-def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None,regular=False):
+def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='g', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,suband=None,regular=False):
     """
     seeing is the rms in arcseconds
     syntax: genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
@@ -436,30 +487,31 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=None,zenit
                 else:
                     xmm = regridx[i]+ccd[1]
                     ymm = regridy[i]+ccd[2]
-            res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband)
+            res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, phi=phi,corrector=corrector,x=x,y=y,z=z,suband=suband)
             datalist.append(res[0])
             hdrlist.append(res[1])
         data = np.array(datalist)
     if filename is not None:
         hdu = pf.PrimaryHDU(data)
-        hdu.header.update('RAYPATT',raypattern)
-        hdu.header.update('NPIX',npix)
-        hdu.header.update('SCALE',scale)
-        hdu.header.update('FWHM',fwhm)
-        hdu.header.update('ZENITH',zenith)
-        hdu.header.update('FILTER',filter)
-        hdu.header.update('THETA',theta)
-        hdu.header.update('CORRT',corrector)
+        hdu.header.set('RAYPATT',raypattern)
+        hdu.header.set('NPIX',npix)
+        hdu.header.set('SCALE',scale)
+        hdu.header.set('FWHM',diffusionfwhm)
+        hdu.header.set('ZENITH',zenith)
+        hdu.header.set('FILTER',filter)
+        hdu.header.set('THETA',theta)
+        hdu.header.set('CORRT',corrector)
+        hdu.header.set('PHI',phi)
         if x != None:
-            hdu.header.update('X',x)
+            hdu.header.set('X',x)
         if y != None:
-            hdu.header.update('Y',y)
+            hdu.header.set('Y',y)
         if z != None:
-            hdu.header.update('Z',z)
+            hdu.header.set('Z',z)
         if seeing != 0.:
-            hdu.header.update('s_fwhm',seeing[0])
-            hdu.header.update('e1',seeing[1])
-            hdu.header.update('e2',seeing[2])
+            hdu.header.set('s_fwhm',seeing[0])
+            hdu.header.set('e1',seeing[1])
+            hdu.header.set('e2',seeing[2])
         if os.path.exists(filename):
             os.system('rm '+filename)
             hdu.writeto(filename)
@@ -485,24 +537,24 @@ def genImgVfixedPos(filename=None,seeing=0,npix=None,zenith=0,filter='r', theta=
     data = np.array(datalist)
     if filename is not None:
         hdu = pf.PrimaryHDU(data)
-        hdu.header.update('RAYPATT',raypattern)
-        hdu.header.update('NPIX',npix)
-        hdu.header.update('SCALE',scale)
-        hdu.header.update('FWHM',fwhm)
-        hdu.header.update('ZENITH',zenith)
-        hdu.header.update('FILTER',filter)
-        hdu.header.update('THETA',theta)
-        hdu.header.update('CORRT',corrector)
+        hdu.header.set('RAYPATT',raypattern)
+        hdu.header.set('NPIX',npix)
+        hdu.header.set('SCALE',scale)
+        hdu.header.set('FWHM',fwhm)
+        hdu.header.set('ZENITH',zenith)
+        hdu.header.set('FILTER',filter)
+        hdu.header.set('THETA',theta)
+        hdu.header.set('CORRT',corrector)
         if x != None:
-            hdu.header.update('X',x)
+            hdu.header.set('X',x)
         if y != None:
-            hdu.header.update('Y',y)
+            hdu.header.set('Y',y)
         if z != None:
-            hdu.header.update('Z',z)
+            hdu.header.set('Z',z)
         if seeing != 0.:
-            hdu.header.update('s_fwhm',seeing[0])
-            hdu.header.update('e1',seeing[1])
-            hdu.header.update('e2',seeing[2])
+            hdu.header.set('s_fwhm',seeing[0])
+            hdu.header.set('e1',seeing[1])
+            hdu.header.set('e2',seeing[2])
         if os.path.exists(filename):
             os.system('rm '+filename)
             hdu.writeto(filename)
@@ -566,38 +618,40 @@ def disImgCCD(imgV=None,ccd=None):
     return 'The image is done!'
 
   
-def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,contour=False,sigma=1.1/scale,npix=None):
+def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,contour=False,sigma=1.1/scale,npix=None,phi=0,zenith=0):
     xmm = ccd[1]
     ymm = ccd[2]
-    res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,x=x,y=y,z=z,npix=npix)
+    res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,x=x,y=y,z=z,npix=npix,zenith=zenith,phi=phi)
     data = res[0]
     img = data[0][4:].reshape(npix,npix)
-    #npix = npix/4
-    #scale = 0.27
+    npix = npix/4
+    scale = 0.27
     img = rebin(img,(npix,npix))
     mfit = mfwhm(img)
     gfit = gfwhm(img)
     s2fit = s2fwhm(img)
     g2dfit = g2dfwhm(img)
+    wfit = wfwhm(img,sigma=sigma)
     pl.figure(figsize=(18,6))
     pl.subplot(1,3,1)
     pl.matshow(img,fignum=False)
     pl.xlabel('Pixel')
     pl.ylabel('Pixel')
     pl.grid(color='y')
-    rowCen,colCen = adaptiveCentroid(data=img,sigma=sigma)
-    M20, M22, M31, M33 =complexMoments(img,sigma=sigma)
-    e1 = M22.real/M20.real
-    e2 = M22.imag/M20.real
-    whiskerLength = np.sqrt(np.abs(M22))*scale
-    lambdap = 0.5*(M20 + abs(M22))
-    lambdam = 0.5*(M20 - abs(M22))
+    rowCen,colCen = adaptiveCentroidNew(data=img,sigma=sigma)
+    #M20, M22, M31, M33 =complexMoments(img,sigma=sigma)
+    #e1 = M22.real/M20.real
+    #e2 = M22.imag/M20.real
+    #whiskerLength = np.sqrt(np.abs(M22))*scale
+    #lambdap = 0.5*(M20 + abs(M22))
+    #lambdam = 0.5*(M20 - abs(M22))
     #fwhm = np.sqrt(2.*np.log(2.))*(np.sqrt(lambdap)+np.sqrt(lambdam))*scale
     #fwhm = np.sqrt(M20/2.)*2.35482*scale
-    fwhm = (1./(M20/2.) - 1./sigma**2)**(-0.5)*2.35482*scale
-    pl.figtext(0.15,0.8, 'e1: '+str(round(e1,3)) + ',  e2: '+str(round(e2,3)), color='r')
+    #fwhm = (1./(M20/2.) - 1./sigma**2)**(-0.5)*2.35482*scale
+    pl.figtext(0.15,0.8, 'e1: '+str(round(wfit[0],3)) + ',  e2: '+str(round(wfit[1],3)), color='r')
     pl.figtext(0.15,0.75, 'rowCen: '+str(round(rowCen,4)) + ',  colCen: '+str(round(colCen,4)), color='r')
-    pl.figtext(0.15,0.7, 'PSF whisker_Wmoments: '+str(round(whiskerLength,4))+' [arcsec]', color='r')
+    #pl.figtext(0.15,0.7, 'PSF whisker_Wmoments: '+str(round(whiskerLength,4))+' [arcsec]', color='r')
+    pl.figtext(0.15,0.7, 'PSF whisker_Wmoments: '+str(round(wfit[2]*scale,4))+' [arcsec]', color='r')
     pl.figtext(0.15,0.65, 'PSF whisker_Amoments: '+str(round(g2dfit[2]*scale,4))+' [arcsec]', color='r')
     pl.figtext(0.15,0.6, 'CCD Position: '+ccd[0] +',   filter: '+filter, color='r')
     pl.subplot(1,3,2)
@@ -619,7 +673,8 @@ def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,conto
     pl.hlines(gfit[1]/2.,0,radius.max(),linestyle='solid',colors='g')
     pl.hlines(s2fit[1]/2.,0,radius.max(),linestyle='solid',colors='m')
     pl.hlines(g2dfit[0]/2.,0,radius.max(),linestyle='solid',colors='c',label='Adaptive Moments')
-    pl.vlines(fwhm/scale/2.,0, halfmax*4,linestyle='solid',colors='b',label='Weighted Moments')
+    #pl.vlines(fwhm/scale/2.,0, halfmax*4,linestyle='solid',colors='b',label='Weighted Moments')
+    pl.vlines(wfit[3]/2.,0, halfmax*4,linestyle='solid',colors='b',label='Weighted Moments')
     pl.vlines(mfit[4]/2.,0, halfmax*4,linestyle='solid',colors='r')
     pl.vlines(gfit[3]/2.,0, halfmax*4,linestyle='solid',colors='g')
     pl.vlines(s2fit[3]/2.,0, halfmax*4,linestyle='solid',colors='m')
@@ -637,9 +692,10 @@ def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,conto
     pl.figtext(0.65,0.6,'FWHM_Gaussian: '+str(round(gfit[3]*scale,3))+ ' arcsec')
     pl.figtext(0.65,0.55,'FWHM_Moffat: '+str(round(mfit[4]*scale,3))+ ' arcsec')
     pl.figtext(0.65,0.5,'FWHM_Sech2: '+str(round(s2fit[3]*scale,3))+ ' arcsec')
-    pl.figtext(0.65,0.45,'FWHM_Wmoments: '+str(round(fwhm,3))+ ' arcsec') 
+    pl.figtext(0.65,0.45,'FWHM_Wmoments: '+str(round(wfit[3]*scale,3))+ ' arcsec') 
     pl.figtext(0.65,0.4,'FWHM_Amoments: '+str(round(g2dfit[3]*scale,3))+ ' arcsec') 
-    return M20*scale**2,M22*scale**2,M31*scale**2,M33*scale**2
+    #return M20*scale**2,M22*scale**2,M31*scale**2,M33*scale**2
+    return img
 
 def decompPCA(data=None,comp=None):
     img = data[:,2:].T
@@ -692,9 +748,9 @@ def addseeing(filename=None,fwhm=1.,e1=0.,e2=0.,fft=True):
     """
     hdu = pf.open(filename)
     n = len(hdu)
-    hdu[0].header.update('s_fwhm',fwhm)
-    hdu[0].header.update('e1',e1)
-    hdu[0].header.update('e2',e2)
+    hdu[0].header.set('s_fwhm',fwhm)
+    hdu[0].header.set('e1',e1)
+    hdu[0].header.set('e2',e2)
     kern = gauss_seeing(npix,fwhm=fwhm,e1=e1,e2=e2)
     for i in range(1,n):
         img=hdu[i].data[0][4:].reshape(npix,npix)
@@ -722,8 +778,8 @@ def imageRebin(dir=None,rebinsize=(40,40)):
     for filename in filenameAll:
         hdu = pf.open(filename)
         n = len(hdu)
-        hdu[0].header.update('npix',rebinsize[0])
-        hdu[0].header.update('scale',hdu[0].header.update('scale')*hdu[0].header.update('npix')/rebinsize[0])
+        hdu[0].header.set('npix',rebinsize[0])
+        hdu[0].header.set('scale',hdu[0].header.set('scale')*hdu[0].header.set('npix')/rebinsize[0])
         for i in range(1,n):
             img=hdu[i].data[0][4:].reshape(npix,npix)
             img = img.astype('f')
@@ -856,38 +912,39 @@ def wisker(data=None, sigma = None):
 
 
 
-def genImgVallCCD(filename=None,Nstar=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='g', theta=0., corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False):
+def genImgVallCCD(filename=None,Nstar=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False):
     """
     Nstar is the number of stars on each CCD
     """
     hduList = pf.HDUList()
     hdu = pf.PrimaryHDU(np.array([0]))
-    hdu.header.update('RAYPATT',raypattern)
-    hdu.header.update('NPIX',npix)
-    hdu.header.update('SCALE',scale)
-    hdu.header.update('FWHM',fwhm)
-    hdu.header.update('ZENITH',zenith)
-    hdu.header.update('FILTER',filter)
-    hdu.header.update('THETA',theta)
-    hdu.header.update('CORRT',corrector)
+    hdu.header.set('RAYPATT',raypattern)
+    hdu.header.set('NPIX',npix)
+    hdu.header.set('SCALE',scale)
+    hdu.header.set('FWHM',diffusionfwhm)
+    hdu.header.set('ZENITH',zenith)
+    hdu.header.set('FILTER',filter)
+    hdu.header.set('THETA',theta)
+    hdu.header.set('CORRT',corrector)
+    hdu.header.set('PHI',phi)
     if x != None:
-        hdu.header.update('X',x)
+        hdu.header.set('X',x)
     if y != None:
-        hdu.header.update('Y',y)
+        hdu.header.set('Y',y)
     if z != None:
-        hdu.header.update('Z',z)
+        hdu.header.set('Z',z)
     if seeing != 0.:
-        hdu.header.update('s_fwhm',seeing[0])
-        hdu.header.update('e1',seeing[1])
-        hdu.header.update('e2',seeing[2])
+        hdu.header.set('s_fwhm',seeing[0])
+        hdu.header.set('e1',seeing[1])
+        hdu.header.set('e2',seeing[2])
     hduList.append(hdu)
     for ccd in N[1:]+S[1:]:
         print ccd
-        res = genImgV(filename=filename,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband,regular=regular)
+        res = genImgV(filename=filename,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, phi=phi,corrector=corrector,x=x,y=y,z=z,suband=suband,regular=regular)
         hdu = pf.PrimaryHDU(res[0])
-        hdu.header.update('ccdPos',ccd[0])
-        hdu.header.update('ccdXcen',ccd[1])
-        hdu.header.update('ccdYcen',ccd[2])
+        hdu.header.set('ccdPos',ccd[0])
+        hdu.header.set('ccdXcen',ccd[1])
+        hdu.header.set('ccdYcen',ccd[2])
         hduList.append(hdu)
     if filename != None:
         if os.path.exists(filename):
@@ -1045,6 +1102,88 @@ def zernike_diagnosis(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r
     return betaAll,betaErrAll, R2adjAll
 
 
+def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,regular=False):
+    """
+    This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
+    """
+    hdu = genImgVallCCD(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta,phi=phi, corrector=corrector,x=x,y=y,z=z,regular=regular)
+    nn = len(hdu)
+    data = []
+    colnames = ['x','y','M20','M22','M31','M33']
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        M20=np.zeros(Nobj)
+        M22=np.zeros(Nobj).astype(complex)
+        M31=np.zeros(Nobj).astype(complex)
+        M33=np.zeros(Nobj).astype(complex)
+        #sigma = 1.1/0.27
+        sigma = 1.08/scale
+        for i in range(Nobj):
+            M20[i],M22[i],M31[i],M33[i]=complexMomentsNew(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
+        x=hdui.header['ccdXcen']
+        y=hdui.header['ccdYcen']
+        data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
+    data=np.array(data)
+    pl.figure(figsize=(12,12))
+    pl.subplot(2,2,1)
+    phi22 = 0.5*np.arctan2(data[:,3].imag,data[:,3].real)
+    x = data[:,0].real
+    y = data[:,1].real
+    phi22[x<0] = phi22+np.deg2rad(180)
+    u = np.sqrt(np.abs(data[:,3]))*np.cos(phi22)
+    v = np.sqrt(np.abs(data[:,3]))*np.sin(phi22)
+    pl.quiver(x,y,u,v,width=0.004,color='r',pivot='middle',headwidth=2)
+    pl.plot(x,y,'b,')
+    pl.xlim(-250,250)
+    pl.ylim(-250,250)
+    pl.grid(color='g')
+    pl.xlabel('X [mm]')
+    pl.ylabel('Y [mm]')
+    pl.title('M22')
+    pl.subplot(2,2,2)
+    phi31 = np.arctan2(data[:,4].imag,data[:,4].real)
+    u = np.sqrt(np.abs(data[:,4]))*np.cos(phi31)
+    v = np.sqrt(np.abs(data[:,4]))*np.sin(phi31)
+    pl.quiver(x,y,u,v,width=0.003,color='r',pivot='middle',headwidth=4)
+    pl.plot(x,y,'b.')
+    pl.xlim(-250,250)
+    pl.ylim(-250,250)
+    pl.grid(color='g')
+    pl.xlabel('X [mm]')
+    pl.ylabel('Y [mm]')
+    pl.title('M31')
+    pl.subplot(2,2,3)
+    phi33 = np.arctan2(data[:,5].imag,data[:,5].real)/3.
+    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33)
+    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33)
+    pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
+    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33+np.deg2rad(120))
+    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33+np.deg2rad(120))
+    pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
+    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33+np.deg2rad(240))
+    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33+np.deg2rad(240))
+    pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
+    pl.plot(x,y,'b,')
+    pl.xlim(-250,250)
+    pl.ylim(-250,250)
+    pl.grid(color='g')
+    pl.xlabel('X [mm]')
+    pl.ylabel('Y [mm]')
+    pl.title('M33')
+    pl.subplot(2,2,4)
+    pl.quiver(x,y,np.sqrt(data[:,2].real),np.zeros(len(data[:,2].real)),headwidth=2,color='r',width=0.003,pivot='middle')
+    pl.plot(x,y,'b,')
+    pl.grid(color='g')
+    #pl.boxplot(np.sqrt(data[:,2].real)*scale)
+    pl.title('median '+r'$\sqrt{M20}$: '+str(round(np.median(scale*np.sqrt(data[:,2].real)),3))+' [arcsec]')
+    return '----done!---'
+
+
+
+
+
+
+
 def zernike_file(filename=None,zernike_max_order=20,significance=False):
     """
     This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
@@ -1175,31 +1314,33 @@ def zernike_coeff(filename=None,zernike_max_order=20):
     nn = len(hdu)
     data = []
     colnames = ['x','y','M20','M22','M31','M33']
-    sigma = 1.08/scale
+    sigma = 1.08/0.27
     for hdui in hdu[1:]:
-        M20,M22,M31,M33=complexMoments(data=hdui.data[0][4:].reshape(npix,npix),sigma=sigma)
+        img = hdui.data[0][4:].reshape(npix,npix)
+        img = rebin(img,(40,40))
+        M20,M22,M31,M33=complexMoments(data=img,sigma=sigma)
         x=hdui.header['ccdXcen']
         y=hdui.header['ccdYcen']
         data.append([x,y,M20,M22,M31,M33])
     data=np.array(data)
     betaAll=[]
-    betaErrAll=[]
+    #betaErrAll=[]
     R2adjAll=[]
     beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,2].real,max_order=zernike_max_order)
     betaAll.append(beta)
-    betaErrAll.append(betaErr)
+    #betaErrAll.append(betaErr)
     R2adjAll.append(R2_adj)
     for i in range(3,6):
         beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].real,max_order=zernike_max_order)
         betaAll.append(beta)
-        betaErrAll.append(betaErr)
+        #betaErrAll.append(betaErr)
         R2adjAll.append(R2_adj)
         beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].imag,max_order=zernike_max_order)
         betaAll.append(beta)
-        betaErrAll.append(betaErr)
+        #betaErrAll.append(betaErr)
         R2adjAll.append(R2_adj)
     betaAll = np.array(betaAll)
-    betaErrAll = np.array(betaErrAll)
+    #betaErrAll = np.array(betaErrAll)
     R2adjAll = np.array(R2adjAll)
     x=hdu[0].header['x']
     y=hdu[0].header['y']
@@ -1208,9 +1349,33 @@ def zernike_coeff(filename=None,zernike_max_order=20):
     s_fwhm=hdu[0].header['s_fwhm']
     e1=hdu[0].header['e1']
     e2=hdu[0].header['e2']
-    return x,y,z,theta,s_fwhm,e1,e2,betaAll,betaErrAll, R2adjAll
+    return x,y,z,theta,s_fwhm,e1,e2,betaAll,R2adjAll
 
 
+def measure_zernike_coeff(filelist=None,computer=None):
+    """
+    In the save data file, the cols are:
+    x,y,z,theta,s_fwhm,e1,e2,betaAll
+    """
+    data=[]
+    f = filelist
+    n = len(f)
+    for i in range(n):
+        print i
+        t = zernike_coeff(f[i])
+        data.append(np.append(t[0:7],t[7].flatten()))
+    data = np.array(data)
+    if computer != None:
+        datafile = open('/data/des09.a/data/jiangang_psf/lowres_psf_with_seeing_coeff_matrix/zernike_coeff_data_matrix_'+computer+'.cp','w')
+    else:
+        datafile = open('/home/jghao/research/decamFocus/psf_withseeing/validation_lowres/zernike_coeff_data_matrix_validation_randomseeing.cp','w')
+    p.dump(data,datafile,2)
+    return '---done---'
+
+
+
+
+    
 def rowcol2XY(row,col,CCD):
     """
     This code convert the row/col [in pixels] of a given CCD to the x, y
@@ -1289,9 +1454,187 @@ def multimachine_psfgen(computer=None):
                 filename='/home/jghao/research/decamFocus/psf_noseeing/highres_smallsize/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
                     #filename = '/data/des07.b/data/jiangang/PSF_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
                 t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=npix,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
+    return '----done!-----'
+
+
+
+def multimachine_measure_zernike(computer=None):
+    machine = np.array(['des04','des05','des06','des07','des08','des09','des10'])
+    allfile=gl.glob('/data/des09.a/data/jiangang_psf/lowres_psf_with_seeing/*.fit')
+    allfile.sort()
+    nfile=len(allfile)
+    nmachine = len(machine)
+    mm = nfile/nmachine
+    if machine == 'des04':
+        files = allfile[0:mm]
+    if machine == 'des05':
+        files = allfile[mm:2*mm]
+    if machine == 'des06':
+        files = allfile[2*mm:3*mm]
+    if machine == 'des07':
+        files = allfile[3*mm:4*mm]
+    if machine == 'des08':
+        files = allfile[4*mm:5*mm]
+    if machine == 'des09':
+        files = allfile[5*mm:6*mm]
+    if machine == 'des10':
+        files = allfile[6*mm:7*mm]
+    t=measure_zernike_coeff(filelist=files,computer=computer)
+    return '----done!-----'
+    
+
+def getPCA(data):
+    """
+    row of the data matrix is observations, col is the variable
+    """
+    #covM = np.cov(data.T) #note that np.cov define row as variables, col as observations
+    #corM = np.corrcoef(data.T) # we will use correlation matrix instead of cov.
+    covM = np.cov(data.T)
+    eigvalue,eigvector = np.linalg.eig(covM) # each col of the eigvector matrix corresponds to one eigenvalue. So, each col is the coeff of one component
+    pca = np.dot(data,eigvector) # each col is one pca, each row is one obs in that pca. 
+    return eigvalue,eigvector,pca
+    
+def SVMRegression(trainingObs,trainingParam,Obs):
+    """
+    using the SVM regression to get the parameter
+    trainingObs: the zernike coefficients data matrix. each row is a new observation
+    trainingParam: the hexapod configration and seeing, each row is a new obs.
+    Obs: a given set of measured coefficients
+    """
+    svr = SVR()
+    nparam=trainingParam.shape[1]
+    vparam = []
+    for i in range(nparam,4):
+        print i
+        svr.fit(trainingObs,trainingParam[:,i])
+        vparam.append(svr.predict(Obs))
+    vparam = np.array(vparam)
+    return vparam
+   
+
+
+def KNeighborRegression(trainingObs,trainingParam,Obs,n_neighbors):
+    """
+    using the k nearest neighbor regression to get the parameter
+    trainingObs: the zernike coefficients data matrix. each row is a new observation
+    trainingParam: the hexapod configration and seeing, each row is a new obs.
+    Obs: a given set of measured coefficients
+    """
+    #knn = nb.KNeighborsRegressor(algorithm='ball_tree',n_neighbors=n_neighbors,weights = 'distance')
+    knn = nb.KNeighborsRegressor(algorithm='ball_tree',n_neighbors=n_neighbors)
+    knn.fit(trainingObs,trainingParam)
+    return knn.predict(Obs)
+    
+
+def standardizeData(tdata,vdata):
+    """
+    This code standardize the training data and validation data by the training data.
+    """
+    tmean = tdata.mean(axis=0)
+    tstd = tdata.std(axis=0)
+    tdataNew = (tdata - tmean)/tstd
+    vdataNew = (vdata - tmean)/tstd
+    return tdataNew, vdataNew
+
+
+
+
+def validateFit(Tfile=None,Vfile=None,PCA=False,alg='NNR'):
+    b=p.load(open(Tfile))
+    vb = p.load(open(Vfile))
+    nobs = len(b)
+    #tdata=b[:,7:61] #2nd moments only
+    #tdata=b[:,61:] # only 3rd moments
+    tdata=b[:,7:]
+    tpara=b[:,0:7]
+    #vdata=vb[:,7:61] #2nd moments only
+    #vdata = vb[:,61:] # only 3rd moments
+    vdata = vb[:,7:]
+    vparaTrue=vb[:,0:7]
+    tdata,vdata = standardizeData(tdata,vdata)
+    if PCA == True:
+        evlue, eigvector,tdata=getPCA(tdata)
+        vdata=np.dot(vdata,eigvector)
+    if alg == 'NNR':
+        vparaReg=KNeighborRegression(tdata,tpara,vdata,5)
+    if alg == 'SVM':
+        vparaReg = SVMRegression(tdata,tpara,vdata)
+    pl.figure(figsize=(13,10))
+    pl.subplot(2,2,1)
+    #pl.plot(vparaTrue[:,0],vparaReg[:,0],'b.')
+    bp.bin_scatter(vparaTrue[:,0],vparaReg[:,0],binsize=0.2,fmt='b.')
+    pl.plot([vparaTrue[:,0].min(),vparaTrue[:,0].max()],[vparaTrue[:,0].min(),vparaTrue[:,0].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('x shift [mm]')
+    pl.subplot(2,2,2)
+    #pl.plot(vparaTrue[:,1],vparaReg[:,1],'b.')
+    bp.bin_scatter(vparaTrue[:,1],vparaReg[:,1],binsize=0.2,fmt='b.')
+    pl.plot([vparaTrue[:,1].min(),vparaTrue[:,1].max()],[vparaTrue[:,1].min(),vparaTrue[:,1].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('y shift [mm]')
+    pl.subplot(2,2,3)
+    #pl.plot(vparaTrue[:,2],vparaReg[:,2],'b.')
+    bp.bin_scatter(vparaTrue[:,2],vparaReg[:,2],binsize=0.2,fmt='b.')
+    pl.plot([vparaTrue[:,2].min(),vparaTrue[:,2].max()],[vparaTrue[:,2].min(),vparaTrue[:,2].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('defocus [mm]')
+    pl.subplot(2,2,4)
+    #pl.plot(vparaTrue[:,3],vparaReg[:,3],'b.')
+    bp.bin_scatter(vparaTrue[:,3],vparaReg[:,3],binsize=10,fmt='b.')
+    pl.plot([vparaTrue[:,3].min(),vparaTrue[:,3].max()],[vparaTrue[:,3].min(),vparaTrue[:,3].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('tilt angle [arcsec]')
+    """
+    pl.figure(figsize=(17,5))
+    pl.subplot(1,3,1)
+    #pl.plot(vparaTrue[:,4],vparaReg[:,4],'b.')
+    bp.bin_scatter(vparaTrue[:,4],vparaReg[:,4],binsize=0.2,fmt='b.')
+    pl.plot([vparaTrue[:,4].min(),vparaTrue[:,4].max()],[vparaTrue[:,4].min(),vparaTrue[:,4].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('Seeing FWHM [arcsec]')
+    pl.subplot(1,3,2)
+    #pl.plot(vparaTrue[:,5],vparaReg[:,5],'b.')
+    bp.bin_scatter(vparaTrue[:,5],vparaReg[:,5],binsize=0.005,fmt='b.')
+    pl.plot([vparaTrue[:,5].min(),vparaTrue[:,5].max()],[vparaTrue[:,5].min(),vparaTrue[:,5].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('Seeing e1')
+    pl.subplot(1,3,3)
+    #pl.plot(vparaTrue[:,6],vparaReg[:,6],'b.')
+    bp.bin_scatter(vparaTrue[:,6],vparaReg[:,6],binsize=0.1,fmt='b.')
+    pl.plot([vparaTrue[:,6].min(),vparaTrue[:,6].max()],[vparaTrue[:,6].min(),vparaTrue[:,6].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('Seeing e2')
+    """
+    return vparaTrue,vparaReg
+
+def genValidation(n=None):
+    """
+    generate the zernike coefficients files for validation
+    """
+    tilt = np.random.randint(-100,101,n)*1.#[-100,-80,-50,-20,0,50,80,100]
+    xshift = np.random.randint(-1000,1001,n)*0.001#[-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    yshift = np.random.randint(-1000,1001,n)*0.001#[-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    defocus = np.random.randint(-1000,1001,n)*0.001#[-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    fwhm = np.random.randint(-1400,1400,n)*0.001
+    e1 = np.random.randint(-800,900,n)*0.0001
+    e2 = np.random.randint(-800,900,n)*0.0001
+    for i in range(n):
+        print i
+        filename='/home/jghao/research/decamFocus/psf_withseeing/validation_highres_small/randomseeing/PSF_validation_theta'+str(tilt[15])+'_x_'+str(xshift[15])+'_y_'+str(yshift[15])+'_z_'+str(defocus[15])+'_fwhm_'+str(fwhm[i])+'_e1_'+str(e1[i])+'_e2_'+str(e2[i])+'.fit'
+        t = genImgVallCCD(filename=filename,Nstar=1,seeing=[fwhm[i],e1[i],e2[i]],npix=npix,zenith=0,filter='r', theta=tilt[15], corrector='corrector',x=xshift[15],y=yshift[15],z=defocus[15],suband=None,regular=False)
+    
+    filelist = gl.glob('/home/jghao/research/decamFocus/psf_withseeing/validation_highres_small/randomseeing/PSF_*.fit*')
+    t=measure_zernike_coeff(filelist)
+    return '-----done!-----'
  
-
-
+    
 
 if __name__ == '__main__':
     #import healpy as hp
@@ -1311,7 +1654,8 @@ if __name__ == '__main__':
                     #filename = '/data/des07.b/data/jiangang/PSF_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
                     t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=npix,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
     """
-    t=singlemachine_addseeing()
+    #genValidation(500)
+    #t=singlemachine_addseeing()
     #computer = sys.argv[1]
     #multimachine_addseeing(computer)
     #multimachine_psfgen(computer)            
@@ -1324,3 +1668,8 @@ if __name__ == '__main__':
     #    pngname = filename[:-3]+'png'
     #    pl.savefig(pngname)
     #    pl.close()
+
+    Tfile='/home/jghao/research/decamFocus/psf_withseeing/highres_small_psf_with_seeing_coeff_matrix/zernike_highres_small_coeff_data_matrix_all.cp'
+    Vfile='/home/jghao/research/decamFocus/psf_withseeing/validation_highres_small/zernike_coeff_data_matrix_validation_hires_small_rebin.cp'
+    Vfile='/home/jghao/research/decamFocus/psf_withseeing/validation_highres_small/zernike_coeff_data_matrix_validation_randomseeing.cp'
+    validateFit(Tfile,Vfile)
