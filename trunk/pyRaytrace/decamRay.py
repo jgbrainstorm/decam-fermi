@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #---this is a python scrit that encapsulate the raytracing code from steve to make it more interactive/scriptable.
-# the zernike polynomial definition codes is adopted from:
+# the zernike polynomial definition codes is adopted and modified from:
 #http://www.staff.science.uu.nl/~werkh108/docs/teach/2011b_python/python102/examples/py102-example2-zernike.py
 # J Hao 3/28/2012 @ FNAL
 # This is copied from decamspotPY on 6/18/2012 to delete those unnecessary routines. 
@@ -638,19 +638,9 @@ def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,conto
     pl.xlabel('Pixel')
     pl.ylabel('Pixel')
     pl.grid(color='y')
-    rowCen,colCen = adaptiveCentroidNew(data=img,sigma=sigma)
-    #M20, M22, M31, M33 =complexMoments(img,sigma=sigma)
-    #e1 = M22.real/M20.real
-    #e2 = M22.imag/M20.real
-    #whiskerLength = np.sqrt(np.abs(M22))*scale
-    #lambdap = 0.5*(M20 + abs(M22))
-    #lambdam = 0.5*(M20 - abs(M22))
-    #fwhm = np.sqrt(2.*np.log(2.))*(np.sqrt(lambdap)+np.sqrt(lambdam))*scale
-    #fwhm = np.sqrt(M20/2.)*2.35482*scale
-    #fwhm = (1./(M20/2.) - 1./sigma**2)**(-0.5)*2.35482*scale
+    rowCen,colCen = adaptiveCentroid(data=img,sigma=sigma)
     pl.figtext(0.15,0.8, 'e1: '+str(round(wfit[0],3)) + ',  e2: '+str(round(wfit[1],3)), color='r')
     pl.figtext(0.15,0.75, 'rowCen: '+str(round(rowCen,4)) + ',  colCen: '+str(round(colCen,4)), color='r')
-    #pl.figtext(0.15,0.7, 'PSF whisker_Wmoments: '+str(round(whiskerLength,4))+' [arcsec]', color='r')
     pl.figtext(0.15,0.7, 'PSF whisker_Wmoments: '+str(round(wfit[2]*scale,4))+' [arcsec]', color='r')
     pl.figtext(0.15,0.65, 'PSF whisker_Amoments: '+str(round(g2dfit[2]*scale,4))+' [arcsec]', color='r')
     pl.figtext(0.15,0.6, 'CCD Position: '+ccd[0] +',   filter: '+filter, color='r')
@@ -1016,7 +1006,7 @@ def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
 
 
 def dispZernike(beta=1.,j=0,gridsize = 1, max_rad = 1):
-    x,y = np.meshgrid(np.arange(-gridsize,gridsize,0.01),np.arange(-gridsize,gridsize,0.01))
+    x,y = np.meshgrid(np.arange(-gridsize,gridsize,0.001),np.arange(-gridsize,gridsize,0.001))
     rho = np.sqrt(x**2+y**2)
     phi = np.arctan2(y,x)
     ok = rho < max_rad
@@ -1043,11 +1033,11 @@ def showZernike(beta=None,betaErr=None,gridsize = 1, max_rad = 1,significance=Fa
     return znk
 
 
-def zernike_diagnosis(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,zernike_max_order=20,regular=False):
+def zernike_diagnosis(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,zernike_max_order=20,regular=False):
     """
     This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
     """
-    hdu = genImgVallCCD(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,regular=regular)
+    hdu = genImgVallCCD(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta,phi=phi, corrector=corrector,x=x,y=y,z=z,regular=regular)
     nn = len(hdu)
     data = []
     colnames = ['x','y','M20','M22','M31','M33']
@@ -1119,7 +1109,7 @@ def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r',
         #sigma = 1.1/0.27
         sigma = 1.08/scale
         for i in range(Nobj):
-            M20[i],M22[i],M31[i],M33[i]=complexMomentsNew(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
+            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
         x=hdui.header['ccdXcen']
         y=hdui.header['ccdYcen']
         data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
@@ -1145,7 +1135,7 @@ def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r',
     u = np.sqrt(np.abs(data[:,4]))*np.cos(phi31)
     v = np.sqrt(np.abs(data[:,4]))*np.sin(phi31)
     pl.quiver(x,y,u,v,width=0.003,color='r',pivot='middle',headwidth=4)
-    pl.plot(x,y,'b.')
+    pl.plot(x,y,'b,')
     pl.xlim(-250,250)
     pl.ylim(-250,250)
     pl.grid(color='g')
@@ -1174,11 +1164,166 @@ def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r',
     pl.quiver(x,y,np.sqrt(data[:,2].real),np.zeros(len(data[:,2].real)),headwidth=2,color='r',width=0.003,pivot='middle')
     pl.plot(x,y,'b,')
     pl.grid(color='g')
+    pl.xlim(-250,250)
+    pl.ylim(-250,250)
     #pl.boxplot(np.sqrt(data[:,2].real)*scale)
     pl.title('median '+r'$\sqrt{M20}$: '+str(round(np.median(scale*np.sqrt(data[:,2].real)),3))+' [arcsec]')
     return '----done!---'
 
+def coeff_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=0.,y=0.,z=0.,zernike_max_order=20,regular=False):
+    """
+    This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
+    """
+    hdu = genImgVallCCD(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta,phi=phi, corrector=corrector,x=x,y=y,z=z,regular=regular)
+    nn = len(hdu)
+    data = []
+    colnames = ['x','y','M20','M22','M31','M33']
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        M20=np.zeros(Nobj)
+        M22=np.zeros(Nobj).astype(complex)
+        M31=np.zeros(Nobj).astype(complex)
+        M33=np.zeros(Nobj).astype(complex)
+        #sigma = 1.1/0.27
+        sigma = 1.08/scale
+        for i in range(Nobj):
+            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
+        x=hdui.header['ccdXcen']
+        y=hdui.header['ccdYcen']
+        data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
+    data=np.array(data)
+    betaAll=[]
+    betaErrAll=[]
+    R2adjAll=[]
+    beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,2].real,max_order=zernike_max_order)
+    betaAll.append(beta)
+    betaErrAll.append(betaErr)
+    R2adjAll.append(R2_adj)
+    for i in range(3,6):
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].real,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].imag,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+    betaAll = np.array(betaAll)
+    betaErrAll = np.array(betaErrAll)
+    R2adjAll = np.array(R2adjAll)
+    ind = np.arange(len(betaAll[0]))
+    momname = ('M20','M22.Real','M22.imag','M31.real','M31.imag','M33.real','M33.imag')
+    fmtarr = ['bo-','ro-','go-','co-','mo-','yo-','ko-']
+    pl.figure(figsize=(17,13))
+    for i in range(7):
+        pl.subplot(7,1,i+1)
+        pl.errorbar(ind,betaAll[i],yerr = betaErrAll[i],fmt=fmtarr[i])
+        if i == 0:
+            pl.title('x: '+str(hdu[0].header['x'])+'   y: '+str(hdu[0].header['y'])+'   z: '+str(hdu[0].header['z'])+'   tilt: '+str(hdu[0].header['theta'])+'   fwhm: '+str(hdu[0].header['s_fwhm'])+'   e1: '+str(hdu[0].header['e1'])+'   e2: '+str(hdu[0].header['e2']))
+        pl.grid()
+        pl.xlim(-1,21)
+        if i ==0:
+            pl.ylim(-10,65)
+        elif i ==1:
+            pl.ylim(-5,6)
+        elif i ==2:
+            pl.ylim(-5,6)
+        elif i == 3:
+            pl.ylim(-0.1,0.1)
+        elif i == 4:
+            pl.ylim(-0.1,0.1)
+        elif i ==5:
+            pl.ylim(-100,100)
+        elif i == 6:
+            pl.ylim(-100,100)
+        pl.xticks(ind,('','','','','','','','','','','','','','','','','','','',''))
+        pl.ylabel(momname[i])
+    pl.xticks(ind,('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'))
+    pl.xlabel('Zernike Coefficients')
+    return betaAll,betaErrAll
 
+
+    #pl.figure(figsize=(13,5))
+    #ind = np.arange(len(betaAll[0]))
+    #pl.pcolor(betaAll,vmin=-50,vmax=60)
+    #pl.grid(color='red')
+    #pl.yticks(np.arange(7)+0.5,('M20','M22.Real','M22.imag','M31.real','M31.imag','M33.real','M33.imag'))
+    #pl.xticks(ind+0.5,('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'))
+    #pl.xlabel('Zernike Coefficients')
+    #pl.colorbar(shrink=1)
+    #return betaAll,betaErrAll
+
+def coeff_display_file(filename,zernike_max_order=20):
+    """
+    This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
+    """
+    hdu = pf.open(filename)
+    nn = len(hdu)
+    data = []
+    colnames = ['x','y','M20','M22','M31','M33']
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        M20=np.zeros(Nobj)
+        M22=np.zeros(Nobj).astype(complex)
+        M31=np.zeros(Nobj).astype(complex)
+        M33=np.zeros(Nobj).astype(complex)
+        #sigma = 1.1/0.27
+        sigma = 1.08/scale
+        for i in range(Nobj):
+            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
+        x=hdui.header['ccdXcen']
+        y=hdui.header['ccdYcen']
+        data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
+    data=np.array(data)
+    betaAll=[]
+    betaErrAll=[]
+    R2adjAll=[]
+    beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,2].real,max_order=zernike_max_order)
+    betaAll.append(beta)
+    betaErrAll.append(betaErr)
+    R2adjAll.append(R2_adj)
+    for i in range(3,6):
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].real,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].imag,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+    betaAll = np.array(betaAll)
+    betaErrAll = np.array(betaErrAll)
+    R2adjAll = np.array(R2adjAll)
+    ind = np.arange(len(betaAll[0]))
+    momname = ('M20','M22.Real','M22.imag','M31.real','M31.imag','M33.real','M33.imag')
+    fmtarr = ['bo-','ro-','go-','co-','mo-','yo-','ko-']
+    pl.figure(figsize=(17,13))
+    for i in range(7):
+        pl.subplot(7,1,i+1)
+        pl.errorbar(ind,betaAll[i],yerr = betaErrAll[i],fmt=fmtarr[i])
+        if i == 0:
+            pl.title('x: '+str(hdu[0].header['x'])+'   y: '+str(hdu[0].header['y'])+'   z: '+str(hdu[0].header['z'])+'   tilt: '+str(hdu[0].header['theta'])+'   fwhm: '+str(hdu[0].header['s_fwhm'])+'   e1: '+str(hdu[0].header['e1'])+'   e2: '+str(hdu[0].header['e2']))
+        pl.grid()
+        pl.xlim(-1,21)
+        if i ==0:
+            pl.ylim(-50,100)
+        elif i ==1:
+            pl.ylim(-10,10)
+        elif i ==2:
+            pl.ylim(-10,10)
+        elif i == 3:
+            pl.ylim(-0.01,0.01)
+        elif i == 4:
+            pl.ylim(-0.01,0.01)
+        elif i ==5:
+            pl.ylim(-20,20)
+        elif i == 6:
+            pl.ylim(-20,20)
+        pl.xticks(ind,('','','','','','','','','','','','','','','','','','','',''))
+        pl.ylabel(momname[i])
+    pl.xticks(ind,('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'))
+    pl.xlabel('Zernike Coefficients')
+    return betaAll,betaErrAll
 
 
 
@@ -1305,6 +1450,16 @@ def comp_zernike(beta1=None,betaErr1=None,beta2=None,betaErr2=None):
     for i in range(nmoments):
         chi2[i] = np.sum((beta1[i,:] - beta2[i,:])**2/(betaErr1**2+betaErr2**2))
     return chi2
+
+
+
+def dispZernike20():
+    pl.figure(figsize=(20,16))
+    for i in range(0,20):
+        pl.subplot(4,5,i+1)
+        dispZernike(j=i)
+        pl.title('j = '+str(i))
+    return 0
 
 def zernike_coeff(filename=None,zernike_max_order=20):
     """
@@ -1501,15 +1656,15 @@ def SVMRegression(trainingObs,trainingParam,Obs):
     trainingParam: the hexapod configration and seeing, each row is a new obs.
     Obs: a given set of measured coefficients
     """
-    svr = SVR()
+    svr = SVR(C=1.0, cache_size=2000, coef0=0.0, degree=3, epsilon=0.1, gamma=0.,  kernel='rbf', probability=False, shrinking=True, tol=0.00001)
     nparam=trainingParam.shape[1]
     vparam = []
-    for i in range(nparam,4):
+    for i in range(0,nparam):
         print i
         svr.fit(trainingObs,trainingParam[:,i])
         vparam.append(svr.predict(Obs))
     vparam = np.array(vparam)
-    return vparam
+    return vparam.T
    
 
 
@@ -1543,76 +1698,106 @@ def validateFit(Tfile=None,Vfile=None,PCA=False,alg='NNR'):
     b=p.load(open(Tfile))
     vb = p.load(open(Vfile))
     nobs = len(b)
-    #tdata=b[:,7:61] #2nd moments only
-    #tdata=b[:,61:] # only 3rd moments
-    tdata=b[:,7:]
-    tpara=b[:,0:7]
-    #vdata=vb[:,7:61] #2nd moments only
-    #vdata = vb[:,61:] # only 3rd moments
-    vdata = vb[:,7:]
-    vparaTrue=vb[:,0:7]
+    tdata=b[:,8:]
+    tpara=b[:,0:8]
+    vdata = vb[:,8:]
+    vparaTrue=vb[:,0:8]
     tdata,vdata = standardizeData(tdata,vdata)
     if PCA == True:
         evlue, eigvector,tdata=getPCA(tdata)
         vdata=np.dot(vdata,eigvector)
     if alg == 'NNR':
-        vparaReg=KNeighborRegression(tdata,tpara,vdata,5)
+        vparaReg=KNeighborRegression(tdata,tpara,vdata,15)
     if alg == 'SVM':
         vparaReg = SVMRegression(tdata,tpara,vdata)
-    pl.figure(figsize=(13,10))
-    pl.subplot(2,2,1)
-    #pl.plot(vparaTrue[:,0],vparaReg[:,0],'b.')
-    bp.bin_scatter(vparaTrue[:,0],vparaReg[:,0],binsize=0.2,fmt='b.')
+    pl.figure(figsize=(17,10))
+    pl.subplot(2,3,1)
+    bp.bin_scatter(vparaTrue[:,0],vparaReg[:,0],binsize=0.005,fmt='b.')
     pl.plot([vparaTrue[:,0].min(),vparaTrue[:,0].max()],[vparaTrue[:,0].min(),vparaTrue[:,0].max()],'r-')
     pl.xlabel('True Value')
     pl.ylabel('Regression Value')
     pl.title('x shift [mm]')
-    pl.subplot(2,2,2)
-    #pl.plot(vparaTrue[:,1],vparaReg[:,1],'b.')
-    bp.bin_scatter(vparaTrue[:,1],vparaReg[:,1],binsize=0.2,fmt='b.')
+    pl.subplot(2,3,2)
+    bp.bin_scatter(vparaTrue[:,1],vparaReg[:,1],binsize=0.005,fmt='b.')
     pl.plot([vparaTrue[:,1].min(),vparaTrue[:,1].max()],[vparaTrue[:,1].min(),vparaTrue[:,1].max()],'r-')
     pl.xlabel('True Value')
     pl.ylabel('Regression Value')
     pl.title('y shift [mm]')
-    pl.subplot(2,2,3)
-    #pl.plot(vparaTrue[:,2],vparaReg[:,2],'b.')
-    bp.bin_scatter(vparaTrue[:,2],vparaReg[:,2],binsize=0.2,fmt='b.')
+    pl.subplot(2,3,3)
+    bp.bin_scatter(vparaTrue[:,2],vparaReg[:,2],binsize=0.005,fmt='b.')
     pl.plot([vparaTrue[:,2].min(),vparaTrue[:,2].max()],[vparaTrue[:,2].min(),vparaTrue[:,2].max()],'r-')
     pl.xlabel('True Value')
     pl.ylabel('Regression Value')
     pl.title('defocus [mm]')
-    pl.subplot(2,2,4)
-    #pl.plot(vparaTrue[:,3],vparaReg[:,3],'b.')
-    bp.bin_scatter(vparaTrue[:,3],vparaReg[:,3],binsize=10,fmt='b.')
+    pl.subplot(2,3,4)
+    bp.bin_scatter(vparaTrue[:,3],vparaReg[:,3],binsize=3,fmt='b.')
     pl.plot([vparaTrue[:,3].min(),vparaTrue[:,3].max()],[vparaTrue[:,3].min(),vparaTrue[:,3].max()],'r-')
     pl.xlabel('True Value')
     pl.ylabel('Regression Value')
     pl.title('tilt angle [arcsec]')
-    """
-    pl.figure(figsize=(17,5))
-    pl.subplot(1,3,1)
-    #pl.plot(vparaTrue[:,4],vparaReg[:,4],'b.')
-    bp.bin_scatter(vparaTrue[:,4],vparaReg[:,4],binsize=0.2,fmt='b.')
+    pl.subplot(2,3,5)
+    bp.bin_scatter(vparaTrue[:,4],vparaReg[:,4],binsize=5,fmt='b.')
     pl.plot([vparaTrue[:,4].min(),vparaTrue[:,4].max()],[vparaTrue[:,4].min(),vparaTrue[:,4].max()],'r-')
     pl.xlabel('True Value')
     pl.ylabel('Regression Value')
-    pl.title('Seeing FWHM [arcsec]')
-    pl.subplot(1,3,2)
-    #pl.plot(vparaTrue[:,5],vparaReg[:,5],'b.')
-    bp.bin_scatter(vparaTrue[:,5],vparaReg[:,5],binsize=0.005,fmt='b.')
-    pl.plot([vparaTrue[:,5].min(),vparaTrue[:,5].max()],[vparaTrue[:,5].min(),vparaTrue[:,5].max()],'r-')
-    pl.xlabel('True Value')
-    pl.ylabel('Regression Value')
-    pl.title('Seeing e1')
-    pl.subplot(1,3,3)
-    #pl.plot(vparaTrue[:,6],vparaReg[:,6],'b.')
-    bp.bin_scatter(vparaTrue[:,6],vparaReg[:,6],binsize=0.1,fmt='b.')
-    pl.plot([vparaTrue[:,6].min(),vparaTrue[:,6].max()],[vparaTrue[:,6].min(),vparaTrue[:,6].max()],'r-')
-    pl.xlabel('True Value')
-    pl.ylabel('Regression Value')
-    pl.title('Seeing e2')
-    """
+    pl.title('phi angle [deg]')
     return vparaTrue,vparaReg
+
+
+
+def validateFitNew(Tfile=None,Vfile=None,PCA=False,alg='NNR'):
+    b=p.load(open(Tfile))
+    vb = p.load(open(Vfile))
+    nobs = len(b)
+    tdata=b[:,8:]
+    ttpara=b[:,0:5]
+    vdata = vb[:,8:]
+    vvparaTrue=vb[:,0:5]
+    tpara[:,3] = ttpara[:,3]*np.cos(np.deg2rad(ttpara[:,4]))
+    tpara[:,4] = ttpara[:,3]*np.sin(np.deg2rad(ttpara[:,4]))
+    vparaTrue[:,3] = vvparaTrue[:,3]*np.cos(np.deg2rad(vvparaTrue[:,4]))
+    vparaTrue[:,4] = vvparaTrue[:,3]*np.sin(np.deg2rad(vvparaTrue[:,4]))
+    tdata,vdata = standardizeData(tdata,vdata)
+    if PCA == True:
+        evlue, eigvector,tdata=getPCA(tdata)
+        vdata=np.dot(vdata,eigvector)
+    if alg == 'NNR':
+        vparaReg=KNeighborRegression(tdata,tpara,vdata,15)
+    if alg == 'SVM':
+        vparaReg = SVMRegression(tdata,tpara,vdata)
+    pl.figure(figsize=(17,10))
+    pl.subplot(2,3,1)
+    bp.bin_scatter(vparaTrue[:,0],vparaReg[:,0],binsize=0.005,fmt='b.')
+    pl.plot([vparaTrue[:,0].min(),vparaTrue[:,0].max()],[vparaTrue[:,0].min(),vparaTrue[:,0].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('x shift [mm]')
+    pl.subplot(2,3,2)
+    bp.bin_scatter(vparaTrue[:,1],vparaReg[:,1],binsize=0.005,fmt='b.')
+    pl.plot([vparaTrue[:,1].min(),vparaTrue[:,1].max()],[vparaTrue[:,1].min(),vparaTrue[:,1].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('y shift [mm]')
+    pl.subplot(2,3,3)
+    bp.bin_scatter(vparaTrue[:,2],vparaReg[:,2],binsize=0.005,fmt='b.')
+    pl.plot([vparaTrue[:,2].min(),vparaTrue[:,2].max()],[vparaTrue[:,2].min(),vparaTrue[:,2].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('defocus [mm]')
+    pl.subplot(2,3,4)
+    bp.bin_scatter(vparaTrue[:,3],vparaReg[:,3],binsize=3,fmt='b.')
+    pl.plot([vparaTrue[:,3].min(),vparaTrue[:,3].max()],[vparaTrue[:,3].min(),vparaTrue[:,3].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('tilt angle in x direction [arcsec]')
+    pl.subplot(2,3,5)
+    bp.bin_scatter(vparaTrue[:,4],vparaReg[:,4],binsize=3,fmt='b.')
+    pl.plot([vparaTrue[:,4].min(),vparaTrue[:,4].max()],[vparaTrue[:,4].min(),vparaTrue[:,4].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('tilt angle in x direction [arcsec]')
+    return vparaTrue,vparaReg
+
 
 def genValidation(n=None):
     """
@@ -1637,23 +1822,7 @@ def genValidation(n=None):
     
 
 if __name__ == '__main__':
-    #import healpy as hp
-    """
-    tiltrange = [-100,-80,-50,-20,0,50,80,100]
-    xshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
-    yshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
-    defocusrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
-    counter=0.
-    for tlt in tiltrange:
-        for xsft in xshiftrange:
-            for ysft in yshiftrange:
-                for defo in defocusrange:
-                    counter = counter +1
-                    print '----'+str(counter)+'----'
-                    filename='/home/jghao/research/decamFocus/psf_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
-                    #filename = '/data/des07.b/data/jiangang/PSF_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
-                    t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=npix,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
-    """
+
     #genValidation(500)
     #t=singlemachine_addseeing()
     #computer = sys.argv[1]
@@ -1669,7 +1838,103 @@ if __name__ == '__main__':
     #    pl.savefig(pngname)
     #    pl.close()
 
-    Tfile='/home/jghao/research/decamFocus/psf_withseeing/highres_small_psf_with_seeing_coeff_matrix/zernike_highres_small_coeff_data_matrix_all.cp'
-    Vfile='/home/jghao/research/decamFocus/psf_withseeing/validation_highres_small/zernike_coeff_data_matrix_validation_hires_small_rebin.cp'
-    Vfile='/home/jghao/research/decamFocus/psf_withseeing/validation_highres_small/zernike_coeff_data_matrix_validation_randomseeing.cp'
-    validateFit(Tfile,Vfile)
+    #Tfile='/home/jghao/research/decamFocus/psf_withseeing/highres_small_psf_with_seeing_coeff_matrix/zernike_highres_small_coeff_data_matrix_all.cp'
+    #Vfile='/home/jghao/research/decamFocus/psf_withseeing/validation_highres_small/zernike_coeff_data_matrix_validation_hires_small_rebin.cp'
+    #Vfile='/home/jghao/research/decamFocus/psf_withseeing/validation_highres_small/zernike_coeff_data_matrix_validation_randomseeing.cp'
+    #validateFit(Tfile,Vfile)
+
+    Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_training.cp'
+    Vfile = '/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_validation.cp'
+
+    # combine files ---
+    f1=p.load(open('zernike_coeff_finerGrid_des04.cp','r'))
+    f2=p.load(open('zernike_coeff_finerGrid_des05.cp','r'))
+    f3=p.load(open('zernike_coeff_finerGrid_des06.cp','r'))
+    f4=p.load(open('zernike_coeff_finerGrid_des07.cp','r'))
+    f5=p.load(open('zernike_coeff_finerGrid_des08.cp','r'))
+    f6=p.load(open('zernike_coeff_finerGrid_des09.cp','r'))
+    f7=p.load(open('zernike_coeff_finerGrid_des10.cp','r'))
+    f = np.concatenate((f1,f2,f3,f4,f5,f6,f7))
+    p.dump(f,open('zernike_coeff_finerGrid_all.cp','w'),2)
+    rnd = np.random.rand(len(f[:,1]))
+    idx =np.argsort(rnd)
+    training = f[idx[0:500],]
+    validate = f[idx[500:],]
+    p.dump(training,open('zernike_coeff_finerGrid_training.cp','w'),2)
+    p.dump(validate,open('zernike_coeff_finerGrid_validate.cp','w'),2)
+    
+    t= moments_display(Nstar=1,npix = npix)
+    pl.savefig('moments_seeing0.9.png')
+    pl.close()
+    t= moments_display(Nstar=1,npix = npix,seeing=0)
+    pl.savefig('moments_seeing0.png')
+    pl.close()
+    t= moments_display(Nstar=1,z=0.1,npix = npix)
+    pl.savefig('moments_seeing0.9_z0.1.png')
+    pl.close()
+    t= moments_display(Nstar=1,z=-0.1,npix = npix)
+    pl.savefig('moments_seeing0.9_z-0.1.png')
+    pl.close()
+    t= moments_display(Nstar=1,x=0.1,npix = npix)
+    pl.savefig('moments_seeing0.9_x0.1.png')
+    pl.close()
+    t= moments_display(Nstar=1,x=-0.1,npix = npix)
+    pl.savefig('moments_seeing0.9_x-0.1.png')
+    pl.close()
+    t= moments_display(Nstar=1,y=0.1,npix = npix)
+    pl.savefig('moments_seeing0.9_y0.1.png')
+    pl.close()
+    t= moments_display(Nstar=1,y=-0.1,npix = npix)
+    pl.savefig('moments_seeing0.9_y-0.1.png')
+    pl.close()
+    t= moments_display(Nstar=1,theta=30,phi=0,npix = npix)
+    pl.savefig('moments_seeing0.9_theta30_phi0.png')
+    pl.close()
+    t= moments_display(Nstar=1,theta=-30,phi=0,npix = npix)
+    pl.savefig('moments_seeing0.9_theta-30_phi0.png')
+    pl.close()
+    t= moments_display(Nstar=1,theta=30,phi=90,npix = npix)
+    pl.savefig('moments_seeing0.9_theta30_phi90.png')
+    pl.close()
+    t= moments_display(Nstar=1,theta=-30,phi=90,npix = npix)
+    pl.savefig('moments_seeing0.9_theta-30_phi90.png')
+    pl.close()
+    
+    #-----coeff ------
+    t= coeff_display(Nstar=1,npix = npix)
+    pl.savefig('coeff_seeing0.9.png')
+    pl.close()
+    t= coeff_display(Nstar=1,npix = npix)
+    pl.savefig('coeff_seeing0.png')
+    pl.close()
+    t= coeff_display(Nstar=1,z=0.1,npix = npix)
+    pl.savefig('coeff_seeing0.9_z0.1.png')
+    pl.close()
+    t= coeff_display(Nstar=1,z=-0.1,npix = npix)
+    pl.savefig('coeff_seeing0.9_z-0.1.png')
+    pl.close()
+    t= coeff_display(Nstar=1,x=0.1,npix = npix)
+    pl.savefig('coeff_seeing0.9_x0.1.png')
+    pl.close()
+    t= coeff_display(Nstar=1,x=-0.1,npix = npix)
+    pl.savefig('coeff_seeing0.9_x-0.1.png')
+    pl.close()
+    t= coeff_display(Nstar=1,y=0.1,npix = npix)
+    pl.savefig('coeff_seeing0.9_y0.1.png')
+    pl.close()
+    t= coeff_display(Nstar=1,y=-0.1,npix = npix)
+    pl.savefig('coeff_seeing0.9_y-0.1.png')
+    pl.close()
+    t= coeff_display(Nstar=1,theta=30,phi=0,npix = npix)
+    pl.savefig('coeff_seeing0.9_theta30_phi0.png')
+    pl.close()
+    t= coeff_display(Nstar=1,theta=-30,phi=0,npix = npix)
+    pl.savefig('coeff_seeing0.9_theta-30_phi0.png')
+    pl.close()
+    t= coeff_display(Nstar=1,theta=30,phi=90,npix = npix)
+    pl.savefig('coeff_seeing0.9_theta30_phi90.png')
+    pl.close()
+    t= coeff_display(Nstar=1,theta=-30,phi=90,npix = npix)
+    pl.savefig('coeff_seeing0.9_theta-30_phi90.png')
+    pl.close()
+    
