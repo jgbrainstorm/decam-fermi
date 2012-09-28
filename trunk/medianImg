@@ -2,6 +2,7 @@
 import numpy as np
 import pyfits as pf
 import sys
+sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi')
 import glob as gl
 from DECamCCD_def import *
 
@@ -11,15 +12,18 @@ if len(sys.argv) == 1:
     print 'For all images in the current dir: medianImg all'
     print 'The resulting median image will be named as median.fits'
 elif sys.argv[1]=='all':
-    ff=gl.glob('*.fits*')
-    nimg=len(ff)-1
+    ff=gl.glob('*.fits')
+    nimg=len(ff)
     hdu=pf.open(ff[0])
     hdu.verify('silentfix')
-    for i in extidx:
-        for j in range(1,nimg+1):
+    nExt=len(hdu)
+    for i in range(1,nExt):
+        print i
+        for j in range(0,nimg):
             b=[]
             b.append(pf.getdata(ff[j],i))
         hdu[i].data=np.median(b,axis=0)
+        hdu[i].header.update('bzero',0)
     hdu.writeto('median.fits')
 else:
     nimg=len(sys.argv)-1
@@ -27,8 +31,10 @@ else:
     hdu.verify('silentfix')
     nExt=len(hdu)
     for i in extidx:
+        print i
         for j in range(1,nimg+1):
             b=[]
             b.append(pf.getdata(sys.argv[j],i))
         hdu[i].data=np.median(b,axis=0)
+        hdu[i].header.update('bzero',0)
     hdu.writeto('median.fits')
