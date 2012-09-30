@@ -9,6 +9,7 @@ import pyfits as pf
 import sys
 sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi')
 import glob as gl
+from DECamCCD import *
 from DECamCCD_def import *
 
 if len(sys.argv) == 1:
