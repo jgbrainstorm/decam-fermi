@@ -36,3 +36,7 @@ else:
         hdu[ext].data = hdu[ext].data / robust_mean(hdu[ext].data)
         hdu[ext].header.update('bzero',0)
     hdu.writeto('masterFlat.fits')
+    endTime=time.time()
+    elapseTime=endTime-startTime
+    print '---elapsed time: ' + str(elapseTime)
+    return '----done ---'
