@@ -33,6 +33,7 @@ else:
             imgosub = imgosub - pf.getdata(bias,ext)    
             b.append(imgosub)
         hdu[ext].data=np.median(b,axis=0)
+        hdu[ext].data[hdu[ext].data == 0.] = 0.00001 #avoid the blow up
         hdu[ext].data = hdu[ext].data / robust_mean(hdu[ext].data)
         hdu[ext].header.update('bzero',0)
     hdu.writeto('masterFlat.fits')
