@@ -25,7 +25,7 @@ else:
     for ext in range(1,63):
         for j in range(0,nimg):
             b=[]
-            filename = filehead+'_'+sys.argv[2+j]+'.fits'
+            filename = filehead+'_'+sys.argv[3+j]+'.fits'
             imgext = pf.getdata(filename,ext)
             imgosub = oscanSub(imgext)
             imgosub = imgosub - pf.getdata(bias,ext)    
