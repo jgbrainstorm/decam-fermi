@@ -1,0 +1,28 @@
+import pylab as pl
+import numpy as np
+
+#----noise ----
+
+noisedata = np.genfromtxt('bias/noise.txt',dtype=None,names=['ccdname','noise'])
+ccdname = noisedata['ccdname']
+noise = noisedata['noise']
+
+n = len(noise)
+pl.figure(figsize=(16,10))
+pl.subplot(2,1,1)
+pl.bar(np.arange(n/2),noise[0:n/2],color=['pink','green'])
+pl.xticks(np.arange(n/2)+0.5,ccdname[0:n/2],rotation=90)
+pl.ylim(0,3)
+pl.ylabel('Readout Noise (ADU)')
+
+pl.subplot(2,1,2)
+pl.bar(np.arange(n/2),noise[n/2:],color=['pink','green'])
+pl.xticks(np.arange(n/2)+0.5,ccdname[n/2:],rotation=90)
+pl.ylim(0,3)
+pl.ylabel('Readout Noise (ADU)')
+pl.savefig('readout_noise.png')
+pl.close()
+
+#---gain and fullwell
+
+data = np.genfromtxt()

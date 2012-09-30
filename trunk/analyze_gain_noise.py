@@ -30,6 +30,11 @@ fw = data['fw']
 ccd = data['ccd']
 gain = data['gain']
 
+idx = np.argsort(ccd)
+fw = fw[idx]
+ccd = ccd[idx]
+gain = gain[idx]
+
 n = len(gain)
 
 pl.figure(figsize=(16,10))

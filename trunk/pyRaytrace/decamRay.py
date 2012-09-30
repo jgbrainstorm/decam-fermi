@@ -141,7 +141,7 @@ def s2fwhm(img):
     return r0,A,B,fwhm_sech2
 
 def gaussian2d(x,y,xc,yc,sigmax,sigmay,rho,A,B):
-    res = A*np.exp(-0.5/(1-rho**2)*(x**2/sigmax**2+y**2/sigmay**2-2.*rho*x*y/(sigmax*sigmay)))
+    res = A*np.exp(-0.5/(1-rho**2)*(x**2/sigmax**2+y**2/sigmay**2-2.*rho*x*y/(sigmax*sigmay)))+B
     return res
 
 def g2dfwhm(img):
@@ -303,6 +303,16 @@ def gauss_seeing(npix = None,fwhm=None,e1=None,e2=None):
     img = np.exp(-0.5/(1-rho**2)*(row**2/Mrr + col**2/Mcc - 2*rho*row*col/np.sqrt(Mrr*Mcc)))
     res = img/img.sum()
     return res
+
+
+def moffat_seeing(npix = None, alpha=None,beta=None):
+    row,col = np.mgrid[-npix/2:npix/2,-npix/2:npix/2]
+    rowc = row.mean()
+    colc = col.mean()
+    img = (beta - 1)/(np.pi*alpha**2)/(1+((row**2+col**2)/alpha**2))**beta
+    res = img/img.sum()
+    return res
+
                  
    
 
@@ -348,7 +358,60 @@ def adaptiveCentroid(data=None,sigma=None):
     return rowmean,colmean
 
          
+def des_image(exptime=100,mag=None, Nstar=1,ccd=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,suband=None,regular=False,setbkg=True):
+    """
+    This code generate a PSF star with seeing and sky background
+    exptime is given in sec
+    """
+    gain = 0.21 # convert electrons to ADU
+    zeropoint = 26.794176 # r band, from Nikolay
+    objectphoton = exptime*10**(0.4*(zeropoint - mag))
+    if setbkg == False:
+        skyphoton = 0.
+    else:
+        skyphoton = 8.460140*exptime
+    bkg = skyphoton*gain
+    res = genImgV(filename=None,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, phi=phi,corrector=corrector,x=x,y=y,z=z,suband=suband,regular=regular)
+    if Nstar == 1:
+        psf = res[0][0][4:].reshape(npix,npix)
+        img = (psf * objectphoton + skyphoton)*gain
+        img = img + np.sqrt(img)
+        img = rebin(img,(40,40))
+        psf = rebin(psf,(40,40))
+    if Nstar > 1:
+        img = []
+        psf = []
+        for i in range(Nstar):
+           psfi = res[0][i][4:].reshape(npix,npix)
+           imgi = (psf * objectphoton + skyphoton)*gain
+           imgi = imgi+np.sqrt(imgi)
+           imgi = rebin(imgi,(40,40))
+           psfi = rebin(psfi,(40,40))
+           img.append(imgi = np.sqrt(imgi))
+           psf.append(psfi)
+    return img,bkg,psf
 
+
+def des_psf_image(exptime=100,mag=None,seeing=[0.9,0.,0.],npix=npix,setbkg=True):
+    
+    """
+    This code generate a PSF star with seeing and sky background (no optics psf)
+    exptime is given in sec
+    """
+    gain = 0.21 # convert electrons to ADU
+    zeropoint = 26.794176 # r band, from Nikolay
+    objectphoton = exptime*10**(0.4*(zeropoint - mag))
+    if setbkg == False:
+        skyphoton = 0.
+    else:
+        skyphoton = 8.460140*exptime
+    bkg = skyphoton*gain
+    psf = gauss_seeing(npix,seeing[0],seeing[1],seeing[2])
+    img = (psf * objectphoton + skyphoton)*gain
+    img = img + np.sqrt(img)
+    img = rebin(img,(40,40))
+    psf = rebin(psf,(40,40))
+    return img,bkg,psf
 
 
 def complexMoments(data=None,sigma=None):
@@ -445,6 +508,7 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r'
     #---output the result as an image vector
     b=pf.getdata(dir+'temp.fit')
     if seeing != 0.:
+        #b=addseeingImgFFTmoffat(b,alpha=3., beta=0.7)
         b=addseeingImgFFT(b,fwhm=seeing[0],e1=seeing[1],e2=seeing[2])
     hdr = pf.getheader(dir+'temp.fit')
     ypstamp,xpstamp = nd.center_of_mass(b) # y -> row, x-> col
@@ -618,7 +682,7 @@ def disImgCCD(imgV=None,ccd=None):
     return 'The image is done!'
 
   
-def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,contour=False,sigma=1.1/scale,npix=None,phi=0,zenith=0):
+def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,contour=False,sigma=1.08/scale,npix=None,phi=0,zenith=0):
     xmm = ccd[1]
     ymm = ccd[2]
     res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,x=x,y=y,z=z,npix=npix,zenith=zenith,phi=phi)
@@ -626,6 +690,7 @@ def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,conto
     img = data[0][4:].reshape(npix,npix)
     npix = npix/4
     scale = 0.27
+    sigma= sigma/4.
     img = rebin(img,(npix,npix))
     mfit = mfwhm(img)
     gfit = gfwhm(img)
@@ -635,10 +700,12 @@ def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,conto
     pl.figure(figsize=(18,6))
     pl.subplot(1,3,1)
     pl.matshow(img,fignum=False)
+    stampImg = img.copy()
     pl.xlabel('Pixel')
     pl.ylabel('Pixel')
     pl.grid(color='y')
     rowCen,colCen = adaptiveCentroid(data=img,sigma=sigma)
+    M20, M22, M31, M33 =complexMoments(stampImg,sigma=sigma)
     pl.figtext(0.15,0.8, 'e1: '+str(round(wfit[0],3)) + ',  e2: '+str(round(wfit[1],3)), color='r')
     pl.figtext(0.15,0.75, 'rowCen: '+str(round(rowCen,4)) + ',  colCen: '+str(round(colCen,4)), color='r')
     pl.figtext(0.15,0.7, 'PSF whisker_Wmoments: '+str(round(wfit[2]*scale,4))+' [arcsec]', color='r')
@@ -684,8 +751,16 @@ def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,conto
     pl.figtext(0.65,0.5,'FWHM_Sech2: '+str(round(s2fit[3]*scale,3))+ ' arcsec')
     pl.figtext(0.65,0.45,'FWHM_Wmoments: '+str(round(wfit[3]*scale,3))+ ' arcsec') 
     pl.figtext(0.65,0.4,'FWHM_Amoments: '+str(round(g2dfit[3]*scale,3))+ ' arcsec') 
+    pl.figtext(0.65,0.35,'M20: '+str(round(M20,5))+ ' pix')
+    pl.figtext(0.65,0.3,'M22.real: '+str(round(M22.real,5))+ ' pix')
+    pl.figtext(0.8,0.3,'M22.imag: '+str(round(M22.imag,5))+ ' pix')
+    pl.figtext(0.65,0.25,'M31.real: '+str(round(M31.real,5))+ ' pix')
+    pl.figtext(0.8,0.25,'M31.imag: '+str(round(M31.imag,5))+ ' pix')
+    pl.figtext(0.65,0.2,'M33.real: '+str(round(M33.real,5))+ ' pix')
+    pl.figtext(0.8,0.2,'M33.imag: '+str(round(M33.imag,5))+ ' pix')
+
     #return M20*scale**2,M22*scale**2,M31*scale**2,M33*scale**2
-    return img
+    return stampImg
 
 def decompPCA(data=None,comp=None):
     img = data[:,2:].T
@@ -729,6 +804,17 @@ def addseeingImgFFT(img = None,fwhm=1.,e1=0.,e2=0.):
     covimg = convolveH(img,kern)
     covimg = covimg/covimg.sum()
     return covimg
+
+def addseeingImgFFTmoffat(img = None,alpha=None,beta=None):
+    """
+    fwhm input in the unit of the arcsec
+    """
+    kern = moffat_seeing(npix,alpha=alpha,beta=beta)
+    img = img.astype('f') # required for the fftconvolve
+    covimg = convolveH(img,kern)
+    covimg = covimg/covimg.sum()
+    return covimg
+
 
 
 def addseeing(filename=None,fwhm=1.,e1=0.,e2=0.,fft=True):
@@ -1107,13 +1193,20 @@ def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r',
         M31=np.zeros(Nobj).astype(complex)
         M33=np.zeros(Nobj).astype(complex)
         #sigma = 1.1/0.27
-        sigma = 1.08/scale
+        #scale=0.27
+        #sigma = 1.08/scale
         for i in range(Nobj):
-            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=hdui.data[i][4:].reshape(npix,npix),sigma=sigma)
+            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=rebin(hdui.data[i][4:].reshape(npix,npix),(40,40)),sigma=2.)
         x=hdui.header['ccdXcen']
         y=hdui.header['ccdYcen']
         data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
     data=np.array(data)
+    datam = data.copy()
+    #---add 20 percent noise --
+    #data = addMomentsNoise(data,5.)
+    
+    # remove the mean for M31 and M33
+    #data = subMeanM3x(data)
     pl.figure(figsize=(12,12))
     pl.subplot(2,2,1)
     phi22 = 0.5*np.arctan2(data[:,3].imag,data[:,3].real)
@@ -1168,7 +1261,15 @@ def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r',
     pl.ylim(-250,250)
     #pl.boxplot(np.sqrt(data[:,2].real)*scale)
     pl.title('median '+r'$\sqrt{M20}$: '+str(round(np.median(scale*np.sqrt(data[:,2].real)),3))+' [arcsec]')
-    return '----done!---'
+    return datam
+
+def addMomentsNoise(data,percent):
+    noise = data[:,2:]*percent
+    noise = noise*np.random.randn(noise.shape[0],noise.shape[1])
+    data[:,2:] = data[:,2:]+noise
+    return data
+
+
 
 def coeff_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=0.,y=0.,z=0.,zernike_max_order=20,regular=False):
     """
@@ -1743,59 +1844,93 @@ def validateFit(Tfile=None,Vfile=None,PCA=False,alg='NNR'):
     pl.title('phi angle [deg]')
     return vparaTrue,vparaReg
 
+def remM3xZernike(tdata):
+    """
+    This code remove the 0th zernike coefficient for the M31, M33 from the training and validation data object. The data has 140 columns, from 0 - 59 are the 2nd moments coefficients. 60, 80, 100, 120 are the 0th coefficients for the 3rd moments. We remove them from the data structure.    
+    """
+    idx = np.concatenate((np.arange(0,60),np.arange(61,80),np.arange(81,100),np.arange(101,120),np.arange(121,140)))
+    datanew = tdata[:,idx]
+    return datanew
 
 
-def validateFitNew(Tfile=None,Vfile=None,PCA=False,alg='NNR'):
+def subMeanM3x(data=None):
+    """
+    this code subtract the mean of the 3rd moments from the data. This is to remove the tracking errors. The data is a matrix with 6 columns. The columns are 
+    x, y, M20, M22, M31, M33
+    """
+    datamean = data.mean(axis = 0)
+    data[:,4:6] = data[:,4:6] - datamean[4:6]
+    return data
+
+
+def validateFitNew(Tfile=None,Vfile=None,PCA=False,alg='NNR',scatter=False):
     b=p.load(open(Tfile))
     vb = p.load(open(Vfile))
     nobs = len(b)
-    tdata=b[:,8:]
-    ttpara=b[:,0:5]
-    vdata = vb[:,8:]
-    vvparaTrue=vb[:,0:5]
+    tdata=b[:,8:].copy()
+    ttpara=b[:,0:5].copy()
+    tpara = b[:,0:5].copy()
+    vdata = vb[:,8:].copy()
+    vparaTrue=vb[:,0:5].copy()
+    vvparaTrue=vb[:,0:5].copy()
     tpara[:,3] = ttpara[:,3]*np.cos(np.deg2rad(ttpara[:,4]))
     tpara[:,4] = ttpara[:,3]*np.sin(np.deg2rad(ttpara[:,4]))
     vparaTrue[:,3] = vvparaTrue[:,3]*np.cos(np.deg2rad(vvparaTrue[:,4]))
     vparaTrue[:,4] = vvparaTrue[:,3]*np.sin(np.deg2rad(vvparaTrue[:,4]))
+    # remove the 0th coeff for 3rd moments
+    tdata = remM3xZernike(tdata)
+    vdata = remM3xZernike(vdata)
     tdata,vdata = standardizeData(tdata,vdata)
     if PCA == True:
         evlue, eigvector,tdata=getPCA(tdata)
         vdata=np.dot(vdata,eigvector)
     if alg == 'NNR':
-        vparaReg=KNeighborRegression(tdata,tpara,vdata,15)
+        vparaReg=KNeighborRegression(tdata,tpara,vdata,10)
     if alg == 'SVM':
         vparaReg = SVMRegression(tdata,tpara,vdata)
     pl.figure(figsize=(17,10))
     pl.subplot(2,3,1)
-    bp.bin_scatter(vparaTrue[:,0],vparaReg[:,0],binsize=0.005,fmt='b.')
+    bp.bin_scatter(vparaTrue[:,0],vparaReg[:,0],binsize=0.01,fmt='b.',scatter=scatter)
     pl.plot([vparaTrue[:,0].min(),vparaTrue[:,0].max()],[vparaTrue[:,0].min(),vparaTrue[:,0].max()],'r-')
     pl.xlabel('True Value')
     pl.ylabel('Regression Value')
     pl.title('x shift [mm]')
+    pl.xlim(-0.1,0.1)
+    pl.ylim(-0.1,0.1)
     pl.subplot(2,3,2)
-    bp.bin_scatter(vparaTrue[:,1],vparaReg[:,1],binsize=0.005,fmt='b.')
+    bp.bin_scatter(vparaTrue[:,1],vparaReg[:,1],binsize=0.01,fmt='b.',scatter=scatter)
     pl.plot([vparaTrue[:,1].min(),vparaTrue[:,1].max()],[vparaTrue[:,1].min(),vparaTrue[:,1].max()],'r-')
     pl.xlabel('True Value')
     pl.ylabel('Regression Value')
     pl.title('y shift [mm]')
+    pl.xlim(-0.1,0.1)
+    pl.ylim(-0.1,0.1)
     pl.subplot(2,3,3)
-    bp.bin_scatter(vparaTrue[:,2],vparaReg[:,2],binsize=0.005,fmt='b.')
+    bp.bin_scatter(vparaTrue[:,2],vparaReg[:,2],binsize=0.01,fmt='b.',scatter=scatter)
     pl.plot([vparaTrue[:,2].min(),vparaTrue[:,2].max()],[vparaTrue[:,2].min(),vparaTrue[:,2].max()],'r-')
     pl.xlabel('True Value')
     pl.ylabel('Regression Value')
     pl.title('defocus [mm]')
+    pl.xlim(-0.1,0.1)
+    pl.ylim(-0.1,0.1)
+
     pl.subplot(2,3,4)
-    bp.bin_scatter(vparaTrue[:,3],vparaReg[:,3],binsize=3,fmt='b.')
+    bp.bin_scatter(vparaTrue[:,3],vparaReg[:,3],binsize=5,fmt='b.',scatter=scatter)
     pl.plot([vparaTrue[:,3].min(),vparaTrue[:,3].max()],[vparaTrue[:,3].min(),vparaTrue[:,3].max()],'r-')
     pl.xlabel('True Value')
     pl.ylabel('Regression Value')
     pl.title('tilt angle in x direction [arcsec]')
+    pl.xlim(-40,40)
+    pl.ylim(-40,40)
+
     pl.subplot(2,3,5)
-    bp.bin_scatter(vparaTrue[:,4],vparaReg[:,4],binsize=3,fmt='b.')
+    bp.bin_scatter(vparaTrue[:,4],vparaReg[:,4],binsize=5,fmt='b.',scatter=scatter)
     pl.plot([vparaTrue[:,4].min(),vparaTrue[:,4].max()],[vparaTrue[:,4].min(),vparaTrue[:,4].max()],'r-')
     pl.xlabel('True Value')
     pl.ylabel('Regression Value')
-    pl.title('tilt angle in x direction [arcsec]')
+    pl.title('tilt angle in y direction [arcsec]')
+    pl.xlim(-40,40)
+    pl.ylim(-40,40)
     return vparaTrue,vparaReg
 
 
@@ -1844,7 +1979,10 @@ if __name__ == '__main__':
     #validateFit(Tfile,Vfile)
 
     Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_training.cp'
-    Vfile = '/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_validation.cp'
+    Vfile = '/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_validate.cp'
+
+    Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/partialdata/zernike_coeff_finerGrid_training.cp'
+    Vfile = '/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/partialdata/zernike_coeff_finerGrid_validation.cp'
 
     # combine files ---
     f1=p.load(open('zernike_coeff_finerGrid_des04.cp','r'))
@@ -1858,8 +1996,8 @@ if __name__ == '__main__':
     p.dump(f,open('zernike_coeff_finerGrid_all.cp','w'),2)
     rnd = np.random.rand(len(f[:,1]))
     idx =np.argsort(rnd)
-    training = f[idx[0:500],]
-    validate = f[idx[500:],]
+    validate = f[idx[0:500],]
+    training = f[idx[500:],]
     p.dump(training,open('zernike_coeff_finerGrid_training.cp','w'),2)
     p.dump(validate,open('zernike_coeff_finerGrid_validate.cp','w'),2)
     
