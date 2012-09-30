@@ -14,17 +14,16 @@ from DECamCCD_def import *
 if len(sys.argv) == 1:
     print 'syntax: '
     print 'masterBias biasFileHead, expids'
-    print 'example: masterBias decam (12345,12346,12347)'
+    print 'example: masterBias decam 12345 12346 12347'
     print 'The resulting median image will be named as masterBias.fits'
 else:
     filehead = sys.argv[1]
-    expid = eval(sys.argv[2])
-    nimg=len(expid)
-    hdu = pf.open(filehead+'_'+str(expid[0])+'.fits.fz') # need to funpack first
+    nimg=len(sys.argv) - 2
+    hdu = pf.open(filehead+'_'+sys.argv[2]+'.fits.fz') # need to funpack first
     for ext in range(1,63):
         for j in range(0,nimg):
             b=[]
-            filename = filehead+str(expid[j])+'.fits.fz'
+            filename = filehead+sys.argv[2+j]+'.fits.fz'
             imgext = pf.getdata(filename,ext)
             imgosub = oscanSub(imgext)
             b.append(imgosub)
