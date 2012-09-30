@@ -24,7 +24,7 @@ else:
     for ext in range(1,63):
         for j in range(0,nimg):
             b=[]
-            filename = filehead+str(expid[j])+'.fits'
+            filename = filehead+str(expid[j])+'.fits.fz'
             imgext = pf.getdata(filename,ext)
             imgosub = oscanSub(imgext)
             b.append(imgosub)
