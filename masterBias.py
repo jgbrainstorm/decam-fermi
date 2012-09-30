@@ -37,4 +37,4 @@ else:
     elapseTime=endTime-startTime
     hdu.writeto('masterBias.fits')
     print '---elapsed time: ' + str(elapseTime)
-return '----done -----'
+
