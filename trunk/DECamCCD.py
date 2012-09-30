@@ -386,8 +386,10 @@ def oscanSub(img):
     #(aR,bR,sda,sdb,se)=linefit(rowR,mdR)
     #oscanLfit=rowL*bL+aL
     #oscanRfit=rowR*bR+aR
-    img[:,0:2104] = img[:,0:2104] - mdL #oscanLfit
-    img[:,2104:] = img[:,2104:] - mdR #oscanRfit
+    for i in range(1080):
+        img[:,i] = img[:,i] - mdL #oscanLfit
+        img[:,1080+i] = img[:,1080+i] - mdR #oscanRfit
+
     return img
 
 #------subtract the overscan-------
