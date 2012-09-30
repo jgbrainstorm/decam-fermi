@@ -376,8 +376,8 @@ def oscanSub(img):
     """
     Note that this code only subtract the overscan of individual 4k x 2k imaging ccd from DECam. The L and R is only for the fits image. This is the most recent one as of 9/30/2012 J. Hao
     """
-    oscanL = img[100:4000,10:50]
-    oscanR = img[100:4000,2110:2150]
+    oscanL = img[:,10:50]
+    oscanR = img[:,2110:2150]
     mdL=np.median(oscanL,axis=1)
     mdR=np.median(oscanR,axis=1)
     #rowL=np.arange(0,mdL.shape[0])
