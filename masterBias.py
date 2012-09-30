@@ -22,6 +22,7 @@ else:
     nimg=len(sys.argv) - 2
     hdu = pf.open(filehead+'_'+sys.argv[2]+'.fits.fz') # need to funpack first
     for ext in range(1,63):
+        print ext
         for j in range(0,nimg):
             b=[]
             filename = filehead+'_'+sys.argv[2+j]+'.fits.fz'
