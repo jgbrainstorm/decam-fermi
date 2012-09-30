@@ -11,11 +11,9 @@ sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi')
 import glob as gl
 from DECamCCD_def import *
 
-
-
 if len(sys.argv) == 1:
     print 'syntax: '
-    print 'For a given set of images: masterFlat masterBiasName FlatFileHead expids '
+    print 'masterFlat.py masterBiasName FlatFileHead expids '
     print 'example: masterFlat masterBias.fits decam 12345 12346 12347'
     print 'The resulting median image will be named as masterFlat.fits'
 else:
@@ -39,4 +37,4 @@ else:
     endTime=time.time()
     elapseTime=endTime-startTime
     print '---elapsed time: ' + str(elapseTime)
-    return '----done ---'
+return '----done ---'
