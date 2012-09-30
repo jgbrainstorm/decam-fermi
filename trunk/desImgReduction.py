@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 """
-This code performe the bias and flat field subtration. All the frames are overscan subtracted. 
+This code performe the bias and flat field correction. All the frames are overscan subtracted. Before you perform this, you need to have masterBias and masterFlat readay
 J. Hao @ FNAL, 9/30/2012
 """
 import numpy as np
@@ -10,40 +10,30 @@ import sys
 sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi')
 import glob as gl
 from DECamCCD_def import *
+from DECamCCD import *
+
 
 if len(sys.argv) == 1:
     print 'syntax: '
-    print 'For a given set of images: medianImg image1.fits image2.fits ... '
-    print 'For all images in the current dir: medianImg all'
-    print 'The resulting median image will be named as median.fits'
-elif sys.argv[1]=='all':
-    ff=gl.glob('*.fits')
-    nimg=len(ff)
-    hdu=pf.open(ff[0])
-    hdu.verify('silentfix')
-    nExt=len(hdu)
-    for i in range(1,nExt):
-        print i
-        for j in range(0,nimg):
-            b=[]
-            imgext = pf.getdata(ff[j],i)
-            imgosub = oscanSub(imgext)
-            b.append(imgosub)
-        hdu[i].data=np.median(b,axis=0)
-        hdu[i].header.update('bzero',0)
-    hdu.writeto('median.fits')
+    print '   desImgReduction masterBias masterFlat ImgFileHead epxid  '
+    print 'example:' 
+    print '   desImgReduction masterBias.fits masterFlat.fits DECam 001234 0023456'
+
 else:
-    nimg=len(sys.argv)-1
-    hdu=pf.open(sys.argv[1])
-    hdu.verify('silentfix')
-    nExt=len(hdu)
-    for i in extidx:
-        print i
-        for j in range(1,nimg+1):
-            b=[]
-            imgext = pf.getdata(sys.argv[j],i)
-            imgosub = oscanSub(imgext)
-            b.append(imgosub)
-        hdu[i].data=np.median(b,axis=0)
-        hdu[i].header.update('bzero',0)
-    hdu.writeto('masterBias.fits')
+    startTime=time.time()
+    bias = sys.argv[1]
+    flat = sys.argv[2]
+    filehead = sys.argv[3]
+    nimg=len(sys.argv) - 4
+    
+    for i in range(nimg):
+        hdu = pf.open(filehead+'_'+sys.argv[4+i]+'.fits') # need to funpack first
+        for ext in range(1,63):
+            print ext
+            hdu[ext].data = (oscanSub(hdu[ext].data) - pf.getdata(bias,ext))/pf.getdata(flat,ext)
+        hdu.write(filehead+'_'+sys.argv[4+i]+'_corrected.fits')
+    endTime=time.time()
+    elapseTime=endTime-startTime
+    print '---elapsed time: ' + str(elapseTime)
+
+    
