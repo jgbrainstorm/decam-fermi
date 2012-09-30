@@ -35,5 +35,6 @@ else:
         hdu[ext].header.update('bzero',0)
     endTime=time.time()
     elapseTime=endTime-startTime
-    print '---elapsed time: ' + str(elapseTime)
     hdu.writeto('masterBias.fits')
+    print '---elapsed time: ' + str(elapseTime)
+    return '----done -----'
