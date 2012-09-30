@@ -10,6 +10,7 @@ import sys,time
 sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi')
 import glob as gl
 from DECamCCD_def import *
+from DECamCCD import *
 
 if len(sys.argv) == 1:
     print 'syntax: '
