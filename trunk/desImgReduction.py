@@ -31,7 +31,7 @@ else:
         for ext in range(1,63):
             print ext
             hdu[ext].data = (oscanSub(hdu[ext].data) - pf.getdata(bias,ext))/pf.getdata(flat,ext)
-        hdu.write(filehead+'_'+sys.argv[4+i]+'_corrected.fits.fz')
+        hdu.writeto(filehead+'_'+sys.argv[4+i]+'_corrected.fits.fz')
     endTime=time.time()
     elapseTime=endTime-startTime
     print '---elapsed time: ' + str(elapseTime)
