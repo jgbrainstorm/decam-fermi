@@ -27,11 +27,11 @@ else:
     nimg=len(sys.argv) - 4
     
     for i in range(nimg):
-        hdu = pf.open(filehead+'_'+sys.argv[4+i]+'.fits.fz') # need to funpack first
+        hdu = pf.open(filehead+'_'+sys.argv[4+i]+'.fits',mode='update')
         for ext in range(1,63):
             print ext
             hdu[ext].data = (oscanSub(hdu[ext].data) - pf.getdata(bias,ext))/pf.getdata(flat,ext)
-        hdu.writeto(filehead+'_'+sys.argv[4+i]+'_corrected.fits.fz')
+        hdu.writeto(filehead+'_'+sys.argv[4+i]+'_corrected.fits')
     endTime=time.time()
     elapseTime=endTime-startTime
     print '---elapsed time: ' + str(elapseTime)
