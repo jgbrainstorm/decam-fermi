@@ -21,14 +21,22 @@ else:
     startTime=time.time()
     bias = sys.argv[1]
     sumpix = 0.
-    filehead = sys.argv[2]
-    nimg=len(sys.argv) - 3
-    hdu = pf.open(filehead+'_'+sys.argv[3]+'.fits') # need to funpack first
+    if sys.argv[2] == 'all':
+        filenamelist = gl.glob('*.fits')
+        nimg = len(filenamelist)
+        hdu = pf.open(filenamelist[0],mode='update')
+    else:   
+        filehead = sys.argv[2]
+        nimg=len(sys.argv) - 3
+        hdu = pf.open(filehead+'_'+sys.argv[3]+'.fits',mode='update') # need to funpack first
     for ext in range(1,63):
         print ext
         for j in range(0,nimg):
             b=[]
-            filename = filehead+'_'+sys.argv[3+j]+'.fits'
+            if sys.argv[2] == 'all':
+                filename = filenamelist[j]
+            else:
+                filehead+'_'+sys.argv[3+j]+'.fits'
             imgext = pf.getdata(filename,ext)
             imgosub = oscanSub(imgext)
             imgosub = imgosub - pf.getdata(bias,ext)    
