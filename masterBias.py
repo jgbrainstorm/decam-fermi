@@ -15,8 +15,9 @@ import time
 
 if len(sys.argv) == 1:
     print 'syntax: '
-    print 'masterBias biasFileHead, expids'
-    print 'example: masterBias decam 12345 12346 12347'
+    print '    masterBias biasFileHead, expids'
+    print 'example: '
+    print '    masterBias DECam 12345 12346 12347'
     print 'The resulting median image will be named as masterBias.fits'
 else:
     startTime=time.time()

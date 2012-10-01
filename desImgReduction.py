@@ -6,7 +6,7 @@ J. Hao @ FNAL, 9/30/2012
 """
 import numpy as np
 import pyfits as pf
-import sys
+import sys,time
 sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi')
 import glob as gl
 from DECamCCD_def import *
@@ -27,11 +27,11 @@ else:
     nimg=len(sys.argv) - 4
     
     for i in range(nimg):
-        hdu = pf.open(filehead+'_'+sys.argv[4+i]+'.fits') # need to funpack first
+        hdu = pf.open(filehead+'_'+sys.argv[4+i]+'.fits.fz') # need to funpack first
         for ext in range(1,63):
             print ext
             hdu[ext].data = (oscanSub(hdu[ext].data) - pf.getdata(bias,ext))/pf.getdata(flat,ext)
-        hdu.write(filehead+'_'+sys.argv[4+i]+'_corrected.fits')
+        hdu.write(filehead+'_'+sys.argv[4+i]+'_corrected.fits.fz')
     endTime=time.time()
     elapseTime=endTime-startTime
     print '---elapsed time: ' + str(elapseTime)
