@@ -20,7 +20,7 @@ if len(sys.argv) == 1:
 else:
     startTime=time.time()
     bias = sys.argv[1]
-    sumvalue=[]
+    sumpix = 0.
     filehead = sys.argv[2]
     nimg=len(sys.argv) - 3
     hdu = pf.open(filehead+'_'+sys.argv[3]+'.fits') # need to funpack first
@@ -33,14 +33,17 @@ else:
             imgosub = oscanSub(imgext)
             imgosub = imgosub - pf.getdata(bias,ext)    
             b.append(imgosub)
-        col0=hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[0].split(':')[0]
-        col1=hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[0].split(':')[1]
-        row0=hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[1].split(':')[0]
-        row1=hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[1].split(':')[1]
+        col0=int(hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[0].split(':')[0])-1
+        col1=int(hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[0].split(':')[1]) 
+        row0=int(hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[1].split(':')[0])-1
+        row1=int(hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[1].split(':')[1]) 
         hdu[ext].data=np.median(b,axis=0)
-        hdu[ext].data[hdu[ext].data == 0.] = 0.00001 #avoid the blow up
-        hdu[ext].data[] = hdu[ext].data / robust_mean(hdu[ext].data)
+        hdu[ext].data[hdu[ext].data == 0.] = 0.0000001 #avoid the blow up
+        sumpix = sumpix+np.sum(hdu[ext].data[row0:row1,col0:col1]))
         hdu[ext].header.update('bzero',0)
+    globalMean = sumpix / (4096.*2048*62)
+    for ext in range(1,63):
+        hdu[ext].data[row0:row1,col0:col1] = hdu[ext].data[row0:row1,col0:col1]/globalMean
     hdu.writeto('masterFlat.fits')
     endTime=time.time()
     elapseTime=endTime-startTime
