@@ -39,7 +39,7 @@ else:
         row1=int(hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[1].split(':')[1]) 
         hdu[ext].data=np.median(b,axis=0)
         hdu[ext].data[hdu[ext].data == 0.] = 0.0000001 #avoid the blow up
-        sumpix = sumpix+np.sum(hdu[ext].data[row0:row1,col0:col1]))
+        sumpix = sumpix+np.sum(hdu[ext].data[row0:row1,col0:col1])
         hdu[ext].header.update('bzero',0)
     globalMean = sumpix / (4096.*2048*62)
     for ext in range(1,63):
