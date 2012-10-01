@@ -15,9 +15,9 @@ from DECamCCD import *
 
 if len(sys.argv) == 1:
     print 'syntax: '
-    print '   desImgReduction masterBias masterFlat ImgFileHead epxid  '
+    print '   desImgReduction.py masterBias masterFlat ImgFileHead epxid  '
     print 'example:' 
-    print '   desImgReduction masterBias.fits masterFlat.fits DECam 001234 0023456'
+    print '   desImgReduction.py masterBias.fits masterFlat.fits DECam 001234 0023456'
 
 else:
     startTime=time.time()

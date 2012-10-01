@@ -15,11 +15,12 @@ from DECamCCD import *
 if len(sys.argv) == 1:
     print 'syntax: '
     print '   masterFlat.py masterBiasName FlatFileHead expids '
-    print '   example: masterFlat masterBias.fits decam 12345 12346 12347'
+    print '   example: masterFlat.py masterBias.fits decam 12345 12346 12347'
     print '   The resulting median image will be named as masterFlat.fits'
 else:
     startTime=time.time()
     bias = sys.argv[1]
+    sumvalue=[]
     filehead = sys.argv[2]
     nimg=len(sys.argv) - 3
     hdu = pf.open(filehead+'_'+sys.argv[3]+'.fits') # need to funpack first
@@ -32,9 +33,13 @@ else:
             imgosub = oscanSub(imgext)
             imgosub = imgosub - pf.getdata(bias,ext)    
             b.append(imgosub)
+        col0=hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[0].split(':')[0]
+        col1=hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[0].split(':')[1]
+        row0=hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[1].split(':')[0]
+        row1=hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[1].split(':')[1]
         hdu[ext].data=np.median(b,axis=0)
         hdu[ext].data[hdu[ext].data == 0.] = 0.00001 #avoid the blow up
-        hdu[ext].data = hdu[ext].data / robust_mean(hdu[ext].data)
+        hdu[ext].data[] = hdu[ext].data / robust_mean(hdu[ext].data)
         hdu[ext].header.update('bzero',0)
     hdu.writeto('masterFlat.fits')
     endTime=time.time()
