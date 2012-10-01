@@ -23,15 +23,23 @@ else:
     startTime=time.time()
     bias = sys.argv[1]
     flat = sys.argv[2]
-    filehead = sys.argv[3]
-    nimg=len(sys.argv) - 4
-    
+    if sys.argv[3] == 'all':
+        filename = gl.glob('*.fits')
+        nimg = len(filename)
+    else:
+        filehead = sys.argv[3]
+        nimg=len(sys.argv) - 4
     for i in range(nimg):
-        hdu = pf.open(filehead+'_'+sys.argv[4+i]+'.fits',mode='update')
+        if sys.argv[3] == 'all':
+            hdu = pf.open(filename[i],mode='update')
+            correctedFilename = filename[i][0:-5]+'_corrected.fits'
+        else:
+            hdu = pf.open(filehead+'_'+sys.argv[4+i]+'.fits',mode='update')
+            correctedFilename = filehead+'_'+sys.argv[4+i]+'_corrected.fits'
         for ext in range(1,63):
             print ext
             hdu[ext].data = (oscanSub(hdu[ext].data) - pf.getdata(bias,ext))/pf.getdata(flat,ext)
-        hdu.writeto(filehead+'_'+sys.argv[4+i]+'_corrected.fits')
+        hdu.writeto(correctedFilename)
     endTime=time.time()
     elapseTime=endTime-startTime
     print '---elapsed time: ' + str(elapseTime)

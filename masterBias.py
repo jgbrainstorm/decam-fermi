@@ -21,14 +21,22 @@ if len(sys.argv) == 1:
     print 'The resulting median image will be named as masterBias.fits'
 else:
     startTime=time.time()
-    filehead = sys.argv[1]
-    nimg=len(sys.argv) - 2
-    hdu = pf.open(filehead+'_'+sys.argv[2]+'.fits') # need to funpack first
+    if sys.argv[2] == 'all':
+        filenamelist = gl.glob('*.fits')
+        nimg = len(filenamelist)
+        hdu = pf.open(filenamelist[0],mode='update')
+    else:
+        filehead = sys.argv[1]
+        nimg=len(sys.argv) - 2
+        hdu = pf.open(filehead+'_'+sys.argv[2]+'.fits',mode='update') # need to funpack first
     for ext in range(1,63):
         print ext
         for j in range(0,nimg):
             b=[]
-            filename = filehead+'_'+sys.argv[2+j]+'.fits'
+            if sys.argv[2] == 'all':
+                filename = filenamelist[j]
+            else:
+                filename = filehead+'_'+sys.argv[2+j]+'.fits'
             imgext = pf.getdata(filename,ext)
             imgosub = oscanSub(imgext)
             b.append(imgosub)
