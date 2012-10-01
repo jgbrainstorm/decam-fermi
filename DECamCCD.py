@@ -358,6 +358,7 @@ def Img_sub(imageName=None,biasName=None,subName=None):
         imageHDU=pf.open(imageName)
         imageHDU.verify('silentfix')
         for i in range(1,len(imageHDU)):
+            print i
             imageHDU[i].data=pf.getdata(imageName,i)-pf.getdata(biasName,i)
             imageHDU[i].header.update('bzero',0)
         #imageHDU=scaleHDU(imageHDU)
@@ -367,6 +368,7 @@ def Img_sub(imageName=None,biasName=None,subName=None):
         imageHDU.verify('silentfix')
         NChannel = len(imageHDU)
         for i in range(1,len(imageHDU)):
+            print i
             imageHDU[i].data=pf.getdata(imageName,i)-pf.getdata(biasName,i)
             imageHDU[i].header.update('bzero',0)
         #imageHDU=scaleHDU(imageHDU)
