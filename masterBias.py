@@ -29,6 +29,7 @@ else:
         filehead = sys.argv[1]
         nimg=len(sys.argv) - 2
         hdu = pf.open(filehead+'_'+sys.argv[2]+'.fits',mode='update') # need to funpack first
+    hdu[0].header.update('PROCTYPE','Master Bias')
     for ext in range(1,63):
         print ext
         for j in range(0,nimg):

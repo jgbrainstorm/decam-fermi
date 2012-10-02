@@ -15,7 +15,11 @@ from DECamCCD import *
 if len(sys.argv) == 1:
     print 'syntax: '
     print '   masterFlat.py masterBiasName FlatFileHead expids '
-    print '   example: masterFlat.py masterBias.fits decam 12345 12346 12347'
+    print 'or:'
+    print '   masterFlat.py masterBiasName all'
+    print 'example: '
+    print 'masterFlat.py masterBias.fits decam 12345 12346 12347'
+    print 'masterFlat.py masterBias.fits all'
     print '   The resulting median image will be named as masterFlat.fits'
 else:
     startTime=time.time()
@@ -29,6 +33,7 @@ else:
         filehead = sys.argv[2]
         nimg=len(sys.argv) - 3
         hdu = pf.open(filehead+'_'+sys.argv[3]+'.fits',mode='update') # need to funpack first
+    hdu[0].header.update('PROCTYPE','Master Flat')
     for ext in range(1,63):
         print ext
         for j in range(0,nimg):
