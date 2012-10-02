@@ -15,8 +15,8 @@ else:
     b=pf.getdata(sys.argv[1],sys.argv[3])-pf.getdata(sys.argv[2],sys.argv[3])
     hdr=pf.getheader(sys.argv[1],sys.argv[3])
     if hdr['detpos'][0]=='N':
-            noiseL=np.std(b[300:600,20:40])
-            noiseR=np.std(b[300:600,2120:2140])
+            noiseL=np.std(b[300:600,20:40])/np.sqrt(2.)
+            noiseR=np.std(b[300:600,2120:2140])/np.sqrt(2.)
             bl=b[300:600,20:40]
             br=b[300:600,2120:2140]
     if hdr['detpos'][0]=='S':
