@@ -16,8 +16,12 @@ from DECamCCD import *
 if len(sys.argv) == 1:
     print 'syntax: '
     print '   desImgReduction.py masterBias masterFlat ImgFileHead epxid  '
+    print 'or:'
+    print '   desImgReduction.py masterBias masterFlat all'
+    print '   which process all the files in the current directory'
     print 'example:' 
     print '   desImgReduction.py masterBias.fits masterFlat.fits DECam 001234 0023456'
+    print '   desImgReduction.py masterBias.fits masterFlat.fits all'
 
 else:
     startTime=time.time()
@@ -36,6 +40,7 @@ else:
         else:
             hdu = pf.open(filehead+'_'+sys.argv[4+i]+'.fits',mode='update')
             correctedFilename = filehead+'_'+sys.argv[4+i]+'_corrected.fits'
+        hdu[0].header.update('PROCTYPE','Reduced')
         for ext in range(1,63):
             print ext
             hdu[ext].data = (oscanSub(hdu[ext].data) - pf.getdata(bias,ext))/pf.getdata(flat,ext)

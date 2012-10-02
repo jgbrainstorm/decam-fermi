@@ -2,79 +2,96 @@ import sys
 sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi')
 sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi/pyRaytrace')
 from decamRay import *
+import pickle as p
 
 hdu = pf.open('masterFlat.fits')
 data = []
-ccd = []
-gain2ap = np.genfromtxt('../fullwell.txt',dtype=None,names=['ccd','fw','gain'])['gain'][0:124]
-gain=[]
+ccd = np.genfromtxt('../fullwell.txt',dtype=None,names=['ccd','fw','gain'])['ccd'][0:124]
+gain = np.genfromtxt('../fullwell.txt',dtype=None,names=['ccd','fw','gain'])['gain'][0:124]
 
-for i in range(0,len(gain2ap),2):
-    gain.append((gain2ap[i]+gain2ap[i+1])*0.5)
-
-gain = np.array(gain)
+gain = gain[0:124]
 
 for ext in range(1,63):
-    x = eval(hdu[ext].header['detpos'])[1]
+    xhigh = eval(hdu[ext].header['detpos'])[1]+15.
+    xlow = eval(hdu[ext].header['detpos'])[1]-15.
     y = eval(hdu[ext].header['detpos'])[2]
-    col0=500
-    col1=1500
-    row0=500
-    row1=3500
-    mn = hdu[ext].data[row0:row1,col0:col1].mean()
-    sd = hdu[ext].data[row0:row1,col0:col1].std()
-    data.append([x,y,mn,sd])
-    ccd.append(eval(hdu[ext].header['detpos'])[0])
+    detector = hdu[ext].header['DETPOS']   
+    if detector[0]=='S':
+        # --- left---:
+        colmin=1360
+        colmax=1860
+        rowmin=500  
+        rowmax=3500
+        mn = hdu[ext].data[rowmin:rowmax,colmin:colmax].mean()
+        sd = hdu[ext].data[rowmin:rowmax,colmin:colmax].std()
+        mne = mn/gain[2*(ext-1)]
+        sde = sd/gain[2*(ext-1)]
+        x = xlow
+        data.append([x,y,mn,mne,sd,sde,gain[2*(ext-1)]])
+        # ---right ---:
+        colmin=300
+        colmax=800
+        rowmin=500
+        rowmax=3500
+        mn = hdu[ext].data[rowmin:rowmax,colmin:colmax].mean()
+        sd = hdu[ext].data[rowmin:rowmax,colmin:colmax].std()
+        mne = mn/gain[2*(ext-1)+1]
+        sde = sd/gain[2*(ext-1)+1]
+        x = xhigh
+        data.append([x,y,mn,mne,sd,sde,gain[2*(ext-1)+1]])
+ 
+    if detector[0]=='N':
+        # ---left ---:
+        colmin=300
+        colmax=800
+        rowmin=500
+        rowmax=3500
+        mn = hdu[ext].data[rowmin:rowmax,colmin:colmax].mean()
+        sd = hdu[ext].data[rowmin:rowmax,colmin:colmax].std()
+        mne = mn/gain[2*(ext-1)]
+        sde = sd/gain[2*(ext-1)]
+        x = xhigh
+        data.append([x,y,mn,mne,sd,sde,gain[2*(ext-1)]])
+
+        # --- right ---:
+        colmin=1360
+        colmax=1860
+        rowmin=500
+        rowmax=3500
+        mn = hdu[ext].data[rowmin:rowmax,colmin:colmax].mean()
+        sd = hdu[ext].data[rowmin:rowmax,colmin:colmax].std()
+        mne = mn/gain[2*(ext-1)+1]
+        sde = sd/gain[2*(ext-1)+1]
+        x = xlow
+        data.append([x,y,mn,mne,sd,sde,gain[2*(ext-1)+1]])
+
+
 data = np.array(data)
-ccd = np.array(ccd)
 srtidx = np.argsort(ccd)
 
+data = data[srtidx,:]
+np.savetxt('flatField.txt',data,fmt='%10.5f',delimiter=',')
+
 pl.figure(figsize=(16,8))
-pl.errorbar(np.arange(1,63),data[srtidx,2],yerr=data[srtidx,3],fmt='g.',label='flat ADU count')
-pl.xticks(np.arange(1,63)+0.5,ccd[srtidx],rotation=-90)
+pl.subplot(2,1,1)
+pl.bar(np.arange(0,62),data[0:62,3],yerr=data[0:62,5],color=['red','green'])
+pl.xticks(np.arange(0,62)+0.5,ccd[0:62],rotation=-90)
+pl.title('Photon Count of the Flat Field')
 
-pl.errorbar(np.arange(1,63),data[srtidx,2]/gain[srtidx],yerr=data[srtidx,3],fmt='b.',label='flat electron count')
-pl.xticks(np.arange(1,63)+0.5,ccd[srtidx],rotation=-90)
+pl.subplot(2,1,2)
+pl.bar(np.arange(0,62),data[62:125,3],yerr=data[62:125,5],color=['red','green'])
+pl.xticks(np.arange(0,62)+0.5,ccd[62:125],rotation=-90)
+pl.savefig('photon_count_flat.png')
 
-pl.errorbar(np.arange(1,63),1./gain[srtidx],yerr=data[srtidx,3],fmt='r.',label='gain')
-pl.xticks(np.arange(1,63)+0.5,ccd[srtidx],rotation=-90)
-pl.legend(loc='best')
-pl.savefig('flatfield.png')
-pl.close()
+pl.figure(figsize=(16,8))
+pl.subplot(2,1,1)
+pl.bar(np.arange(0,62),(data[0:62,3] - data[0:62,3].mean())/data[0:62,3].mean(),color=['red','green'])
+pl.xticks(np.arange(0,62)+0.5,ccd[0:62],rotation=-90)
+pl.title('Photon Count fractional variation of the Flat Field')
 
-
-pl.scatter(data[:,0],data[:,1],s=abs(data[:,2]-data[:,2].mean())*4000)
-pl.xlabel('West')
-pl.ylabel('North')
-pl.grid()
-pl.title('Variations of ADUs on')
-pl.savefig('adu_variation.png')
-pl.close()
-
-pl.figure(figsize=(10,10))
-pl.scatter(data[:,0],data[:,1],s=abs(1./gain-np.mean(1./gain))*1000,color='red')
-pl.xlabel('West')
-pl.ylabel('North')
-pl.grid()
-pl.title('Variations of Gains (e/adu)on masterFlat')
-pl.savefig('gain_variation.png')
-pl.close()
-
-pl.figure(figsize=(10,10))
-pl.scatter(data[:,0],data[:,1],s=abs(data[:,2]/gain-np.mean(data[:,2]/gain))*1000,color='green')
-pl.xlabel('West')
-pl.ylabel('North')
-pl.grid()
-pl.title('Variations of electrons on masterFlat')
-pl.savefig('electron_variation.png')
-pl.close()
+pl.subplot(2,1,2)
+pl.bar(np.arange(0,62),(data[62:125,3] - data[62:125,3].mean())/data[62:125,3].mean(),color=['red','green'])
+pl.xticks(np.arange(0,62)+0.5,ccd[62:125],rotation=-90)
+pl.savefig('fractional_photon_count_flat.png')
 
 
-betaMN,betaErr,R2_adj = zernikeFit(data[:,0],data[:,1],data[:,2]-data[:,2].mean(),max_order=10)
-
-betaMN,betaErr,R2_adj = zernikeFit(data[:,0],data[:,1],data[:,2],max_order=40)
-
-
-betaSD,betaErr,R2_adj = zernikeFit(data[:,0],data[:,1],data[:,3],max_order=20)
-
-showZernike(betaMN)
