@@ -21,11 +21,11 @@ else:
         b=pf.getdata(sys.argv[1],i)-pf.getdata(sys.argv[2],i)
         hdr=pf.getheader(sys.argv[1],i)
         if hdr['detpos'][0]=='N':
-            noiseL=np.std(b[100:2000,20:40])/np.sqrt(2.)
-            noiseR=np.std(b[100:2000,2120:2140])/np.sqrt(2.)
+            noiseL=np.std(b[300:600,20:40])/np.sqrt(2.)
+            noiseR=np.std(b[300:600,2120:2140])/np.sqrt(2.)
         if hdr['detpos'][0]=='S':
-            noiseL=np.std(b[100:2000,2120:2140])/np.sqrt(2.)
-            noiseR=np.std(b[100:2000,20:40])/np.sqrt(2.)       
+            noiseL=np.std(b[300:600,2120:2140])/np.sqrt(2.)
+            noiseR=np.std(b[300:600,20:40])/np.sqrt(2.)       
         ccd.append(hdr['detpos']+'_L')
         ccd.append(hdr['detpos']+'_R')
         noise.append(noiseL)
