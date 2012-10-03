@@ -72,6 +72,8 @@ srtidx = np.argsort(ccd)
 data = data[srtidx,:]
 np.savetxt('flatField.txt',data,fmt='%10.5f',delimiter=',')
 
+# ---photon count variation ----
+
 pl.figure(figsize=(16,8))
 pl.subplot(2,1,1)
 pl.bar(np.arange(0,62),data[0:62,3],yerr=data[0:62,5],color=['red','green'])
@@ -83,6 +85,7 @@ pl.bar(np.arange(0,62),data[62:125,3],yerr=data[62:125,5],color=['red','green'])
 pl.xticks(np.arange(0,62)+0.5,ccd[62:125],rotation=-90)
 pl.savefig('photon_count_flat.png')
 
+#-----fractional change ---
 pl.figure(figsize=(16,8))
 pl.subplot(2,1,1)
 pl.bar(np.arange(0,62),(data[0:62,3] - data[0:62,3].mean())/data[0:62,3].mean(),color=['red','green'])
