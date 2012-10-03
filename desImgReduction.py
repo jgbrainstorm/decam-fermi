@@ -36,14 +36,15 @@ else:
     for i in range(nimg):
         if sys.argv[3] == 'all':
             hdu = pf.open(filename[i],mode='update')
-            correctedFilename = filename[i][0:-5]+'_corrected.fits'
+            correctedFilename = filename[i][0:-5]+'_reduced.fits'
         else:
             hdu = pf.open(filehead+'_'+sys.argv[4+i]+'.fits',mode='update')
-            correctedFilename = filehead+'_'+sys.argv[4+i]+'_corrected.fits'
+            correctedFilename = filehead+'_'+sys.argv[4+i]+'_reduced.fits'
         hdu[0].header.update('PROCTYPE','Reduced')
         for ext in range(1,63):
             print ext
             hdu[ext].data = (oscanSub(hdu[ext].data) - pf.getdata(bias,ext))/pf.getdata(flat,ext)
+            hdu[ext].data = np.clip(hdu[ext].data,0,65536)
         hdu.writeto(correctedFilename)
     endTime=time.time()
     elapseTime=endTime-startTime
