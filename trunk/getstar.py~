@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+# build a catalog using sextractor on des image
+
+import sys,glob
+from DECamCCD import *
+
+
+def sextractor(image, output, sexdir='/Users/burns/CSP/template_subtraction/sex', check_img=None,config=None):
+   '''Construct a sextractor command and run it.'''
+   if sexdir[-1] != '/':  sexdir += '/'
+   com = ["sextractor", image, "-c "+sexdir+config,"-CATALOG_NAME "+output,"-CHECKIMAGE_NAME "+check_img]
+   com = string.join(com)
+   res = os.system(com)
+   return res
+
+
+
+baseDir = '/home/jghao/research/decamFocus/sextractor_config/image/'
+NameFits = baseDir + 'DECam_00137338_corrected.fits'
+for ext in extidx:
+    print ext
+    t=extract_extension(NameFits,ext)
+
+name = glob.glob(baseDir+'*exten*.fits')
+Nfile=len(name)
+
+sexdir='/home/jghao/research/decamFocus/sextractor_config/'
+
+for i in range(Nfile):
+    print i
+    img_name=name[i]
+    output=img_name[0:-5]+'_catalog.fits'
+    ckimg=img_name[0:-5]+'check.fits'
+    t=sextractor(img_name,output,sexdir=sexdir,check_img=ckimg,config="initial.sex")
+
+
+

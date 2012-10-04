@@ -12,11 +12,11 @@ try:
     import os,sys
     from DECamCCD_def import *
     import scipy.ndimage as nd
-    #import healpy as hp
+    import healpy as hp
     import glob as gl
     from scipy.misc import factorial as fac
-    #from scipy.signal import convolve2d
-    #from scipy.signal import fftconvole
+    from scipy.signal import convolve2d
+    from scipy.signal import fftconvolve
     import scipy.signal as sg
     import binplot as bp
     from scipy.optimize import leastsq
@@ -1178,7 +1178,7 @@ def zernike_diagnosis(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r
     return betaAll,betaErrAll, R2adjAll
 
 
-def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,regular=False):
+def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,regular=False):
     """
     This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
     """
@@ -1192,9 +1192,6 @@ def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r',
         M22=np.zeros(Nobj).astype(complex)
         M31=np.zeros(Nobj).astype(complex)
         M33=np.zeros(Nobj).astype(complex)
-        #sigma = 1.1/0.27
-        #scale=0.27
-        #sigma = 1.08/scale
         for i in range(Nobj):
             M20[i],M22[i],M31[i],M33[i]=complexMoments(data=rebin(hdui.data[i][4:].reshape(npix,npix),(40,40)),sigma=2.)
         x=hdui.header['ccdXcen']
@@ -1204,7 +1201,6 @@ def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r',
     datam = data.copy()
     #---add 20 percent noise --
     #data = addMomentsNoise(data,5.)
-    
     # remove the mean for M31 and M33
     #data = subMeanM3x(data)
     pl.figure(figsize=(12,12))
@@ -1215,7 +1211,8 @@ def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r',
     phi22[x<0] = phi22+np.deg2rad(180)
     u = np.sqrt(np.abs(data[:,3]))*np.cos(phi22)
     v = np.sqrt(np.abs(data[:,3]))*np.sin(phi22)
-    pl.quiver(x,y,u,v,width=0.004,color='r',pivot='middle',headwidth=2)
+    qvr = pl.quiver(x,y,u,v,width = 0.004, color='r',pivot='middle',headwidth=0.,headlength=0.,headaxislength=0.,scale_units='width')
+    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
     pl.plot(x,y,'b,')
     pl.xlim(-250,250)
     pl.ylim(-250,250)
@@ -1227,7 +1224,8 @@ def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r',
     phi31 = np.arctan2(data[:,4].imag,data[:,4].real)
     u = np.sqrt(np.abs(data[:,4]))*np.cos(phi31)
     v = np.sqrt(np.abs(data[:,4]))*np.sin(phi31)
-    pl.quiver(x,y,u,v,width=0.003,color='r',pivot='middle',headwidth=4)
+    qvr=pl.quiver(x,y,u,v,width=0.003,color='r',pivot='middle',headwidth=4)
+    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
     pl.plot(x,y,'b,')
     pl.xlim(-250,250)
     pl.ylim(-250,250)
@@ -1245,7 +1243,8 @@ def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r',
     pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
     u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33+np.deg2rad(240))
     v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33+np.deg2rad(240))
-    pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
+    qvr=pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
+    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
     pl.plot(x,y,'b,')
     pl.xlim(-250,250)
     pl.ylim(-250,250)
@@ -1254,13 +1253,15 @@ def moments_display(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r',
     pl.ylabel('Y [mm]')
     pl.title('M33')
     pl.subplot(2,2,4)
-    pl.quiver(x,y,np.sqrt(data[:,2].real),np.zeros(len(data[:,2].real)),headwidth=2,color='r',width=0.003,pivot='middle')
+    u = np.sqrt(data[:,2].real) - np.sqrt(data[:,2].real).min()
+    v = np.zeros(len(data[:,2].real))
+    qvr = pl.quiver(x,y,u,v,width = 0.008, color='r',pivot='middle',headwidth=0.,headlength=0.,headaxislength=0.,scale_units='width')
+    qk = pl.quiverkey(qvr, -150,-240,np.max(u),str(round(max(u),3))+' pix',coordinates='data',color='blue')
     pl.plot(x,y,'b,')
     pl.grid(color='g')
     pl.xlim(-250,250)
     pl.ylim(-250,250)
-    #pl.boxplot(np.sqrt(data[:,2].real)*scale)
-    pl.title('median '+r'$\sqrt{M20}$: '+str(round(np.median(scale*np.sqrt(data[:,2].real)),3))+' [arcsec]')
+    pl.title('median '+r'$\sqrt{M20}$: '+str(round(np.median(scale*4*np.sqrt(data[:,2].real)),3))+' [arcsec]')
     return datam
 
 def addMomentsNoise(data,percent):
@@ -1867,10 +1868,10 @@ def validateFitNew(Tfile=None,Vfile=None,PCA=False,alg='NNR',scatter=False):
     b=p.load(open(Tfile))
     vb = p.load(open(Vfile))
     nobs = len(b)
-    tdata=b[:,8:].copy()
+    tdata=b[:,8:28].copy()
     ttpara=b[:,0:5].copy()
     tpara = b[:,0:5].copy()
-    vdata = vb[:,8:].copy()
+    vdata = vb[:,8:28].copy()
     vparaTrue=vb[:,0:5].copy()
     vvparaTrue=vb[:,0:5].copy()
     tpara[:,3] = ttpara[:,3]*np.cos(np.deg2rad(ttpara[:,4]))
@@ -1878,8 +1879,8 @@ def validateFitNew(Tfile=None,Vfile=None,PCA=False,alg='NNR',scatter=False):
     vparaTrue[:,3] = vvparaTrue[:,3]*np.cos(np.deg2rad(vvparaTrue[:,4]))
     vparaTrue[:,4] = vvparaTrue[:,3]*np.sin(np.deg2rad(vvparaTrue[:,4]))
     # remove the 0th coeff for 3rd moments
-    tdata = remM3xZernike(tdata)
-    vdata = remM3xZernike(vdata)
+    #tdata = remM3xZernike(tdata)
+    #vdata = remM3xZernike(vdata)
     tdata,vdata = standardizeData(tdata,vdata)
     if PCA == True:
         evlue, eigvector,tdata=getPCA(tdata)
@@ -1972,12 +1973,8 @@ if __name__ == '__main__':
     #    pngname = filename[:-3]+'png'
     #    pl.savefig(pngname)
     #    pl.close()
-
-    #Tfile='/home/jghao/research/decamFocus/psf_withseeing/highres_small_psf_with_seeing_coeff_matrix/zernike_highres_small_coeff_data_matrix_all.cp'
-    #Vfile='/home/jghao/research/decamFocus/psf_withseeing/validation_highres_small/zernike_coeff_data_matrix_validation_hires_small_rebin.cp'
-    #Vfile='/home/jghao/research/decamFocus/psf_withseeing/validation_highres_small/zernike_coeff_data_matrix_validation_randomseeing.cp'
-    #validateFit(Tfile,Vfile)
-
+    """
+ 
     Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_training.cp'
     Vfile = '/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_validate.cp'
 
@@ -2000,7 +1997,8 @@ if __name__ == '__main__':
     training = f[idx[500:],]
     p.dump(training,open('zernike_coeff_finerGrid_training.cp','w'),2)
     p.dump(validate,open('zernike_coeff_finerGrid_validate.cp','w'),2)
-    
+    """
+
     t= moments_display(Nstar=1,npix = npix)
     pl.savefig('moments_seeing0.9.png')
     pl.close()
@@ -2038,6 +2036,7 @@ if __name__ == '__main__':
     pl.savefig('moments_seeing0.9_theta-30_phi90.png')
     pl.close()
     
+    """
     #-----coeff ------
     t= coeff_display(Nstar=1,npix = npix)
     pl.savefig('coeff_seeing0.9.png')
@@ -2075,4 +2074,4 @@ if __name__ == '__main__':
     t= coeff_display(Nstar=1,theta=-30,phi=90,npix = npix)
     pl.savefig('coeff_seeing0.9_theta-30_phi90.png')
     pl.close()
-    
+    """

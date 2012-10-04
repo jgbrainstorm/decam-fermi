@@ -1,14 +1,15 @@
 RAYPATTERN 18
-NPIX 40
-SCALE 0.27
+NPIX 160
+SCALE 0.0675
 FWHM 0.4
 ZENITH 0
 FILTER g
-XMM 16.908
-YMM 63.89
+PHI corrector 0
+XMM -16.908
+YMM 0.0
 WEIGHTS 1 0.9 0.8 0.7 0.6 
 THETA corrector 0.0
-X corrector 0
-Y corrector 0
+X corrector 0.0
+Y corrector 0.0
 Z corrector 0.0
-OUTPUT temp.fit
+OUTPUT /home/jghao/research/ggsvn/decam-fermi/pyRaytrace/temp.fit

@@ -1,9 +1,11 @@
+#! /usr/bin/env python
 import pylab as pl
 import numpy as np
 
 data1 = np.genfromtxt('/home/jghao/research/ccd/CTI_new/new_in_ctio/fullwell_12_7_2011.txt',dtype=None,names=['ccd','fw','gain'])
 data2 = np.genfromtxt('/home/jghao/research/ccd/CTI_new/new_in_ctio/fullwell_7_26_2012.txt',dtype=None,names=['ccd','fw','gain'])
 data3 = np.genfromtxt('/home/jghao/research/ccd/CTI_new/new_in_ctio/fullwell_9_27_2012.txt',dtype=None,names=['ccd','fw','gain'])
+data4 = np.genfromtxt('/home/jghao/research/ccd/CTI_new/new_in_ctio/fullwell_10_02_2012.txt',dtype=None,names=['ccd','fw','gain'])
 
 
 fw1 = data1['fw']
@@ -38,6 +40,17 @@ ccd3 = ccd3[idx3]
 gain3 = gain3[idx3]
 fwe3 = fw3/gain3
 
+fw4 = data4['fw']
+ccd4 = data4['ccd']
+gain4 = data4['gain']
+
+idx4 = np.argsort(ccd4)
+fw4 = fw4[idx4]
+ccd4 = ccd4[idx4]
+gain4 = gain4[idx4]
+fwe4 = fw4/gain4
+
+
 n = len(gain1)
 
 pl.figure(figsize=(20,10))
@@ -45,23 +58,28 @@ pl.subplot(2,1,1)
 pl.bar(np.arange(n/2),fwe1[0:n/2],width=0.2,color='pink',label='12/7/2012')
 pl.bar(np.arange(n/2)+0.2,fwe2[0:n/2],width=0.2,color='green',label='7/26/2012')
 pl.bar(np.arange(n/2)+0.4,fwe3[0:n/2],width=0.2,color='blue',label='9/27/2012')
+pl.bar(np.arange(n/2)+0.6,fwe4[0:n/2],width=0.2,color='red',label='10/2/2012')
+
 pl.xticks(np.arange(n/2)+0.5,ccd1[0:n/2],rotation=90)
 pl.hlines(130000,0,n/2,color='red',label='spec')
 pl.legend(loc = 'best')
-pl.ylim(-3000,250000)
+pl.ylim(-3000,400000)
+pl.grid()
 pl.ylabel('Fullwell (e-)')
 
 pl.subplot(2,1,2)
-pl.bar(np.arange(n/2),fwe1[0:n/2],width=0.2,color='pink',label='12/7/2012')
-pl.bar(np.arange(n/2)+0.2,fwe2[0:n/2],width=0.2,color='green',label='7/26/2012')
-pl.bar(np.arange(n/2)+0.4,fwe3[0:n/2],width=0.2,color='blue',label='9/27/2012')
-pl.xticks(np.arange(n/2)+0.5,ccd1[0:n/2],rotation=90)
+pl.bar(np.arange(n/2),fwe1[n/2:],width=0.2,color='pink',label='12/7/2012')
+pl.bar(np.arange(n/2)+0.2,fwe2[n/2:],width=0.2,color='green',label='7/26/2012')
+pl.bar(np.arange(n/2)+0.4,fwe3[n/2:],width=0.2,color='blue',label='9/27/2012')
+pl.bar(np.arange(n/2)+0.6,fwe4[n/2:],width=0.2,color='red',label='10/2/2012')
+pl.xticks(np.arange(n/2)+0.5,ccd1[n/2:],rotation=90)
 pl.hlines(130000,0,n/2,color='red',label='spec')
 pl.legend(loc = 'best')
-pl.ylim(-3000,250000)
+pl.ylim(-3000,400000)
 pl.ylabel('Fullwell (e-)')
+pl.grid()
 pl.savefig('fullwell_comp.png')
-
+pl.close()
 #---in adu---
 
 pl.figure(figsize=(20,10))
@@ -69,17 +87,51 @@ pl.subplot(2,1,1)
 pl.bar(np.arange(n/2),fw1[0:n/2],width=0.2,color='pink',label='12/7/2011')
 pl.bar(np.arange(n/2)+0.2,fw2[0:n/2],width=0.2,color='green',label='7/26/2012')
 pl.bar(np.arange(n/2)+0.4,fw3[0:n/2],width=0.2,color='blue',label='9/27/2012')
+pl.bar(np.arange(n/2)+0.6,fw4[0:n/2],width=0.2,color='red',label='10/2/2012')
+
 pl.xticks(np.arange(n/2)+0.5,ccd1[0:n/2],rotation=90)
 pl.legend(loc = 'best')
-pl.ylim(0,50000)
+pl.ylim(0,70000)
+pl.grid()
 pl.ylabel('Fullwell (ADU)')
 
 pl.subplot(2,1,2)
-pl.bar(np.arange(n/2),fw1[0:n/2],width=0.2,color='pink',label='12/7/2011')
-pl.bar(np.arange(n/2)+0.2,fw2[0:n/2],width=0.2,color='green',label='7/26/2012')
-pl.bar(np.arange(n/2)+0.4,fw3[0:n/2],width=0.2,color='blue',label='9/27/2012')
-pl.xticks(np.arange(n/2)+0.5,ccd1[0:n/2],rotation=90)
+pl.bar(np.arange(n/2),fw1[n/2:],width=0.2,color='pink',label='12/7/2011')
+pl.bar(np.arange(n/2)+0.2,fw2[n/2:],width=0.2,color='green',label='7/26/2012')
+pl.bar(np.arange(n/2)+0.4,fw3[n/2:],width=0.2,color='blue',label='9/27/2012')
+pl.bar(np.arange(n/2)+0.6,fw4[n/2:],width=0.2,color='red',label='10/2/2012')
+pl.xticks(np.arange(n/2)+0.5,ccd1[n/2:],rotation=90)
 pl.legend(loc = 'best')
-pl.ylim(0,50000)
+pl.ylim(0,70000)
+pl.grid()
 pl.ylabel('Fullwell (ADU)')
 pl.savefig('fullwell_comp_adu.png')
+
+#-----compare the gain ---
+
+pl.figure(figsize=(20,10))
+pl.subplot(2,1,1)
+pl.bar(np.arange(n/2),1./gain1[0:n/2],width=0.2,color='pink',label='12/7/2012')
+pl.bar(np.arange(n/2)+0.2,1./gain2[0:n/2],width=0.2,color='green',label='7/26/2012')
+pl.bar(np.arange(n/2)+0.4,1./gain3[0:n/2],width=0.2,color='blue',label='9/27/2012')
+pl.bar(np.arange(n/2)+0.6,1./gain4[0:n/2],width=0.2,color='red',label='10/2/2012')
+
+pl.xticks(np.arange(n/2)+0.5,ccd1[0:n/2],rotation=90)
+pl.legend(loc = 'best')
+pl.ylim(0,8)
+pl.grid()
+pl.ylabel('Gain (e-/ADU)')
+
+pl.subplot(2,1,2)
+pl.bar(np.arange(n/2),1./gain1[n/2:],width=0.2,color='pink',label='12/7/2012')
+pl.bar(np.arange(n/2)+0.2,1./gain2[n/2:],width=0.2,color='green',label='7/26/2012')
+pl.bar(np.arange(n/2)+0.4,1./gain3[n/2:],width=0.2,color='blue',label='9/27/2012')
+pl.bar(np.arange(n/2)+0.6,1./gain4[n/2:],width=0.2,color='red',label='10/2/2012')
+pl.xticks(np.arange(n/2)+0.5,ccd1[n/2:],rotation=90)
+pl.legend(loc = 'best')
+pl.ylim(0,8)
+pl.ylabel('Gain (e-/ADU)')
+pl.grid()
+pl.savefig('gain_comp.png')
+pl.close()
+#---in adu---
