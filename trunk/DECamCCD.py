@@ -393,7 +393,6 @@ def oscanSub(img):
     for i in range(1080):
         img[:,i] = img[:,i] - mdL #oscanLfit
         img[:,1080+i] = img[:,1080+i] - mdR #oscanRfit
-
     return img
 
 #------subtract the overscan-------
