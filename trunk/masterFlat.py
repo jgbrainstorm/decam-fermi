@@ -41,7 +41,7 @@ else:
             if sys.argv[2] == 'all':
                 filename = filenamelist[j]
             else:
-                filehead+'_'+sys.argv[3+j]+'.fits'
+                filename=filehead+'_'+sys.argv[3+j]+'.fits'
             imgext = pf.getdata(filename,ext)
             imgosub = oscanSub(imgext)
             imgosub = imgosub - pf.getdata(bias,ext)    
