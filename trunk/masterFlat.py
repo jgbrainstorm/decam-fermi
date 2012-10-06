@@ -54,8 +54,8 @@ else:
         hdu[ext].data[hdu[ext].data == 0.] = 0.0000001 #avoid the blow up
         sumpix = sumpix+np.sum(hdu[ext].data[row0:row1,col0:col1])
         hdu[ext].header.update('bzero',0)
-    globalMean = sumpix / (4096.*2048*62)
-    for ext in range(1,63):
+    globalMean = sumpix / (4096.*2048*62+4096.*1024*8)
+    for ext in range(1,71):
         hdu[ext].data[row0:row1,col0:col1] = hdu[ext].data[row0:row1,col0:col1]/globalMean
     hdu.writeto('masterFlat.fits')
     endTime=time.time()
