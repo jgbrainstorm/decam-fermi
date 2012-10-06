@@ -9,8 +9,11 @@ from DECamCCD import *
 import scipy.fftpack as fft
 
 
-def fftnoise(ext='N4',ionpump='on'):
-    if ionpump == 'on':
+def fftnoise(filename=None,ext='N4',ionpump='on'):
+    if filename != None:
+        b = pf.getdata(filename,ext)
+        hdr = pf.getheader(filename,ext)
+    elif ionpump == 'on':
         b=pf.getdata('/home3/data_local/images/fits/ptc_10_2_hao/bias/DECam_00137808.fits',ext)
         hdr=pf.getheader('/home3/data_local/images/fits/ptc_10_2_hao/bias/DECam_00137808.fits',ext)
     else:
