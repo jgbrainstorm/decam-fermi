@@ -34,7 +34,7 @@ else:
         nimg=len(sys.argv) - 3
         hdu = pf.open(filehead+'_'+sys.argv[3]+'.fits',mode='update') # need to funpack first
     hdu[0].header.update('PROCTYPE','Master Flat')
-    for ext in range(1,63):
+    for ext in range(1,71):
         print ext
         for j in range(0,nimg):
             b=[]
