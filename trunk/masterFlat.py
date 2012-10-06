@@ -56,6 +56,10 @@ else:
         hdu[ext].header.update('bzero',0)
     globalMean = sumpix / (4096.*2048*62+4096.*1024*8)
     for ext in range(1,71):
+        col0=int(hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[0].split(':')[0])-1
+        col1=int(hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[0].split(':')[1]) 
+        row0=int(hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[1].split(':')[0])-1
+        row1=int(hdu[ext].header['datasec'].split('[')[1].split(']')[0].split(',')[1].split(':')[1]) 
         hdu[ext].data[row0:row1,col0:col1] = hdu[ext].data[row0:row1,col0:col1]/globalMean
     hdu.writeto('masterFlat.fits')
     endTime=time.time()
