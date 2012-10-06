@@ -36,8 +36,8 @@ else:
     hdu[0].header.update('PROCTYPE','Master Flat')
     for ext in range(1,71):
         print ext
+        b=[]
         for j in range(0,nimg):
-            b=[]
             if sys.argv[2] == 'all':
                 filename = filenamelist[j]
             else:

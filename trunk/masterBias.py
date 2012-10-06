@@ -23,6 +23,7 @@ else:
     startTime=time.time()
     if sys.argv[2] == 'all':
         filenamelist = gl.glob('*.fits')
+        filenamelist.sort()
         nimg = len(filenamelist)
         hdu = pf.open(filenamelist[0],mode='update')
     else:
@@ -32,8 +33,8 @@ else:
     hdu[0].header.update('PROCTYPE','Master Bias')
     for ext in range(1,71):
         print ext
+        b=[]
         for j in range(0,nimg):
-            b=[]
             if sys.argv[2] == 'all':
                 filename = filenamelist[j]
             else:
