@@ -41,7 +41,7 @@ else:
             hdu = pf.open(filehead+'_'+sys.argv[4+i]+'.fits',mode='update')
             correctedFilename = filehead+'_'+sys.argv[4+i]+'_reduced.fits'
         hdu[0].header.update('PROCTYPE','Reduced')
-        for ext in range(1,63):
+        for ext in range(1,71):
             print ext
             hdu[ext].data = (oscanSub(hdu[ext].data) - pf.getdata(bias,ext))/pf.getdata(flat,ext)
             hdu[ext].data = np.clip(hdu[ext].data,0,65536)
