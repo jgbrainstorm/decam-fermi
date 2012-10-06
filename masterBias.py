@@ -21,7 +21,7 @@ if len(sys.argv) == 1:
     print 'The resulting median image will be named as masterBias.fits'
 else:
     startTime=time.time()
-    if sys.argv[2] == 'all':
+    if sys.argv[1] == 'all':
         filenamelist = gl.glob('*.fits')
         filenamelist.sort()
         nimg = len(filenamelist)
@@ -35,7 +35,7 @@ else:
         print ext
         b=[]
         for j in range(0,nimg):
-            if sys.argv[2] == 'all':
+            if sys.argv[1] == 'all':
                 filename = filenamelist[j]
             else:
                 filename = filehead+'_'+sys.argv[2+j]+'.fits'
