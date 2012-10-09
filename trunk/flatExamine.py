@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import sys
 sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi')
 sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi/pyRaytrace')
@@ -12,8 +14,8 @@ gain = np.genfromtxt('../fullwell.txt',dtype=None,names=['ccd','fw','gain'])['ga
 gain = gain[0:124]
 
 for ext in range(1,63):
-    xhigh = eval(hdu[ext].header['detpos'])[1]+15.
-    xlow = eval(hdu[ext].header['detpos'])[1]-15.
+    xhigh = eval(hdu[ext].header['detpos'])[1]+7.5
+    xlow = eval(hdu[ext].header['detpos'])[1]-7.5
     y = eval(hdu[ext].header['detpos'])[2]
     detector = hdu[ext].header['DETPOS']   
     if detector[0]=='S':
@@ -67,9 +69,7 @@ for ext in range(1,63):
 
 
 data = np.array(data)
-srtidx = np.argsort(ccd)
 
-data = data[srtidx,:]
 np.savetxt('flatField.txt',data,fmt='%10.5f',delimiter=',')
 
 # ---photon count variation ----
@@ -98,3 +98,20 @@ pl.xticks(np.arange(0,62)+0.5,ccd[62:125],rotation=-90)
 pl.savefig('fractional_photon_count_flat.png')
 
 
+#---make new plot based on the new flat -------------
+pl.figure(figsize=(10,10))
+b=np.genfromtxt('flatField_averageGain.txt',delimiter=',')
+pl.scatter(b[:,0],b[:,1],s=200*(b[:,3]-b[:,3].mean()),color='red',label='positive')
+pl.scatter(b[:,0],b[:,1],s=-200*(b[:,3]-b[:,3].mean()),color='blue',label='negative')
+pl.legend(loc='best')
+pl.title('photon count - mean photon count')
+pl.grid()
+pl.savefig('photon_distribution.png')
+pl.close()
+
+pl.figure(figsize=(10,10))
+beta,betaErr,R2 = zernikeFit(b[:,0],b[:,1],b[:,3]-b[:,3].mean(),max_order=15)
+showZernike(beta)
+pl.grid()
+pl.savefig('photon_distribution_zernike.png')
+pl.close()
