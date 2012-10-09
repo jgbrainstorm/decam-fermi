@@ -4,7 +4,7 @@ sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi/pyRaytrace')
 from decamRay import *
 import pickle as p
 
-hdu = pf.open('masterFlat.fits')
+hdu = pf.open('/data_local/images/fits/masterFlat/masterFlat.fits')
 data = []
 ccd = np.genfromtxt('../fullwell.txt',dtype=None,names=['ccd','fw','gain'])['ccd'][0:124]
 gain = np.genfromtxt('../fullwell.txt',dtype=None,names=['ccd','fw','gain'])['gain'][0:124]

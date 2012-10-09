@@ -1955,7 +1955,49 @@ def genValidation(n=None):
     t=measure_zernike_coeff(filelist)
     return '-----done!-----'
  
+def generateKNNobj():
+    """
+    This code generate the KNN object that fited by the training data using M20
+    """
+    Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_training.cp'
+    b=p.load(open(Tfile))
+    nobs = len(b)
+    tdata=b[:,8:28].copy()
+    #-standardize the data. use this information in future validation data too.
+    tmean = tdata.mean(axis=0)
+    tstd = tdata.std(axis=0)
+    tdata = (tdata - tmean)/tstd
+    ttpara=b[:,0:5].copy()
+    tpara = b[:,0:5].copy()
+    tpara[:,3] = ttpara[:,3]*np.cos(np.deg2rad(ttpara[:,4]))
+    tpara[:,4] = ttpara[:,3]*np.sin(np.deg2rad(ttpara[:,4]))
+    knn = nb.KNeighborsRegressor(algorithm='ball_tree',n_neighbors=15)
+    knn.fit(tdata,tpara)
+    p.dump(knn,open('finerGridKnnObj.cp','w'),2)
+    p.dump([tmean,tstd],open('finerGridStdConst.cp','w'),2)
+    #np.savetxt('finerGridStdConst.txt',np.array([tmean,tstd]),fmt='%f10.5',delimiter = ',')
+    return 'It is done !'
     
+
+def validateFitKnnObj(Vfile=None):
+    """
+    This function validate the results using the saved KNN object. It use only M20. 
+    """
+    vb = p.load(open(Vfile))
+    vdata = vb[:,8:28].copy()
+    vparaTrue=vb[:,0:5].copy()
+    vvparaTrue=vb[:,0:5].copy()
+    vparaTrue[:,3] = vvparaTrue[:,3]*np.cos(np.deg2rad(vvparaTrue[:,4]))
+    vparaTrue[:,4] = vvparaTrue[:,3]*np.sin(np.deg2rad(vvparaTrue[:,4]))
+
+    knn = p.load(open('finerGridKnnObj.cp','r'))
+    tmean,tstd = p.load(open('finerGridStdConst.cp','r'))
+    vdata = (vdata - tmean)/tstd
+    vparaReg = knn.predict(vdata)
+    
+
+
+
 
 if __name__ == '__main__':
 
@@ -1977,9 +2019,6 @@ if __name__ == '__main__':
  
     Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_training.cp'
     Vfile = '/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_validate.cp'
-
-    Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/partialdata/zernike_coeff_finerGrid_training.cp'
-    Vfile = '/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/partialdata/zernike_coeff_finerGrid_validation.cp'
 
     # combine files ---
     f1=p.load(open('zernike_coeff_finerGrid_des04.cp','r'))
