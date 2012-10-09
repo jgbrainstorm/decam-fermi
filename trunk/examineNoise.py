@@ -19,7 +19,7 @@ def fftnoise(filename=None,ext='N4',ionpump='on'):
     else:
         b = pf.getdata('/home3/data_local/images/fits/ptc_9_27_hao/bias/DECam_00136714.fits',ext)
         hdr = pf.getheader('/home3/data_local/images/fits/ptc_9_27_hao/bias/DECam_00136714.fits',ext)
-    timestep = 0.0001
+    timestep = 4e-9 # each pixel read out is 4 ns
 
     col0=int(hdr['BIASSECA'].split('[')[1].split(']')[0].split(',')[0].split(':')[0])-1
     col1=int(hdr['BIASSECA'].split('[')[1].split(']')[0].split(',')[0].split(':')[1])
