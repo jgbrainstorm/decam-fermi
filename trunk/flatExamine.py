@@ -24,7 +24,7 @@ for ext in range(1,63):
         colmax=1860
         rowmin=500  
         rowmax=3500
-        mn = hdu[ext].data[rowmin:rowmax,colmin:colmax].mean()
+        mn = np.median(hdu[ext].data[rowmin:rowmax,colmin:colmax])
         sd = hdu[ext].data[rowmin:rowmax,colmin:colmax].std()
         mne = mn/gain[2*(ext-1)]
         sde = sd/gain[2*(ext-1)]
@@ -35,7 +35,7 @@ for ext in range(1,63):
         colmax=800
         rowmin=500
         rowmax=3500
-        mn = hdu[ext].data[rowmin:rowmax,colmin:colmax].mean()
+        mn = np.median(hdu[ext].data[rowmin:rowmax,colmin:colmax])
         sd = hdu[ext].data[rowmin:rowmax,colmin:colmax].std()
         mne = mn/gain[2*(ext-1)+1]
         sde = sd/gain[2*(ext-1)+1]
@@ -48,7 +48,7 @@ for ext in range(1,63):
         colmax=800
         rowmin=500
         rowmax=3500
-        mn = hdu[ext].data[rowmin:rowmax,colmin:colmax].mean()
+        mn = np.median(hdu[ext].data[rowmin:rowmax,colmin:colmax])
         sd = hdu[ext].data[rowmin:rowmax,colmin:colmax].std()
         mne = mn/gain[2*(ext-1)]
         sde = sd/gain[2*(ext-1)]
@@ -60,7 +60,7 @@ for ext in range(1,63):
         colmax=1860
         rowmin=500
         rowmax=3500
-        mn = hdu[ext].data[rowmin:rowmax,colmin:colmax].mean()
+        mn = np.median(hdu[ext].data[rowmin:rowmax,colmin:colmax])
         sd = hdu[ext].data[rowmin:rowmax,colmin:colmax].std()
         mne = mn/gain[2*(ext-1)+1]
         sde = sd/gain[2*(ext-1)+1]
