@@ -467,9 +467,7 @@ def complexMoments(data=None,sigma=None):
 
 #------------------------------
 
-def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r', theta=0., corrector='corrector',x=None,y=None,z=None,phi=0,suband=None):
-    # phi = 0 deg: X direction tilt
-    # phi = 90 deg: Y direction tilt
+def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,suband=None):
     #---generating the .par file------
     dir = os.getcwd()+'/'
     file = open(dir+'temp.par','w')
@@ -495,6 +493,7 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r'
     elif suband == 5:
         file.write('WEIGHTS 0.00001 0.00001 0.00001 0.00001 1 \n')
     file.write('THETA '+corrector+' '+str(theta)+'\n')
+    file.write('PHI '+corrector+' '+str(phi)+'\n')
     if x is not None:
         file.write('X '+corrector+' '+str(x)+'\n')
     if y is not None:
@@ -508,7 +507,6 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r'
     #---output the result as an image vector
     b=pf.getdata(dir+'temp.fit')
     if seeing != 0.:
-        #b=addseeingImgFFTmoffat(b,alpha=3., beta=0.7)
         b=addseeingImgFFT(b,fwhm=seeing[0],e1=seeing[1],e2=seeing[2])
     hdr = pf.getheader(dir+'temp.fit')
     ypstamp,xpstamp = nd.center_of_mass(b) # y -> row, x-> col
@@ -1602,17 +1600,18 @@ def zernike_coeff(filename=None,zernike_max_order=20):
     x=hdu[0].header['x']
     y=hdu[0].header['y']
     z=hdu[0].header['z']
+    phi = hdu[0].header['phi']
     theta=hdu[0].header['theta']
     s_fwhm=hdu[0].header['s_fwhm']
     e1=hdu[0].header['e1']
     e2=hdu[0].header['e2']
-    return x,y,z,theta,s_fwhm,e1,e2,betaAll,R2adjAll
+    return x,y,z,theta,phi,s_fwhm,e1,e2,betaAll,R2adjAll
 
 
 def measure_zernike_coeff(filelist=None,computer=None):
     """
     In the save data file, the cols are:
-    x,y,z,theta,s_fwhm,e1,e2,betaAll
+    x,y,z,theta,phi,s_fwhm,e1,e2,betaAll
     """
     data=[]
     f = filelist
@@ -1620,17 +1619,14 @@ def measure_zernike_coeff(filelist=None,computer=None):
     for i in range(n):
         print i
         t = zernike_coeff(f[i])
-        data.append(np.append(t[0:7],t[7].flatten()))
+        data.append(np.append(t[0:8],t[8].flatten()))
     data = np.array(data)
     if computer != None:
-        datafile = open('/data/des09.a/data/jiangang_psf/lowres_psf_with_seeing_coeff_matrix/zernike_coeff_data_matrix_'+computer+'.cp','w')
+        datafile = open('/data/des09.a/data/jiangang_psf/finegrid/coefficients/zernike_coeff_finerGrid_'+computer+'.cp','w')
     else:
-        datafile = open('/home/jghao/research/decamFocus/psf_withseeing/validation_lowres/zernike_coeff_data_matrix_validation_randomseeing.cp','w')
+        datafile = open('zernike_coeff_data_matrix.cp','w')
     p.dump(data,datafile,2)
-    return '---done---'
-
-
-
+    return '---done--'
 
     
 def rowcol2XY(row,col,CCD):
@@ -1655,10 +1651,14 @@ def rowcol2XY(row,col,CCD):
     
 def multimachine_addseeing(computer=None):
     machine = np.array(['des04','des05','des06','des07','des08','des09','des10'])
-    fwhm = [0.6, 0.8, 1.0, 1.2, 1.4]
-    e1 = [-0.08,-0.04,0,0.04,0.08]
-    e2 = [-0.08,-0.04,0,0.04,0.08]
-    allfile = gl.glob('/home/jghao/research/decamFocus/psf_noseeing/higres/*.gz')
+    #fwhm = [0.6, 0.8, 1.0, 1.2, 1.4]
+    #e1 = [-0.08,-0.04,0,0.04,0.08]
+    #e2 = [-0.08,-0.04,0,0.04,0.08]
+    #fwhm = [0.8, 1.0,1.2]
+    #e1 = [-0.08,0,0.08]
+    #e2 = [-0.08,0,0.08]
+    #allfile = gl.glob('/data/des07.b/data/jiangang/PSF_noseeing/lowres/*.gz')
+    allfile=gl.glob('/data/des09.a/data/jiangang_psf/finegrid/psf_noseeing/*.fit')
     allfile=np.array(allfile)
     allfile.sort()
     nfile=len(allfile)
@@ -1666,12 +1666,12 @@ def multimachine_addseeing(computer=None):
     machineIdx = np.arange(nmachine)
     mid = machineIdx[computer == machine]
     idx = np.arange(mid[0]*nfile/nmachine,(mid[0]+1)*nfile/nmachine)
-    for fname in allfile[idx]:
-        for fw in fwhm:
-            for e11 in e1:
-                for e22 in e2:
-                    t = addseeing(filename=fname,fwhm = fw,e1=e11,e2=e22)
-
+    allfileComputer = allfile[idx]
+    for fname in allfileComputer:
+        fw=np.random.randint(800.,1400)*0.001
+        e11 = np.random.randint(-800,800)*0.0001
+        e22 = np.random.randint(-800,800)*0.0001
+        t = addseeing(filename=fname,fwhm = fw,e1=e11,e2=e22)
 
 def singlemachine_addseeing(dir=None):
     if dir == None:
@@ -1696,49 +1696,64 @@ def singlemachine_addseeing(dir=None):
 
 def multimachine_psfgen(computer=None):
     machine = np.array(['des04','des05','des06','des07','des08','des09','des10'])
-    tiltrange = [-100,-80,-50,-20,0,50,80,100]
-    xshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
-    yshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
-    defocusrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
-    nmachine = len(machine)
-    machineIdx = np.arange(nmachine)
-    mid = machineIdx[computer == machine]
+    #tiltrange = [-100,-80,-50,-20,0,50,80,100]
+    #xshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    #yshiftrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    #defocusrange = [-1.0,-0.8, -0.5, -0.2, 0, 0.2, 0.5, 0.8, 1.0]
+    #nmachine = len(machine)
+    #machineIdx = np.arange(nmachine)
+    #mid = machineIdx[computer == machine]
     #tlt = tiltrange[mid]
-    tlt = 100.
-    for xsft in xshiftrange:
-        for ysft in yshiftrange:
-            for defo in defocusrange:
-                filename='/home/jghao/research/decamFocus/psf_noseeing/highres_smallsize/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
+    #tlt = 100.
+    n=4000
+    for i in range(n):
+        print i
+        xsft = np.random.randint(-1000,1000)*0.0001
+        ysft = np.random.randint(-1000,1000)*0.0001
+        tlt = np.random.randint(-4000,4000)*0.01
+        defo=np.random.randint(-1000,1000)*0.0001
+        phi = np.random.randint(0,18000)*0.01
+        filename='/data/des09.a/data/jiangang_psf/finegrid/psf_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'_phi_'+str(phi)+'.fit'
                     #filename = '/data/des07.b/data/jiangang/PSF_noseeing/PSF_noseeing_theta'+str(tlt)+'_x_'+str(xsft)+'_y_'+str(ysft)+'_z_'+str(defo)+'.fit'
-                t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=npix,zenith=0,filter='r', theta=tlt, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
+        t = genImgVallCCD(filename=filename,Nstar=1,seeing=0.,npix=npix,zenith=0,filter='r', theta=tlt,phi=phi, corrector='corrector',x=xsft,y=ysft,z=defo,suband=None,regular=False)
     return '----done!-----'
 
 
 
-def multimachine_measure_zernike(computer=None):
-    machine = np.array(['des04','des05','des06','des07','des08','des09','des10'])
-    allfile=gl.glob('/data/des09.a/data/jiangang_psf/lowres_psf_with_seeing/*.fit')
+
+def multimachine_measure_zernike(machine=None):
+    #machine = np.array(['des04','des05','des06','des07','des08','des09','des10'])
+    #allfile=gl.glob('/data/des09.a/data/jiangang_psf/highres_small_psf_with_seeing/*.fit')
+    allfile=gl.glob('/data/des09.a/data/jiangang_psf/finegrid/psf_withseeing/*.fit')
     allfile.sort()
     nfile=len(allfile)
-    nmachine = len(machine)
+    nmachine = 7
     mm = nfile/nmachine
     if machine == 'des04':
         files = allfile[0:mm]
+        allfile=0
     if machine == 'des05':
         files = allfile[mm:2*mm]
+        allfile=0
     if machine == 'des06':
         files = allfile[2*mm:3*mm]
+        allfile=0
     if machine == 'des07':
         files = allfile[3*mm:4*mm]
+        allfile=0
     if machine == 'des08':
         files = allfile[4*mm:5*mm]
+        allfile=0
     if machine == 'des09':
         files = allfile[5*mm:6*mm]
+        allfile=0
     if machine == 'des10':
         files = allfile[6*mm:7*mm]
+        allfile=0
     t=measure_zernike_coeff(filelist=files,computer=computer)
-    return '----done!-----'
+    return '---done!----'
     
+
 
 def getPCA(data):
     """
@@ -1962,7 +1977,8 @@ def generateKNNobj():
     Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_training.cp'
     b=p.load(open(Tfile))
     nobs = len(b)
-    tdata=b[:,8:28].copy()
+    #tdata=b[:,8:28].copy()
+    tdata=b[:,9:28].copy() # remove the zero order zernike, i.e. remove the mean of the M20
     #-standardize the data. use this information in future validation data too.
     tmean = tdata.mean(axis=0)
     tstd = tdata.std(axis=0)
@@ -1973,28 +1989,72 @@ def generateKNNobj():
     tpara[:,4] = ttpara[:,3]*np.sin(np.deg2rad(ttpara[:,4]))
     knn = nb.KNeighborsRegressor(algorithm='ball_tree',n_neighbors=15)
     knn.fit(tdata,tpara)
-    p.dump(knn,open('finerGridKnnObj.cp','w'),2)
-    p.dump([tmean,tstd],open('finerGridStdConst.cp','w'),2)
+    p.dump(knn,open('finerGridKnnObj_remMean.cp','w'),2)
+    p.dump([tmean,tstd],open('finerGridStdConst_remMean.cp','w'),2)
     #np.savetxt('finerGridStdConst.txt',np.array([tmean,tstd]),fmt='%f10.5',delimiter = ',')
     return 'It is done !'
     
 
-def validateFitKnnObj(Vfile=None):
+def validateFitKnnObj(Vfile=None,scatter=True):
     """
     This function validate the results using the saved KNN object. It use only M20. 
     """
     vb = p.load(open(Vfile))
-    vdata = vb[:,8:28].copy()
+    vdata = vb[:,9:28].copy() # remove the 0 order of the M20, i.e. remove the mean of M20
     vparaTrue=vb[:,0:5].copy()
     vvparaTrue=vb[:,0:5].copy()
     vparaTrue[:,3] = vvparaTrue[:,3]*np.cos(np.deg2rad(vvparaTrue[:,4]))
     vparaTrue[:,4] = vvparaTrue[:,3]*np.sin(np.deg2rad(vvparaTrue[:,4]))
 
-    knn = p.load(open('finerGridKnnObj.cp','r'))
-    tmean,tstd = p.load(open('finerGridStdConst.cp','r'))
+    knn = p.load(open('finerGridKnnObj_remMean.cp','r'))
+    tmean,tstd = p.load(open('finerGridStdConst_remMean.cp','r'))
     vdata = (vdata - tmean)/tstd
     vparaReg = knn.predict(vdata)
-    
+    pl.figure(figsize=(17,10))
+    pl.subplot(2,3,1)
+    bp.bin_scatter(vparaTrue[:,0],vparaReg[:,0],binsize=0.01,fmt='b.',scatter=scatter)
+    pl.plot([vparaTrue[:,0].min(),vparaTrue[:,0].max()],[vparaTrue[:,0].min(),vparaTrue[:,0].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('x shift [mm]')
+    pl.xlim(-0.1,0.1)
+    pl.ylim(-0.1,0.1)
+    pl.subplot(2,3,2)
+    bp.bin_scatter(vparaTrue[:,1],vparaReg[:,1],binsize=0.01,fmt='b.',scatter=scatter)
+    pl.plot([vparaTrue[:,1].min(),vparaTrue[:,1].max()],[vparaTrue[:,1].min(),vparaTrue[:,1].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('y shift [mm]')
+    pl.xlim(-0.1,0.1)
+    pl.ylim(-0.1,0.1)
+    pl.subplot(2,3,3)
+    bp.bin_scatter(vparaTrue[:,2],vparaReg[:,2],binsize=0.01,fmt='b.',scatter=scatter)
+    pl.plot([vparaTrue[:,2].min(),vparaTrue[:,2].max()],[vparaTrue[:,2].min(),vparaTrue[:,2].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('defocus [mm]')
+    pl.xlim(-0.1,0.1)
+    pl.ylim(-0.1,0.1)
+
+    pl.subplot(2,3,4)
+    bp.bin_scatter(vparaTrue[:,3],vparaReg[:,3],binsize=5,fmt='b.',scatter=scatter)
+    pl.plot([vparaTrue[:,3].min(),vparaTrue[:,3].max()],[vparaTrue[:,3].min(),vparaTrue[:,3].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('tilt angle in x direction [arcsec]')
+    pl.xlim(-40,40)
+    pl.ylim(-40,40)
+
+    pl.subplot(2,3,5)
+    bp.bin_scatter(vparaTrue[:,4],vparaReg[:,4],binsize=5,fmt='b.',scatter=scatter)
+    pl.plot([vparaTrue[:,4].min(),vparaTrue[:,4].max()],[vparaTrue[:,4].min(),vparaTrue[:,4].max()],'r-')
+    pl.xlabel('True Value')
+    pl.ylabel('Regression Value')
+    pl.title('tilt angle in y direction [arcsec]')
+    pl.xlim(-40,40)
+    pl.ylim(-40,40)
+    return vparaTrue,vparaReg
+
 
 
 
