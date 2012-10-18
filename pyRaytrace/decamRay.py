@@ -422,7 +422,7 @@ def des_psf_image(exptime=100,mag=None,seeing=[0.9,0.,0.],npix=npix,setbkg=True)
     if setbkg == False:
         skyphoton = 0.
     else:
-        skyphoton = 8.460140*exptime 
+        skyphoton = 8.460140*exptime (sky level per pix per sec)
     bkg = skyphoton*gain
     psf = gauss_seeing(npix,seeing[0],seeing[1],seeing[2])
     img = (psf * objectphoton + skyphoton)*gain
