@@ -410,25 +410,24 @@ def des_image(exptime=100,mag=None, Nstar=1,ccd=None,seeing=[0.9,0.,0.],npix=npi
     return img,bkg,psf
 
 
-def des_psf_image(exptime=100,mag=None,seeing=[0.9,0.,0.],npix=npix,setbkg=True):
+def des_psf_image(exptime=100,mag=None,seeing=[0.9,0.,0.],setbkg=True):
     
     """
     This code generate a PSF star with seeing and sky background (no optics psf)
     exptime is given in sec
     """
     gain = 0.21 # convert electrons to ADU
+    npix = 40
     zeropoint = 26.794176 # r band, from Nikolay
     objectphoton = exptime*10**(0.4*(zeropoint - mag))
     if setbkg == False:
         skyphoton = 0.
     else:
-        skyphoton = 8.460140*exptime (sky level per pix per sec)
+        skyphoton = 8.460140*exptime #(sky level per pix per sec)
     bkg = skyphoton*gain
     psf = gauss_seeing(npix,seeing[0],seeing[1],seeing[2])
     img = (psf * objectphoton + skyphoton)*gain
-    img = rebin(img,(40,40))
     img = img + add_imageNoise(img)
-    psf = rebin(psf,(40,40))
     return img,bkg,psf
 
 
