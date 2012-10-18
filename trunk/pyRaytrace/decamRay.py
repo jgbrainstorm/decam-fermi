@@ -290,7 +290,7 @@ def wr(x,y,xcen,ycen,sigma):
     res=np.exp(-((x-xcen)**2+(y-ycen)**2)/(2.*sigma**2))/(2.*np.pi*sigma**2) 
     return res
 
-def gauss_seeing(npix = None,fwhm=None,e1=None,e2=None):
+def gauss_seeing(npix = None,fwhm=None,e1=None,e2=None,scale=scale):
     """
     generate a seeing PSF of given fwhm and e1 and e2
     fwhm in the unit of arcsec
@@ -415,6 +415,7 @@ def des_psf_image(exptime=100,mag=None,seeing=[0.9,0.,0.],setbkg=True):
     """
     This code generate a PSF star with seeing and sky background (no optics psf)
     exptime is given in sec
+    seeing is give in terms of [fwhm (arcsec),e1,e2]
     """
     gain = 0.21 # convert electrons to ADU
     npix = 40
@@ -424,8 +425,8 @@ def des_psf_image(exptime=100,mag=None,seeing=[0.9,0.,0.],setbkg=True):
         skyphoton = 0.
     else:
         skyphoton = 8.460140*exptime #(sky level per pix per sec)
-    bkg = skyphoton*gain
-    psf = gauss_seeing(npix,seeing[0],seeing[1],seeing[2])
+    bkg = skyphoton*gain  # background in ADU
+    psf = gauss_seeing(npix,seeing[0],seeing[1],seeing[2],scale = 0.27)
     img = (psf * objectphoton + skyphoton)*gain
     img = img + add_imageNoise(img)
     return img,bkg,psf
