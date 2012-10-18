@@ -23,6 +23,7 @@ try:
     import cPickle as p
     import sklearn.neighbors as nb
     from sklearn.svm import SVR
+    import scipy.stats as st
 except ImportError:
     print 'the required packages are: numpy, pyfits,pylab,scikit,scipy,mahotas'
     raise
@@ -143,6 +144,9 @@ def s2fwhm(img):
 def gaussian2d(x,y,xc,yc,sigmax,sigmay,rho,A,B):
     res = A*np.exp(-0.5/(1-rho**2)*(x**2/sigmax**2+y**2/sigmay**2-2.*rho*x*y/(sigmax*sigmay)))+B
     return res
+
+
+
 
 def g2dfwhm(img):
     """
@@ -357,7 +361,20 @@ def adaptiveCentroid(data=None,sigma=None):
 
     return rowmean,colmean
 
-         
+
+def add_imageNoise(img):
+    """
+    add poisson noise to images
+    """
+    if not np.all(img >= 0):
+        print 'make sure the image pixel values are positive definite'
+        sys.exit()
+    noise = st.poisson.rvs(1.,loc = -1.,scale=1.,size=img.shape)*np.sqrt(img)
+    return noise
+
+    
+
+
 def des_image(exptime=100,mag=None, Nstar=1,ccd=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,suband=None,regular=False,setbkg=True):
     """
     This code generate a PSF star with seeing and sky background
@@ -375,9 +392,9 @@ def des_image(exptime=100,mag=None, Nstar=1,ccd=None,seeing=[0.9,0.,0.],npix=npi
     if Nstar == 1:
         psf = res[0][0][4:].reshape(npix,npix)
         img = (psf * objectphoton + skyphoton)*gain
-        img = img + np.sqrt(img)
         img = rebin(img,(40,40))
         psf = rebin(psf,(40,40))
+        img = img + add_imageNoise(img)
     if Nstar > 1:
         img = []
         psf = []
@@ -387,7 +404,8 @@ def des_image(exptime=100,mag=None, Nstar=1,ccd=None,seeing=[0.9,0.,0.],npix=npi
            imgi = imgi+np.sqrt(imgi)
            imgi = rebin(imgi,(40,40))
            psfi = rebin(psfi,(40,40))
-           img.append(imgi = np.sqrt(imgi))
+           imgi = imgi + add_imageNoise(imgi)
+           img.append(imgi)
            psf.append(psfi)
     return img,bkg,psf
 
@@ -404,14 +422,24 @@ def des_psf_image(exptime=100,mag=None,seeing=[0.9,0.,0.],npix=npix,setbkg=True)
     if setbkg == False:
         skyphoton = 0.
     else:
-        skyphoton = 8.460140*exptime
+        skyphoton = 8.460140*exptime 
     bkg = skyphoton*gain
     psf = gauss_seeing(npix,seeing[0],seeing[1],seeing[2])
     img = (psf * objectphoton + skyphoton)*gain
-    img = img + np.sqrt(img)
     img = rebin(img,(40,40))
+    img = img + add_imageNoise(img)
     psf = rebin(psf,(40,40))
     return img,bkg,psf
+
+
+
+def magphoton(mag,exptime=1.,gain=0.23):
+    zeropoint = 26.794176
+    nphoton = exptime*10**(0.4*(zeropoint - mag))
+    nadu = nphoton*gain
+    return nphoton,nadu
+
+    
 
 
 def complexMoments(data=None,sigma=None):
@@ -1176,7 +1204,7 @@ def zernike_diagnosis(Nstar=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r
     return betaAll,betaErrAll, R2adjAll
 
 
-def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,regular=False):
+def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,regular=False,noise=False,exptime=100,mag=16.,sigma=4.):
     """
     This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
     """
@@ -1191,7 +1219,18 @@ def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', th
         M31=np.zeros(Nobj).astype(complex)
         M33=np.zeros(Nobj).astype(complex)
         for i in range(Nobj):
-            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=rebin(hdui.data[i][4:].reshape(npix,npix),(40,40)),sigma=2.)
+            psf = rebin(hdui.data[i][4:].reshape(npix,npix),(40,40))
+            if noise == True:
+                gain = 0.21 # convert electrons to ADU
+                zeropoint = 26.794176 # r band, from Nikolay
+                objectphoton = exptime*10**(0.4*(zeropoint - mag))
+                skyphoton = 8.460140*exptime
+                bkg = skyphoton*gain
+                img = (psf * objectphoton + skyphoton)*gain
+                img = img + add_imageNoise(img) - bkg
+            else:
+                img = psf
+            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=img,sigma=sigma)
         x=hdui.header['ccdXcen']
         y=hdui.header['ccdYcen']
         data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
@@ -1261,6 +1300,9 @@ def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', th
     pl.ylim(-250,250)
     pl.title('median '+r'$\sqrt{M20}$: '+str(round(np.median(scale*4*np.sqrt(data[:,2].real)),3))+' [arcsec]')
     return datam
+
+
+
 
 def addMomentsNoise(data,percent):
     noise = data[:,2:]*percent
