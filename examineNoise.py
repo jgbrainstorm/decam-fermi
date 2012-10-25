@@ -43,7 +43,7 @@ def fftnoise(filename=None,ext='N4',ionpump='on'):
     pl.subplot(2,1,1)
     pl.plot(np.abs(oscanA1FFT[ok]),'b-')
     pl.semilogy()
-    xtickidx=np.arange(0,len(oscanA1),10000)[ok]
+    xtickidx=np.arange(0,len(oscanA1FFT[ok]),10000)
     pl.xticks(xtickidx,np.repeat('',len(xtickidx)))
     pl.grid()
     pl.title('Noise Spectra, ccd: '+ext)
