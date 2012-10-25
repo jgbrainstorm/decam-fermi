@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # this code examine the readout noise on the ccds close to the ion pump controller.
 # J. Hao, 10/5/2012 @ CTIO
 import sys
