@@ -55,7 +55,8 @@ def fftnoise(filename=None,ext='N4',ionpump='on'):
     pl.grid()
     pl.ylabel('Amp: B')
     pl.figtext(0.7,0.8,'Ion Pump: '+ionpump,color='red',fontsize=17)
-    pl.savefig('noiseSpectra_'+ext+'ionpump_'+ionpump+'.png')
+    pl.xlabel('Frequency (Hz)')
+    pl.savefig('noiseSpectra_'+ext+'_ionpump_'+ionpump+'.png')
     return '---done!---'
 
 if len(sys.argv) == 1:
