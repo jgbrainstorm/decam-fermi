@@ -8,7 +8,7 @@ dir=os.getcwd()+'/'
 NameFits=gl.glob(dir+'/*.fits*')
 NameBias=dir+'/bias/median.fits'
 NameFits.sort()
-
+NameFits=NameFits[0:20]
 hdu=pf.open(NameBias)
 Channel=range(1,len(hdu))
 
