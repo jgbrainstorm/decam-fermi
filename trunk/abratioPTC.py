@@ -20,6 +20,7 @@ nfile =len(file)
 for ext in range(1,63):
     exptime = np.zeros(nfile)
     abratio = np.zeros(nfile)
+    medcount = np.zeros(nfile)
     print ext
     for i in range(0,nfile):
         imgext = pf.getdata(file[i],ext)
@@ -31,14 +32,22 @@ for ext in range(1,63):
         row0,row1,col0,col1=getSec(hdr,ext,'datasecb')
         dataB = imgosub[row0:row1,col0:col1]
         abratio[i] =np.median(dataA)/np.median(dataB) 
+        medcount[i] = np.median(dataB)
         exptime[i] = pf.getheader(file[i],0)['exptime']
     idx1 = np.arange(0,nfile,2)
     idx2 = np.arange(1,nfile+1,2)
+    pl.subplot(2,1,1)
     pl.plot(exptime[idx1],abratio[idx1],'bo')
     pl.plot(exptime[idx2],abratio[idx2],'r*')
     pl.xlabel('exptime')
     pl.ylabel('A/B')
     pl.title(hdr['detpos'])
+    pl.ylim(0.9,1.1)
+    pl.subplot(2,1,2)
+    pl.plot(medcount[idx1],abratio[idx1],'bo')
+    pl.plot(medcount[idx2],abratio[idx2],'r*')
+    pl.xlabel('Median count of amp A')
+    pl.ylabel('A/B')
     pl.ylim(0.9,1.1)
     pl.savefig(hdr['detpos']+'.png')
     pl.close()
