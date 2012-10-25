@@ -19,7 +19,7 @@ def fftnoise(filename=None,ext='N4',ionpump='on'):
     else:
         b = pf.getdata('/home3/data_local/images/fits/ptc_9_27_hao/bias/DECam_00136714.fits',ext)
         hdr = pf.getheader('/home3/data_local/images/fits/ptc_9_27_hao/bias/DECam_00136714.fits',ext)
-    timestep = 4e-9 # each pixel read out is 4 ns
+    timestep = 4e-6# each pixel read out is 4 ms-> 250kpix/sec
 
     col0=int(hdr['BIASSECA'].split('[')[1].split(']')[0].split(',')[0].split(':')[0])-1
     col1=int(hdr['BIASSECA'].split('[')[1].split(']')[0].split(',')[0].split(':')[1])
@@ -35,20 +35,20 @@ def fftnoise(filename=None,ext='N4',ionpump='on'):
     oscanB = b[row0:row1,col0:col1]
     oscanB1 = oscanB.reshape(oscanB.shape[0]*oscanB.shape[1])
     oscanB1FFT = np.fft.fft(oscanB1) 
+    freq = np.fft.fftfreq(len(oscanB1), d=timestep)
+    ok = freq > 0
     pl.figure(figsize=(14,9))
     pl.subplot(2,1,1)
-    pl.plot(np.abs(oscanA1FFT),'b-')
+    pl.plot(np.abs(oscanA1FFT[ok]),'b-')
     pl.semilogy()
-    xtickidx=np.arange(0,len(oscanA1),10000)
+    xtickidx=np.arange(0,len(oscanA1),10000)[ok]
     pl.xticks(xtickidx,np.repeat('',len(xtickidx)))
     pl.grid()
     pl.title('Noise Spectra, ccd: '+ext)
     pl.ylabel('Amp: A')
     pl.subplot(2,1,2)
-    pl.plot(np.abs(oscanB1FFT),'b-')
+    pl.plot(np.abs(oscanB1FFT[ok]),'b-')
     pl.semilogy()
-    freq = np.fft.fftfreq(len(oscanB1), d=timestep)
-    xtickidx=np.arange(0,len(oscanB1),10000)
     pl.xticks(xtickidx,np.round(freq[xtickidx]),rotation=-60)
     pl.grid()
     pl.ylabel('Amp: B')
