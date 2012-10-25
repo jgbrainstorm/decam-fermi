@@ -375,14 +375,14 @@ def add_imageNoise(img):
     
 
 
-def des_image(exptime=100,mag=None, Nstar=1,ccd=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,suband=None,regular=False,setbkg=True):
+def des_image(exptime=100,mag=None, Nstar=1,ccd=None,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,suband=None,regular=False,setbkg=True):
     """
     This code generate a PSF star with seeing and sky background
     exptime is given in sec
     """
     gain = 0.21 # convert electrons to ADU
     zeropoint = 26.794176 # r band, from Nikolay
-    objectphoton = exptime*10**(0.4*(zeropoint - mag))
+    
     if setbkg == False:
         skyphoton = 0.
     else:
@@ -390,6 +390,7 @@ def des_image(exptime=100,mag=None, Nstar=1,ccd=None,seeing=[0.9,0.,0.],npix=npi
     bkg = skyphoton*gain
     res = genImgV(filename=None,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, phi=phi,corrector=corrector,x=x,y=y,z=z,suband=suband,regular=regular)
     if Nstar == 1:
+        objectphoton = exptime*10**(0.4*(zeropoint - mag))
         psf = res[0][0][4:].reshape(npix,npix)
         img = (psf * objectphoton + skyphoton)*gain
         img = rebin(img,(40,40))
@@ -398,16 +399,24 @@ def des_image(exptime=100,mag=None, Nstar=1,ccd=None,seeing=[0.9,0.,0.],npix=npi
     if Nstar > 1:
         img = []
         psf = []
+        magg = []
         for i in range(Nstar):
+           if type(mag) == list:
+               rng = abs(mag[1] - mag[0])
+               magi = min(mag)+np.random.rand()*rng
+               objectphoton = exptime*10**(0.4*(zeropoint - magi))
            psfi = res[0][i][4:].reshape(npix,npix)
-           imgi = (psf * objectphoton + skyphoton)*gain
+           imgi = (psfi * objectphoton + skyphoton)*gain
            imgi = imgi+np.sqrt(imgi)
            imgi = rebin(imgi,(40,40))
            psfi = rebin(psfi,(40,40))
            imgi = imgi + add_imageNoise(imgi)
            img.append(imgi)
            psf.append(psfi)
-    return img,bkg,psf
+           magg.append(magi)
+    return img,bkg,psf,magg
+
+
 
 
 def des_psf_image(exptime=100,mag=None,seeing=[0.9,0.,0.],setbkg=True):
@@ -958,6 +967,13 @@ def psfSizeAllZernike(Nstar=None,filter='r',npix=None,seeing=0,theta=0., zenith 
         coeff.append(mh.zernike.zernike_moments(img,30,degree = 3, cm=mh.center_of_mass(img)))
     return x, y, np.array(coeff)
 
+def subMeanAll(data=None):
+    """
+    this subtract the mean of all moments except M20 from the data
+    """
+    datamean = data.mean(axis = 0)
+    data[:,3:] = data[:,3:] - datamean[3:]
+    return data
 
 
 def genPSFimage(filename=None):
@@ -1240,6 +1256,7 @@ def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', th
     #data = addMomentsNoise(data,5.)
     # remove the mean for M31 and M33
     #data = subMeanM3x(data)
+    #data = subMeanAll(data)
     pl.figure(figsize=(12,12))
     pl.subplot(2,2,1)
     phi22 = 0.5*np.arctan2(data[:,3].imag,data[:,3].real)
@@ -1301,6 +1318,108 @@ def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', th
     pl.title('median '+r'$\sqrt{M20}$: '+str(round(np.median(scale*4*np.sqrt(data[:,2].real)),3))+' [arcsec]')
     return datam
 
+
+
+def moments_display_new(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,regular=False,noise=False,exptime=100,mag=16.,sigma=4.):
+    """
+    This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
+    """
+    hdu = genImgVallCCD(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta,phi=phi, corrector=corrector,x=x,y=y,z=z,regular=regular)
+    nn = len(hdu)
+    data = []
+    colnames = ['x','y','M20','M22','M31','M33']
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        M20=np.zeros(Nobj)
+        M22=np.zeros(Nobj).astype(complex)
+        M31=np.zeros(Nobj).astype(complex)
+        M33=np.zeros(Nobj).astype(complex)
+        for i in range(Nobj):
+            psf = rebin(hdui.data[i][4:].reshape(npix,npix),(40,40))
+            if noise == True:
+                gain = 0.21 # convert electrons to ADU
+                zeropoint = 26.794176 # r band, from Nikolay
+                objectphoton = exptime*10**(0.4*(zeropoint - mag))
+                skyphoton = 8.460140*exptime
+                bkg = skyphoton*gain
+                img = (psf * objectphoton + skyphoton)*gain
+                img = img + add_imageNoise(img) - bkg
+            else:
+                img = psf
+            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=img,sigma=sigma)
+        x=hdui.header['ccdXcen']
+        y=hdui.header['ccdYcen']
+        data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
+    data=np.array(data)
+    datam = data.copy()
+    data = subMeanAll(data) # remove the mean of all moments except M20
+    pl.figure(figsize=(11,11))
+    pl.subplot(2,2,1)
+    phi22 = 0.5*np.arctan2(data[:,3].imag,data[:,3].real)
+    x = data[:,0].real
+    y = data[:,1].real
+    phi22[x<0] = phi22+np.deg2rad(180)
+    u = np.sqrt(np.abs(data[:,3]))*np.cos(phi22)
+    v = np.sqrt(np.abs(data[:,3]))*np.sin(phi22)
+    qvr = pl.quiver(x,y,u,v,width = 0.004, color='r',pivot='middle',headwidth=0.,headlength=0.,headaxislength=0.,scale_units='width')
+    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
+    pl.plot(x,y,'b,')
+    pl.xlim(-250,250)
+    pl.ylim(-250,250)
+    pl.grid(color='g')
+    pl.xlabel('X [mm] (WEST)')
+    pl.ylabel('Y [mm] (NORTH)')
+    pl.title('M22')
+    pl.subplot(2,2,2)
+    phi31 = np.arctan2(data[:,4].imag,data[:,4].real)
+    u = np.sqrt(np.abs(data[:,4]))*np.cos(phi31)
+    v = np.sqrt(np.abs(data[:,4]))*np.sin(phi31)
+    qvr=pl.quiver(x,y,u,v,width=0.003,color='r',pivot='middle',headwidth=4)
+    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
+    pl.plot(x,y,'b,')
+    pl.xlim(-250,250)
+    pl.ylim(-250,250)
+    pl.grid(color='g')
+    pl.xlabel('X [mm] (WEST)')
+    pl.ylabel('Y [mm] (NORTH)')
+    pl.title('M31')
+    pl.subplot(2,2,3)
+    phi33 = np.arctan2(data[:,5].imag,data[:,5].real)/3.
+    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33)
+    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33)
+    pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
+    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33+np.deg2rad(120))
+    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33+np.deg2rad(120))
+    pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
+    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33+np.deg2rad(240))
+    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33+np.deg2rad(240))
+    qvr=pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
+    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
+    pl.plot(x,y,'b,')
+    pl.xlim(-250,250)
+    pl.ylim(-250,250)
+    pl.grid(color='g')
+    pl.xlabel('X [mm] (WEST)')
+    pl.ylabel('Y [mm] (NORTH)')
+    pl.title('M33')
+    pl.subplot(2,2,4)
+    m20med = np.median(np.sqrt(data[:,2].real))
+    uo = np.sqrt(data[:,2].real) - m20med
+    idxl = uo < 0
+    u = np.abs(uo)
+    v = np.zeros(len(data[:,2].real))
+    qvr = pl.quiver(x,y,u,v,width = 0.008, color='r',pivot='middle',headwidth=0.,headlength=0.,headaxislength=0.,scale_units='width',label='> median')
+    qvr = pl.quiver(x[idxl],y[idxl],u[idxl],v[idxl],width = 0.008, color='b',pivot='middle',headwidth=0.,headlength=0.,headaxislength=0.,scale_units='width',label='< median')
+    pl.legend(loc='best')
+    qk = pl.quiverkey(qvr, -150,-240,max(u),str(round(max(u),3))+' pix',coordinates='data',color='green')
+    pl.plot(x,y,'y,')
+    pl.grid(color='g')
+    pl.xlim(-250,250)
+    pl.ylim(-250,250)
+    pl.xlabel('X [mm] (WEST)')
+    pl.ylabel('Y [mm] (NORTH)')
+    pl.title('median '+r'$\sqrt{M20}$: '+str(round(np.median(scale*4*np.sqrt(data[:,2].real)),3))+' [arcsec]')
+    return '---done---'
 
 
 
