@@ -55,3 +55,13 @@ def fftnoise(filename=None,ext='N4',ionpump='on'):
     pl.figtext(0.7,0.8,'Ion Pump: '+ionpump,color='red',fontsize=17)
     pl.savefig('noiseSpectra_'+ext+'ionpump_'+ionpump+'.png')
     return '---done!---'
+
+if len(sys.argv) == 1:
+    print 'syntax: examineNoise filename ext ionpumpStatus'
+    print 'example: examineNoise bias.fits S2 off'
+    
+else:
+    filename = sys.argv[1]
+    ext = sys.argv[2]
+    ionpump = sys.argv[3]
+    t = fftnoise(filename=filename,ext=ext,ionpump=ionpump)
