@@ -15,13 +15,13 @@ def fftnoise(filename=None,ext='N4',ionpump='on'):
     if filename != None:
         b = pf.getdata(filename,ext)
         hdr = pf.getheader(filename,ext)
-    elif ionpump == 'on':
-        b=pf.getdata('/home3/data_local/images/fits/ptc_10_2_hao/bias/DECam_00137808.fits',ext)
-        hdr=pf.getheader('/home3/data_local/images/fits/ptc_10_2_hao/bias/DECam_00137808.fits',ext)
-    else:
-        b = pf.getdata('/home3/data_local/images/fits/ptc_9_27_hao/bias/DECam_00136714.fits',ext)
-        hdr = pf.getheader('/home3/data_local/images/fits/ptc_9_27_hao/bias/DECam_00136714.fits',ext)
-    timestep = 4e-6# each pixel read out is 4 ms-> 250kpix/sec
+    #elif ionpump == 'on':
+    #    b=pf.getdata('/home3/data_local/images/fits/ptc_10_2_hao/bias/DECam_00137808.fits',ext)
+    #    hdr=pf.getheader('/home3/data_local/images/fits/ptc_10_2_hao/bias/DECam_00137808.fits',ext)
+    #else:
+    #    b = pf.getdata('/home3/data_local/images/fits/ptc_9_27_hao/bias/DECam_00136714.fits',ext)
+    #    hdr = pf.getheader('/home3/data_local/images/fits/ptc_9_27_hao/bias/DECam_00136714.fits',ext)
+    timestep = 4e-6# each pixel read out is 4 micro sec -> 250kpix/sec
 
     col0=int(hdr['BIASSECA'].split('[')[1].split(']')[0].split(',')[0].split(':')[0])-1
     col1=int(hdr['BIASSECA'].split('[')[1].split(']')[0].split(',')[0].split(':')[1])
@@ -48,6 +48,7 @@ def fftnoise(filename=None,ext='N4',ionpump='on'):
     pl.grid()
     pl.title('Noise Spectra, ccd: '+ext)
     pl.ylabel('Amp: A')
+    pl.xlabel('Frequency (Hz)')
     pl.subplot(2,1,2)
     pl.plot(np.abs(oscanB1FFT[ok]),'b-')
     pl.semilogy()
@@ -55,7 +56,6 @@ def fftnoise(filename=None,ext='N4',ionpump='on'):
     pl.grid()
     pl.ylabel('Amp: B')
     pl.figtext(0.7,0.8,'Ion Pump: '+ionpump,color='red',fontsize=17)
-    pl.xlabel('Frequency (Hz)')
     pl.savefig('noiseSpectra_'+ext+'_ionpump_'+ionpump+'.png')
     return '---done!---'
 
