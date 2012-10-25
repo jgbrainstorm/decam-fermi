@@ -395,6 +395,19 @@ def oscanSub(img):
         img[:,1080+i] = img[:,1080+i] - mdR #oscanRfit
     return img
 
+def getdataSec(filename=None,ext=None,datasec='datasec'):
+    """
+    this get the data section needed
+    """
+    hdu = pf.open(filename)
+    col0=int(hdu[ext].header[datasec].split('[')[1].split(']')[0].split(',')[0].split(':')[0])-1
+    col1=int(hdu[ext].header[datasec].split('[')[1].split(']')[0].split(',')[0].split(':')[1]) 
+    row0=int(hdu[ext].header[datasec].split('[')[1].split(']')[0].split(',')[1].split(':')[0])-1
+    row1=int(hdu[ext].header[datasec].split('[')[1].split(']')[0].split(',')[1].split(':')[1]) 
+    data = hdu[ext].data[row0:row1,col0:col1]
+    return data
+
+
 #------subtract the overscan-------
 
 def subOscan(hdu):
