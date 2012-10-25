@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import sys
 sys.path.append('/usr/remote/user/sispi/jiangang/decam-fermi')
 from DECamCCD import *
@@ -18,6 +20,7 @@ nfile =len(file)
 for ext in range(1,63):
     exptime = np.zeros(nfile)
     abratio = np.zeros(nfile)
+    print ext
     for i in range(0,nfile):
         imgext = pf.getdata(file[i],ext)
         hdr = pf.getheader(file[i],ext)
@@ -36,6 +39,7 @@ for ext in range(1,63):
     pl.xlabel('exptime')
     pl.ylabel('A/B')
     pl.title(hdr['detpos'])
-    pl.savefig(hdr['detpos'+'.png')
+    pl.ylim(0.9,1.1)
+    pl.savefig(hdr['detpos']+'.png')
     pl.close()
     
