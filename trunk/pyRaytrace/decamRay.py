@@ -1307,11 +1307,16 @@ def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', th
     x = data[:,0].real
     y = data[:,1].real
     m20sqr_med = np.median(m20sqr)
-    m20sqr_diff = m20sqr - min(m20sqr)
+    m20sqr_diff = m20sqr - m20sqr_med
     m20sqr_diff_absmed = np.median(np.abs(m20sqr_diff))
     plotScale = 1./m20sqr_diff_absmed*100
-    pl.scatter(x,y,s=m20sqr_diff*plotScale,c='b',alpha=0.5)
-    pl.scatter(-230,-230,s=m20sqr_diff_absmed*plotScale,c='g')
+    pos = m20sqr_diff >=0
+    neg = m20sqr_diff < 0
+    pl.scatter(x[pos],y[pos],s=m20sqr_diff[pos]*plotScale,c='r',alpha=0.5)
+    pl.scatter(x[neg],y[neg],s=-m20sqr_diff[neg]*plotScale,c='b',alpha=0.5)
+    pl.scatter(-230,-210,s=m20sqr_diff_absmed*plotScale,c='b',alpha=0.5)
+    pl.text(-200,-215,'-'+str(round(m20sqr_diff_absmed,6))+' pix')
+    pl.scatter(-230,-230,s=m20sqr_diff_absmed*plotScale,c='r',alpha=0.5)
     pl.text(-200,-235,str(round(m20sqr_diff_absmed,6))+' pix')
     pl.plot(x,y,'y,')
     pl.grid(color='g')
@@ -1321,9 +1326,6 @@ def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', th
     pl.ylabel('Y [mm] (NORTH)')
     pl.title('median '+r'$\sqrt{M20}$: '+str(round(scale*4*m20sqr_med,3))+' [arcsec]')
     return '---done---'
-
-
-
 
 
 def addMomentsNoise(data,percent):
