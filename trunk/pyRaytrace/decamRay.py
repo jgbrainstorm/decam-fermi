@@ -1252,106 +1252,6 @@ def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', th
         data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
     data=np.array(data)
     datam = data.copy()
-    #---add 20 percent noise --
-    #data = addMomentsNoise(data,5.)
-    # remove the mean for M31 and M33
-    #data = subMeanM3x(data)
-    #data = subMeanAll(data)
-    pl.figure(figsize=(12,12))
-    pl.subplot(2,2,1)
-    phi22 = 0.5*np.arctan2(data[:,3].imag,data[:,3].real)
-    x = data[:,0].real
-    y = data[:,1].real
-    phi22[x<0] = phi22+np.deg2rad(180)
-    u = np.sqrt(np.abs(data[:,3]))*np.cos(phi22)
-    v = np.sqrt(np.abs(data[:,3]))*np.sin(phi22)
-    qvr = pl.quiver(x,y,u,v,width = 0.004, color='r',pivot='middle',headwidth=0.,headlength=0.,headaxislength=0.,scale_units='width')
-    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
-    pl.plot(x,y,'b,')
-    pl.xlim(-250,250)
-    pl.ylim(-250,250)
-    pl.grid(color='g')
-    pl.xlabel('X [mm]')
-    pl.ylabel('Y [mm]')
-    pl.title('M22')
-    pl.subplot(2,2,2)
-    phi31 = np.arctan2(data[:,4].imag,data[:,4].real)
-    u = np.sqrt(np.abs(data[:,4]))*np.cos(phi31)
-    v = np.sqrt(np.abs(data[:,4]))*np.sin(phi31)
-    qvr=pl.quiver(x,y,u,v,width=0.003,color='r',pivot='middle',headwidth=4)
-    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
-    pl.plot(x,y,'b,')
-    pl.xlim(-250,250)
-    pl.ylim(-250,250)
-    pl.grid(color='g')
-    pl.xlabel('X [mm]')
-    pl.ylabel('Y [mm]')
-    pl.title('M31')
-    pl.subplot(2,2,3)
-    phi33 = np.arctan2(data[:,5].imag,data[:,5].real)/3.
-    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33)
-    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33)
-    pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
-    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33+np.deg2rad(120))
-    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33+np.deg2rad(120))
-    pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
-    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33+np.deg2rad(240))
-    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33+np.deg2rad(240))
-    qvr=pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
-    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
-    pl.plot(x,y,'b,')
-    pl.xlim(-250,250)
-    pl.ylim(-250,250)
-    pl.grid(color='g')
-    pl.xlabel('X [mm]')
-    pl.ylabel('Y [mm]')
-    pl.title('M33')
-    pl.subplot(2,2,4)
-    u = np.sqrt(data[:,2].real) - np.sqrt(data[:,2].real).min()
-    v = np.zeros(len(data[:,2].real))
-    qvr = pl.quiver(x,y,u,v,width = 0.008, color='r',pivot='middle',headwidth=0.,headlength=0.,headaxislength=0.,scale_units='width')
-    qk = pl.quiverkey(qvr, -150,-240,np.max(u),str(round(max(u),3))+' pix',coordinates='data',color='blue')
-    pl.plot(x,y,'b,')
-    pl.grid(color='g')
-    pl.xlim(-250,250)
-    pl.ylim(-250,250)
-    pl.title('median '+r'$\sqrt{M20}$: '+str(round(np.median(scale*4*np.sqrt(data[:,2].real)),3))+' [arcsec]')
-    return datam
-
-
-
-def moments_display_new(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,regular=False,noise=False,exptime=100,mag=16.,sigma=4.):
-    """
-    This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
-    """
-    hdu = genImgVallCCD(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta,phi=phi, corrector=corrector,x=x,y=y,z=z,regular=regular)
-    nn = len(hdu)
-    data = []
-    colnames = ['x','y','M20','M22','M31','M33']
-    for hdui in hdu[1:]:
-        Nobj = hdui.data.shape[0]
-        M20=np.zeros(Nobj)
-        M22=np.zeros(Nobj).astype(complex)
-        M31=np.zeros(Nobj).astype(complex)
-        M33=np.zeros(Nobj).astype(complex)
-        for i in range(Nobj):
-            psf = rebin(hdui.data[i][4:].reshape(npix,npix),(40,40))
-            if noise == True:
-                gain = 0.21 # convert electrons to ADU
-                zeropoint = 26.794176 # r band, from Nikolay
-                objectphoton = exptime*10**(0.4*(zeropoint - mag))
-                skyphoton = 8.460140*exptime
-                bkg = skyphoton*gain
-                img = (psf * objectphoton + skyphoton)*gain
-                img = img + add_imageNoise(img) - bkg
-            else:
-                img = psf
-            M20[i],M22[i],M31[i],M33[i]=complexMoments(data=img,sigma=sigma)
-        x=hdui.header['ccdXcen']
-        y=hdui.header['ccdYcen']
-        data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
-    data=np.array(data)
-    datam = data.copy()
     data = subMeanAll(data) # remove the mean of all moments except M20
     pl.figure(figsize=(11,11))
     pl.subplot(2,2,1)
@@ -1362,7 +1262,7 @@ def moments_display_new(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r'
     u = np.sqrt(np.abs(data[:,3]))*np.cos(phi22)
     v = np.sqrt(np.abs(data[:,3]))*np.sin(phi22)
     qvr = pl.quiver(x,y,u,v,width = 0.004, color='r',pivot='middle',headwidth=0.,headlength=0.,headaxislength=0.,scale_units='width')
-    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
+    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix^2',coordinates='data',color='blue')
     pl.plot(x,y,'b,')
     pl.xlim(-250,250)
     pl.ylim(-250,250)
@@ -1375,7 +1275,7 @@ def moments_display_new(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r'
     u = np.sqrt(np.abs(data[:,4]))*np.cos(phi31)
     v = np.sqrt(np.abs(data[:,4]))*np.sin(phi31)
     qvr=pl.quiver(x,y,u,v,width=0.003,color='r',pivot='middle',headwidth=4)
-    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
+    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix^3',coordinates='data',color='blue')
     pl.plot(x,y,'b,')
     pl.xlim(-250,250)
     pl.ylim(-250,250)
@@ -1394,7 +1294,7 @@ def moments_display_new(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r'
     u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33+np.deg2rad(240))
     v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33+np.deg2rad(240))
     qvr=pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
-    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix',coordinates='data',color='blue')
+    qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix^3',coordinates='data',color='blue')
     pl.plot(x,y,'b,')
     pl.xlim(-250,250)
     pl.ylim(-250,250)
@@ -1403,23 +1303,26 @@ def moments_display_new(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r'
     pl.ylabel('Y [mm] (NORTH)')
     pl.title('M33')
     pl.subplot(2,2,4)
-    m20med = np.median(np.sqrt(data[:,2].real))
-    uo = np.sqrt(data[:,2].real) - m20med
-    idxl = uo < 0
-    u = np.abs(uo)
-    v = np.zeros(len(data[:,2].real))
-    qvr = pl.quiver(x,y,u,v,width = 0.008, color='r',pivot='middle',headwidth=0.,headlength=0.,headaxislength=0.,scale_units='width',label='> median')
-    qvr = pl.quiver(x[idxl],y[idxl],u[idxl],v[idxl],width = 0.008, color='b',pivot='middle',headwidth=0.,headlength=0.,headaxislength=0.,scale_units='width',label='< median')
-    pl.legend(loc='best')
-    qk = pl.quiverkey(qvr, -150,-240,max(u),str(round(max(u),3))+' pix',coordinates='data',color='green')
+    m20sqr = np.sqrt(data[:,2].real)
+    x = data[:,0].real
+    y = data[:,1].real
+    m20sqr_med = np.median(m20sqr)
+    m20sqr_diff = m20sqr - min(m20sqr)
+    m20sqr_diff_absmed = np.median(np.abs(m20sqr_diff))
+    plotScale = 1./m20sqr_diff_absmed*100
+    pl.scatter(x,y,s=m20sqr_diff*plotScale,c='b',alpha=0.5)
+    pl.scatter(-230,-230,s=m20sqr_diff_absmed*plotScale,c='g')
+    pl.text(-200,-235,str(round(m20sqr_diff_absmed,6))+' pix')
     pl.plot(x,y,'y,')
     pl.grid(color='g')
     pl.xlim(-250,250)
     pl.ylim(-250,250)
     pl.xlabel('X [mm] (WEST)')
     pl.ylabel('Y [mm] (NORTH)')
-    pl.title('median '+r'$\sqrt{M20}$: '+str(round(np.median(scale*4*np.sqrt(data[:,2].real)),3))+' [arcsec]')
+    pl.title('median '+r'$\sqrt{M20}$: '+str(round(scale*4*m20sqr_med,3))+' [arcsec]')
     return '---done---'
+
+
 
 
 
