@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 #---this is a python scrit that encapsulate the raytracing code from steve to make it more interactive/scriptable.
 # the zernike polynomial definition codes is adopted and modified from:
-#http://www.staff.science.uu.nl/~werkh108/docs/teach/2011b_python/python102/examples/py102-example2-zernike.py
+#http://www.staff.science.uu.nl/~werkh108/docs/teach/2011b_python/python102/examples/py102-example2-zernike.py; The zernikeFit is based on my lecture note of stat501.
 # J Hao 3/28/2012 @ FNAL
 # This is copied from decamspotPY on 6/18/2012 to delete those unnecessary routines. 
 
@@ -296,7 +296,7 @@ def gauss_seeing(npix = None,fwhm=None,e1=None,e2=None,scale=scale):
     fwhm in the unit of arcsec
     """
     fwhm = fwhm/scale
-    M20 = (fwhm/2.35482)**2
+    M20 = 2.*(fwhm/2.35482)**2
     row,col = np.mgrid[-npix/2:npix/2,-npix/2:npix/2]
     rowc = row.mean()
     colc = col.mean()
@@ -1128,10 +1128,28 @@ def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
     betaErr = sigma/np.dot(dataX.T,dataX).diagonal()
     SST = np.var(z[ok])*(len(z[ok])-1)# SST is the sum((z_i - mean(z))^2)
     R2 = 1 - SSE/SST
-    R2adj = 1-(1-R2)*(len(z[ok])-1)/(len(z[ok])-max_order)# adjusted R2 for quality of fit.             
-    return beta,betaErr, R2adj
+    R2adj = 1-(1-R2)*(len(z[ok])-1)/(len(z[ok])-max_order)# adjusted R2 for quality of fit.            
+    fitted = np.dot(dataX,beta) # fitted value
+    return beta,betaErr,R2adj,fitted
 
-
+def testZernikeFit():
+    x,y = np.meshgrid(np.arange(-50,50,1),np.arange(-50,50,1))
+    r2 = np.sqrt(x**2+y**2)
+    rho = r2/50.
+    phi = np.arctan2(y,x)
+    ok = rho <=1
+    rho = rho*ok
+    phi = phi*ok
+    beta = np.array([1,2,3,4,5,6,7,8,9,10])
+    nn = len(beta)
+    znk=0
+    for j in range(nn):
+        znk = znk + beta[j]*zernikel(j,rho,phi)
+    xx = x[ok].flatten()
+    yy = y[ok].flatten()
+    zz = znk[ok].flatten()
+    betaFit=zernikeFit(xx, yy, zz,max_rad=50.,cm=[0,0],max_order=10)[0]
+    fitted = zernikeFit(xx, yy, zz,max_rad=50.,cm=[0,0],max_order=10)[3]
 
 def dispZernike(beta=1.,j=0,gridsize = 1, max_rad = 1):
     x,y = np.meshgrid(np.arange(-gridsize,gridsize,0.001),np.arange(-gridsize,gridsize,0.001))
@@ -1259,8 +1277,8 @@ def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', th
     x = data[:,0].real
     y = data[:,1].real
     phi22[x<0] = phi22+np.deg2rad(180)
-    u = np.sqrt(np.abs(data[:,3]))*np.cos(phi22)
-    v = np.sqrt(np.abs(data[:,3]))*np.sin(phi22)
+    u = np.abs(data[:,3])*np.cos(phi22)
+    v = np.abs(data[:,3])*np.sin(phi22)
     qvr = pl.quiver(x,y,u,v,width = 0.004, color='r',pivot='middle',headwidth=0.,headlength=0.,headaxislength=0.,scale_units='width')
     qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix^2',coordinates='data',color='blue')
     pl.plot(x,y,'b,')
@@ -1272,8 +1290,8 @@ def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', th
     pl.title('M22')
     pl.subplot(2,2,2)
     phi31 = np.arctan2(data[:,4].imag,data[:,4].real)
-    u = np.sqrt(np.abs(data[:,4]))*np.cos(phi31)
-    v = np.sqrt(np.abs(data[:,4]))*np.sin(phi31)
+    u = np.abs(data[:,4])*np.cos(phi31)
+    v = np.abs(data[:,4])*np.sin(phi31)
     qvr=pl.quiver(x,y,u,v,width=0.003,color='r',pivot='middle',headwidth=4)
     qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix^3',coordinates='data',color='blue')
     pl.plot(x,y,'b,')
@@ -1285,14 +1303,14 @@ def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', th
     pl.title('M31')
     pl.subplot(2,2,3)
     phi33 = np.arctan2(data[:,5].imag,data[:,5].real)/3.
-    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33)
-    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33)
+    u = np.abs(data[:,5])*np.cos(phi33)
+    v = np.abs(data[:,5])*np.sin(phi33)
     pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
-    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33+np.deg2rad(120))
-    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33+np.deg2rad(120))
+    u = np.abs(data[:,5])*np.cos(phi33+np.deg2rad(120))
+    v = np.abs(data[:,5])*np.sin(phi33+np.deg2rad(120))
     pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
-    u = np.sqrt(np.abs(data[:,5]))*np.cos(phi33+np.deg2rad(240))
-    v = np.sqrt(np.abs(data[:,5]))*np.sin(phi33+np.deg2rad(240))
+    u = np.abs(data[:,5])*np.cos(phi33+np.deg2rad(240))
+    v = np.abs(data[:,5])*np.sin(phi33+np.deg2rad(240))
     qvr=pl.quiver(x,y,u,v,width=0.003,color='r',headwidth=4)
     qk = pl.quiverkey(qvr, -150,-240,np.max(np.sqrt(u**2+v**2)),str(round(np.max(np.sqrt(u**2+v**2)),3))+' pix^3',coordinates='data',color='blue')
     pl.plot(x,y,'b,')
@@ -1325,7 +1343,7 @@ def moments_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', th
     pl.xlabel('X [mm] (WEST)')
     pl.ylabel('Y [mm] (NORTH)')
     pl.title('median '+r'$\sqrt{M20}$: '+str(round(scale*4*m20sqr_med,3))+' [arcsec]')
-    return '---done---'
+    return datam
 
 
 def addMomentsNoise(data,percent):
@@ -1407,6 +1425,90 @@ def coeff_display(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', thet
     pl.xticks(ind,('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'))
     pl.xlabel('Zernike Coefficients')
     return betaAll,betaErrAll
+
+def dispM202Coeff(betaAll=None,betaErrAll=None):
+    ind = np.arange(len(betaAll[0]))
+    momname = ('M20','M22.Real','M22.imag')
+    fmtarr = ['bo-','ro-','go-']
+    if betaErrAll == None:
+        betaErrAll = np.zeros(len(ind))
+    pl.figure(figsize=(17,7))
+    for i in range(3):
+        pl.subplot(4,1,i+1)
+        pl.errorbar(ind[1:],betaAll[i][1:],yerr = betaErrAll[i],fmt=fmtarr[i])
+        pl.grid()
+        pl.xlim(-1,len(betaAll[i])+1)
+        pl.ylim(min(betaAll[i][1:])-0.01,max(betaAll[i][1:])+0.01)
+        pl.xticks(ind,('','','','','','','','','','','','','','','','','','','',''))
+        pl.ylabel(momname[i])
+    pl.xticks(ind,('Piston','Tip','Tilt','Astignism','Defocus','Astignism','Trefoil','Coma','Coma','Trefoil','Ashtray','Astigm.5th','Spherical','Astigm.5th','Ashtray','16','17','18','19','20'),rotation=90)
+    pl.xlabel('Zernike Coefficients')
+    return '---done!---'
+
+
+
+def coeff_display_M202(Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=0.,y=0.,z=0.,zernike_max_order=20,regular=False):
+    """
+    This function produce the zernike plots for a set of given parameters of the tilt/shift/defocus
+    """
+    hdu = genImgVallCCD(Nstar=Nstar,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta,phi=phi, corrector=corrector,x=x,y=y,z=z,regular=regular)
+    nn = len(hdu)
+    data = []
+    colnames = ['x','y','M20','M22','M31','M33']
+    sigma = 1.08/scale
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        M20=np.zeros(Nobj)
+        M22=np.zeros(Nobj).astype(complex)
+        M31=np.zeros(Nobj).astype(complex)
+        M33=np.zeros(Nobj).astype(complex)
+        for i in range(Nobj):
+            img = hdui.data[i][4:].reshape(npix,npix)
+            #img = rebin(img,(40,40))
+            M20,M22,M31,M33=complexMoments(data=img,sigma=sigma)
+        x=hdui.header['ccdXcen']
+        y=hdui.header['ccdYcen']
+        data.append([x,y,np.median(M20), np.median(M22), np.median(M31), np.median(M33)])
+    data=np.array(data)
+    betaAll=[]
+    betaErrAll=[]
+    R2adjAll=[]
+    beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,2].real,max_order=zernike_max_order)
+    betaAll.append(beta)
+    betaErrAll.append(betaErr)
+    R2adjAll.append(R2_adj)
+    for i in range(3,6):
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].real,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+        beta,betaErr,R2_adj = zernikeFit(data[:,0].real,data[:,1].real,data[:,i].imag,max_order=zernike_max_order)
+        betaAll.append(beta)
+        betaErrAll.append(betaErr)
+        R2adjAll.append(R2_adj)
+    betaAll = np.array(betaAll)
+    betaErrAll = np.array(betaErrAll)
+    R2adjAll = np.array(R2adjAll)
+    ind = np.arange(len(betaAll[0]))
+    momname = ('M20','M22.Real','M22.imag','M31.real','M31.imag','M33.real','M33.imag')
+    fmtarr = ['bo-','ro-','go-','co-','mo-','yo-','ko-']
+    pl.figure(figsize=(17,7))
+    for i in range(3):
+        pl.subplot(4,1,i+1)
+        pl.errorbar(ind[1:],betaAll[i][1:],yerr = betaErrAll[i][1:],fmt=fmtarr[i])
+        if i == 0:
+            pl.title('x: '+str(hdu[0].header['x'])+'   y: '+str(hdu[0].header['y'])+'   z: '+str(hdu[0].header['z'])+'   tilt: '+str(hdu[0].header['theta'])+'   fwhm: '+str(hdu[0].header['s_fwhm'])+'   e1: '+str(hdu[0].header['e1'])+'   e2: '+str(hdu[0].header['e2']))
+        pl.grid()
+        pl.xlim(-1,len(betaAll[i])+1)
+        #pl.ylim(min(betaAll[i][1:])-0.5,max(betaAll[i][1:])+0.5)
+        pl.ylim(-0.1,0.1)
+        pl.xticks(ind,('','','','','','','','','','','','','','','','','','','',''))
+        pl.ylabel(momname[i])
+    pl.xticks(ind,('Piston','Tip','Tilt','Astignism','Defocus','Astignism','Trefoil','Coma','Coma','Trefoil','Ashtray','Astigm.5th','Spherical','Astigm.5th','Ashtray','16','17','18','19','20'),rotation=90)
+    pl.xlabel('Zernike Coefficients')
+    return betaAll,betaErrAll
+
+
 
 
     #pl.figure(figsize=(13,5))
@@ -1621,10 +1723,11 @@ def comp_zernike(beta1=None,betaErr1=None,beta2=None,betaErr2=None):
 
 def dispZernike20():
     pl.figure(figsize=(20,16))
+    name=('Piston','Tip','Tilt','Astignism','Defocus','Astignism','Trefoil','Coma','Coma','Trefoil','Ashtray','Astigm.5th','Spherical','Astigm.5th','Ashtray','16','17','18','19','20')
     for i in range(0,20):
         pl.subplot(4,5,i+1)
         dispZernike(j=i)
-        pl.title('j = '+str(i))
+        pl.title(name[i])
     return 0
 
 def zernike_coeff(filename=None,zernike_max_order=20):
@@ -2036,6 +2139,196 @@ def genValidation(n=None):
     t=measure_zernike_coeff(filelist)
     return '-----done!-----'
  
+
+def zernikeHexapodTrend(mnts='M20'):
+    """
+    this one plot the general trend when one hexapod parameter varies what zernike coefficients of the M20, M22 will behave
+    """
+    Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_training.cp'
+    b=p.load(open(Tfile))
+    nobs = len(b)
+    x = b[:,0]
+    y = b[:,1]
+    z = b[:,2]
+    theta = b[:,3]
+    phi = b[:,4]
+    fwhm = b[:,5]
+    e1 = b[:,6]
+    e2 = b[:,7]
+    thetax = theta*np.cos(np.deg2rad(phi))
+    thetay = theta*np.sin(np.deg2rad(phi))
+    if mnts == 'M20':
+        idxBase = 9
+    if mnts == 'M22real':
+        idxBase = 29
+    if mnts == 'M22imag':
+        idxBase = 49
+    idx = np.arange(14)
+    zernikeName=('Piston','Tip','Tilt','Astignism','Defocus','Astignism','Trefoil','Coma','Coma','Trefoil','Ashtray','Astigm.5th','Spherical','Astigm.5th','Ashtray','16','17','18','19','20')
+    for i in range(14):
+        pl.figure(figsize=(21,10))
+        pl.subplot(2,3,1)
+        bp.bin_scatter(x,b[:,idxBase+idx[i]],binsize=0.01,fmt='bo',scatter=True)
+        pl.xlabel('x decenter')
+        pl.ylabel(zernikeName[i+1])
+        pl.title(mnts)
+        pl.subplot(2,3,2)
+        bp.bin_scatter(y,b[:,idxBase+idx[i]],binsize=0.01,fmt='bo',scatter=True)
+        pl.xlabel('y decenter')
+        pl.ylabel(zernikeName[i+1])
+        pl.title(mnts)
+        pl.subplot(2,3,3)
+        bp.bin_scatter(z,b[:,idxBase+idx[i]],binsize=0.01,fmt='bo',scatter=True)
+        pl.xlabel('z-defocus')
+        pl.ylabel(zernikeName[i+1])
+        pl.title(mnts)
+        pl.subplot(2,3,4)
+        bp.bin_scatter(thetax,b[:,idxBase+idx[i]],binsize=5,fmt='bo',scatter=True)
+        pl.xlabel('x-tilt')
+        pl.ylabel(zernikeName[i+1])
+        pl.title(mnts)
+        pl.subplot(2,3,5)
+        bp.bin_scatter(thetay,b[:,idxBase+idx[i]],binsize=5,fmt='bo',scatter=True)
+        pl.xlabel('y-tilt')
+        pl.ylabel(zernikeName[i+1])
+        pl.title(mnts)
+        pl.savefig(mnts+'_'+str(i+1)+'_'+zernikeName[i+1]+'.png')
+        pl.close()
+
+
+def hexapodZernikeTrend(mnts='M20'):
+    """
+    this one plot the general trend when one hexapod parameter varies what zernike coefficients of the M20, M22 will behave
+    """
+    Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_training.cp'
+    b=p.load(open(Tfile))
+    nobs = len(b)
+    x = b[:,0]
+    y = b[:,1]
+    z = b[:,2]
+    theta = b[:,3]
+    phi = b[:,4]
+    fwhm = b[:,5]
+    e1 = b[:,6]
+    e2 = b[:,7]
+    thetax = theta*np.cos(np.deg2rad(phi))
+    thetay = theta*np.sin(np.deg2rad(phi))
+    if mnts == 'M20':
+        idxBase = 9
+    if mnts == 'M22real':
+        idxBase = 29
+    if mnts == 'M22imag':
+        idxBase = 49
+    idx = np.arange(14)
+    zernikeName=('Piston','Tip','Tilt','Astignism','Defocus','Astignism','Trefoil','Coma','Coma','Trefoil','Ashtray','Astigm.5th','Spherical','Astigm.5th','Ashtray','16','17','18','19','20')
+    for i in range(14):
+        pl.figure(figsize=(21,10))
+        pl.subplot(2,3,1)
+        bp.bin_scatter(b[:,idxBase+idx[i]],x,nbins=20,fmt='bo',scatter=True)
+        pl.ylabel('x-decenter')
+        pl.xlabel(zernikeName[i+1])
+        pl.title(mnts)
+        pl.subplot(2,3,2)
+        bp.bin_scatter(b[:,idxBase+idx[i]],y,nbins=20,fmt='bo',scatter=True)
+        pl.ylabel('y-decenter')
+        pl.xlabel(zernikeName[i+1])
+        pl.title(mnts)
+        pl.subplot(2,3,3)
+        bp.bin_scatter(b[:,idxBase+idx[i]],z,nbins=20,fmt='bo',scatter=True)
+        pl.ylabel('z-defocus')
+        pl.xlabel(zernikeName[i+1])
+        pl.title(mnts)
+        pl.subplot(2,3,4)
+        bp.bin_scatter(b[:,idxBase+idx[i]],thetax,nbins=20,fmt='bo',scatter=True)
+        pl.ylabel('x-tilt')
+        pl.xlabel(zernikeName[i+1])
+        pl.title(mnts)
+        pl.subplot(2,3,5)
+        bp.bin_scatter(b[:,idxBase+idx[i]],thetay,nbins=20,fmt='bo',scatter=True)
+        pl.ylabel('y-tilt')
+        pl.xlabel(zernikeName[i+1])
+        pl.title(mnts)
+        pl.savefig(zernikeName[i+1]+mnts+'_'+str(i+1)+'.png')
+        pl.close()
+
+def hexapodZernikeLinearModel(mnts='M20'):
+    """
+    this code calculate the linear fit
+    """
+    Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_training.cp'
+    b=p.load(open(Tfile))
+    nobs = len(b)
+    x = b[:,0]
+    y = b[:,1]
+    z = b[:,2]
+    theta = b[:,3]
+    phi = b[:,4]
+    fwhm = b[:,5]
+    e1 = b[:,6]
+    e2 = b[:,7]
+    thetax = theta*np.cos(np.deg2rad(phi))
+    thetay = theta*np.sin(np.deg2rad(phi))
+    
+    M22realTrefoil2 = b[:,37] # for x decenter
+    M22imagTrefoil1 = b[:,54] 
+    M22TrefoilXshift = 0.5*(M22realTrefoil2+M22imagTrefoil1)
+
+    M22realTrefoil1 = b[:,34] # for y decenter
+    M22imagTrefoil2 = b[:,57] 
+    M22TrefoilYshift = 0.5*(M22realTrefoil1 - M22imagTrefoil2)
+
+    M20defocus = b[:,12] # for defocus
+
+    M22realComa2 = b[:,36] # for x-tilt
+    M22imagComa1 = b[:,55]
+    M22ComaXtilt = 0.5*(M22realComa2+M22imagComa1)
+
+    M22realComa1 = b[:,35] # for y-tilt
+    M22imagComa2 = b[:,56]
+    M22ComaYtilt = 0.5*(M22realComa1 - M22imagComa2)
+    
+    pl.figure(figsize=(21,12))
+    pl.subplot(2,3,1)
+    t=bp.bin_scatter(M22TrefoilXshift,x,nbins=20,fmt='bo',scatter=True)
+    res = linefit(M22TrefoilXshift,x)
+    pl.plot(M22TrefoilXshift,M22TrefoilXshift*res[1]+res[0],'r,')
+    pl.ylabel('x-decenter')
+    pl.xlabel('(M22realTrefoil2+M22imagTrefoil1)/2')
+    pl.title('slope: '+str(round(res[1],4))+'  Intercept: '+str(round(res[0],4)))
+    pl.subplot(2,3,2)
+    t=bp.bin_scatter(M22TrefoilYshift,y,nbins=20,fmt='bo',scatter=True)
+    res = linefit(M22TrefoilYshift,y)
+    pl.plot(M22TrefoilYshift,M22TrefoilYshift*res[1]+res[0],'r,')
+    pl.ylabel('y-decenter')
+    pl.xlabel('(M22realTrefoil1 - M22imagTrefoil2)/2')
+    pl.title('slope: '+str(round(res[1],4))+'  Intercept: '+str(round(res[0],4)))
+    pl.subplot(2,3,3)
+    t=bp.bin_scatter(M20defocus,z,nbins=20,fmt='bo',scatter=True)
+    res = linefit(M20defocus,z)
+    pl.plot(M20defocus,M20defocus*res[1]+res[0],'r,')
+    pl.ylabel('z-defocus')
+    pl.xlabel('M20defocus')
+    pl.title('slope: '+str(round(res[1],4))+'  Intercept: '+str(round(res[0],4)))
+    pl.subplot(2,3,4)
+    t=bp.bin_scatter(M22ComaXtilt,thetax,nbins=20,fmt='bo',scatter=True)
+    res = linefit(M22ComaXtilt,thetax)
+    pl.plot(M22ComaXtilt,M22ComaXtilt*res[1]+res[0],'r,')
+    pl.ylabel('x-tilt')
+    pl.xlabel('(M22realComa2+M22imagComa1)/2')
+    pl.title('slope: '+str(round(res[1],4))+'  Intercept: '+str(round(res[0],4)))
+    pl.subplot(2,3,5)
+    t=bp.bin_scatter(M22ComaYtilt,thetay,nbins=20,fmt='bo',scatter=True)
+    res = linefit(M22ComaYtilt,thetay)
+    pl.plot(M22ComaYtilt,M22ComaYtilt*res[1]+res[0],'r,')
+    pl.ylabel('y-tilt')
+    pl.xlabel('(M22realComa1 - M22imagComa2)/2')
+    pl.title('slope: '+str(round(res[1],4))+'  Intercept: '+str(round(res[0],4)))
+
+    pl.close()
+
+
+
+
 def generateKNNobj():
     """
     This code generate the KNN object that fited by the training data using M20
@@ -2044,7 +2337,10 @@ def generateKNNobj():
     b=p.load(open(Tfile))
     nobs = len(b)
     #tdata=b[:,8:28].copy()
-    tdata=b[:,9:28].copy() # remove the zero order zernike, i.e. remove the mean of the M20
+    # indx with only M22 without zero order
+    m22idx = np.concatenate((np.arange(29,48),np.arange(49,68)))
+    tdata=b[:,m22idx].copy()
+    #tdata=b[:,9:28].copy() # remove the zero order zernike, i.e. remove the mean of the M20
     #-standardize the data. use this information in future validation data too.
     tmean = tdata.mean(axis=0)
     tstd = tdata.std(axis=0)
@@ -2055,8 +2351,8 @@ def generateKNNobj():
     tpara[:,4] = ttpara[:,3]*np.sin(np.deg2rad(ttpara[:,4]))
     knn = nb.KNeighborsRegressor(algorithm='ball_tree',n_neighbors=15)
     knn.fit(tdata,tpara)
-    p.dump(knn,open('finerGridKnnObj_remMean.cp','w'),2)
-    p.dump([tmean,tstd],open('finerGridStdConst_remMean.cp','w'),2)
+    p.dump(knn,open('finerGridKnnObj_M22_remMean.cp','w'),2)
+    p.dump([tmean,tstd],open('finerGridStdConst_M22_remMean.cp','w'),2)
     #np.savetxt('finerGridStdConst.txt',np.array([tmean,tstd]),fmt='%f10.5',delimiter = ',')
     return 'It is done !'
     
@@ -2066,14 +2362,17 @@ def validateFitKnnObj(Vfile=None,scatter=True):
     This function validate the results using the saved KNN object. It use only M20. 
     """
     vb = p.load(open(Vfile))
-    vdata = vb[:,9:28].copy() # remove the 0 order of the M20, i.e. remove the mean of M20
+    m22idx = np.concatenate((np.arange(29,48),np.arange(49,68)))
+    #vdata = vb[:,9:28].copy() # remove the 0 order of the M20, i.e. remove the mean of M20
+    vdata = vb[:,m22idx].copy() # remove the 0 order of the M22(real and imag), i.e. remove the mean of M22
     vparaTrue=vb[:,0:5].copy()
     vvparaTrue=vb[:,0:5].copy()
     vparaTrue[:,3] = vvparaTrue[:,3]*np.cos(np.deg2rad(vvparaTrue[:,4]))
     vparaTrue[:,4] = vvparaTrue[:,3]*np.sin(np.deg2rad(vvparaTrue[:,4]))
-
-    knn = p.load(open('finerGridKnnObj_remMean.cp','r'))
-    tmean,tstd = p.load(open('finerGridStdConst_remMean.cp','r'))
+    #knn = p.load(open('finerGridKnnObj_M202_remMean.cp','r'))
+    #tmean,tstd = p.load(open('finerGridStdConst_M202_remMean.cp','r'))
+    knn = p.load(open('finerGridKnnObj_M22_remMean.cp','r'))
+    tmean,tstd = p.load(open('finerGridStdConst_M22_remMean.cp','r'))
     vdata = (vdata - tmean)/tstd
     vparaReg = knn.predict(vdata)
     pl.figure(figsize=(17,10))
@@ -2164,41 +2463,41 @@ if __name__ == '__main__':
     p.dump(validate,open('zernike_coeff_finerGrid_validate.cp','w'),2)
     """
 
-    t= moments_display(Nstar=1,npix = npix)
-    pl.savefig('moments_seeing0.9.png')
+    t= moments_display(Nstar=1,npix = npix,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0.9_mag15_exptime30.png')
     pl.close()
-    t= moments_display(Nstar=1,npix = npix,seeing=0)
-    pl.savefig('moments_seeing0.png')
+    t= moments_display(Nstar=1,npix = npix,seeing=0,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0_mag15_exptime30.png')
     pl.close()
-    t= moments_display(Nstar=1,z=0.1,npix = npix)
-    pl.savefig('moments_seeing0.9_z0.1.png')
+    t= moments_display(Nstar=1,z=0.1,npix = npix,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0.9_z0.1_mag15_exptime30.png')
     pl.close()
-    t= moments_display(Nstar=1,z=-0.1,npix = npix)
-    pl.savefig('moments_seeing0.9_z-0.1.png')
+    t= moments_display(Nstar=1,z=-0.1,npix = npix,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0.9_z-0.1_mag15_exptime30.png')
     pl.close()
-    t= moments_display(Nstar=1,x=0.1,npix = npix)
-    pl.savefig('moments_seeing0.9_x0.1.png')
+    t= moments_display(Nstar=1,x=0.1,npix = npix,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0.9_x0.1_mag15_exptime30.png')
     pl.close()
-    t= moments_display(Nstar=1,x=-0.1,npix = npix)
-    pl.savefig('moments_seeing0.9_x-0.1.png')
+    t= moments_display(Nstar=1,x=-0.1,npix = npix,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0.9_x-0.1_mag15_exptime30.png')
     pl.close()
-    t= moments_display(Nstar=1,y=0.1,npix = npix)
-    pl.savefig('moments_seeing0.9_y0.1.png')
+    t= moments_display(Nstar=1,y=0.1,npix = npix,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0.9_y0.1_mag15_exptime30.png')
     pl.close()
-    t= moments_display(Nstar=1,y=-0.1,npix = npix)
-    pl.savefig('moments_seeing0.9_y-0.1.png')
+    t= moments_display(Nstar=1,y=-0.1,npix = npix,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0.9_y-0.1_mag15_exptime30.png')
     pl.close()
-    t= moments_display(Nstar=1,theta=30,phi=0,npix = npix)
-    pl.savefig('moments_seeing0.9_theta30_phi0.png')
+    t= moments_display(Nstar=1,theta=30,phi=0,npix = npix,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0.9_theta30_phi0_mag15_exptime30.png')
     pl.close()
-    t= moments_display(Nstar=1,theta=-30,phi=0,npix = npix)
-    pl.savefig('moments_seeing0.9_theta-30_phi0.png')
+    t= moments_display(Nstar=1,theta=-30,phi=0,npix = npix,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0.9_theta-30_phi0_mag15_exptime30.png')
     pl.close()
-    t= moments_display(Nstar=1,theta=30,phi=90,npix = npix)
-    pl.savefig('moments_seeing0.9_theta30_phi90.png')
+    t= moments_display(Nstar=1,theta=30,phi=90,npix = npix,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0.9_theta30_phi90_mag15_exptime30.png')
     pl.close()
-    t= moments_display(Nstar=1,theta=-30,phi=90,npix = npix)
-    pl.savefig('moments_seeing0.9_theta-30_phi90.png')
+    t= moments_display(Nstar=1,theta=-30,phi=90,npix = npix,noise=True,mag=15,sigma=2.)
+    pl.savefig('moments_seeing0.9_theta-30_phi90_mag15_exptime30.png')
     pl.close()
     
     """
