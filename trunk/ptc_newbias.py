@@ -9,6 +9,8 @@ NameFits=gl.glob(dir+'/*.fits*')
 #NameBias=dir+'/bias/median.fits'
 NameFits.sort()
 #NameFits=NameFits[0:20]
+NameBias = NameFits[0] # use the first exposure as bias
+NameFits = NameFits[2:]
 hdu=pf.open(NameBias)
 Channel=range(1,len(hdu))
 
@@ -24,21 +26,21 @@ for i in Channel:
     detname=hdr['detpos']
     if oscanL != 0:     
         gainL,fwL=linearity(NameFits,NameBias,i,shift=0,left=1)
-        pl.savefig(dir+'fig/ptc_'+detname+'_channel_'+str(i)+'_left.png')
+        pl.savefig(dir+'fignew/ptc_'+detname+'_channel_'+str(i)+'_left.png')
         ccd.append(detname+'L')
         fullwell.append(fwL)
         gain.append(gainL)
     oscanR=np.mean(data[500:1500,2110:2150])
     if oscanR != 0:
         gainR,fwR=linearity(NameFits,NameBias,i,shift=0,left=0)
-        pl.savefig(dir+'fig/ptc_'+detname+'_channel_'+str(i)+'_right.png')
+        pl.savefig(dir+'fignew/ptc_'+detname+'_channel_'+str(i)+'_right.png')
         ccd.append(detname+'R')
         fullwell.append(fwR)
         gain.append(gainR)
 
 fullwell=np.array(fullwell)
 gain=np.array(gain)
-f = open(dir+'fullwell.txt', 'w')
+f = open(dir+'fullwellnew.txt', 'w')
 for j in range(len(ccd)):
     f.write(ccd[j]+'   '+str(round(fullwell[j]))+'   '+str(round(gain[j],4))+'\n')
 f.close()
