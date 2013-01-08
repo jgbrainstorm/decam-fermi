@@ -11,6 +11,7 @@ try:
     import pylab as pl
     import os,sys
     from DECamCCD_def import *
+    from DECamCCD import *
     import scipy.ndimage as nd
     import healpy as hp
     import glob as gl
@@ -24,6 +25,7 @@ try:
     import sklearn.neighbors as nb
     from sklearn.svm import SVR
     import scipy.stats as st
+    from decamImgAnalyzer import *
 except ImportError:
     print 'the required packages are: numpy, pyfits,pylab,scikit,scipy,mahotas'
     raise
@@ -207,7 +209,8 @@ def mfwhm(img):
     #rad,im,imerr=bp.bin_scatter(radius,img,binsize=1,fmt='b.',plot=False)
     alpha,beta,A,B = p
     fwhm_moffat= 2. * abs(alpha) * np.sqrt(2.**(1./beta)-1)
-    return alpha,beta,A,B,fwhm_moffat
+    r50_moffat = abs(alpha)*np.sqrt(2.**(1./(beta-1))-1)
+    return alpha,beta,A,B,fwhm_moffat,r50_moffat
 
 def wfwhm(img,sigma):
     """
@@ -257,6 +260,29 @@ def wfwhm(img,sigma):
     lambdam = 0.5*(M20 - abs(M22))
     fwhmw = np.sqrt(2.*np.log(2.))*(np.sqrt(lambdap)+np.sqrt(lambdam))
     return e1,e2,whiskerLength,fwhmw 
+
+
+def moments2nd(data):
+    """
+    Returns (Mcc, Mrr, Mrc)
+    the gaussian parameters of a 2D distribution by calculating its
+    moments
+    """
+    nrow,ncol=data.shape
+    Isum = data.sum()
+    Icol = data.sum(axis=0) # sum over all rows
+    Irow = data.sum(axis=1) # sum over all cols
+    colgrid = np.arange(ncol)
+    rowgrid = np.arange(nrow)
+    rowmean=np.sum(rowgrid*Irow)/Isum
+    colmean=np.sum(colgrid*Icol)/Isum
+    ROW,COL=np.indices((nrow,ncol))   
+    rowgrid = rowgrid - rowmean # centered
+    colgrid = colgrid - colmean
+    Mrr = np.sum(rowgrid**2*data)/Isum
+    Mcc = np.sum(colgrid**2*data)/Isum
+    Mrc = np.sum(np.outer(rowgrid,colgrid)*data)/Isum    
+    return Mcc, Mrr, Mrc
 
 
 def moments(data):
@@ -317,7 +343,14 @@ def moffat_seeing(npix = None, alpha=None,beta=None):
     res = img/img.sum()
     return res
 
-                 
+def moffat_psf(npix = None, fwhm=None,beta=3.5,scale=0.27):
+    alpha = fwhm/scale/(2.*np.sqrt(2**(1/beta)-1))
+    row,col = np.mgrid[-npix/2:npix/2,-npix/2:npix/2]
+    rowc = row.mean()
+    colc = col.mean()
+    img = (beta - 1)/(np.pi*alpha**2)/(1+((row**2+col**2)/alpha**2))**beta
+    res = img/img.sum()
+    return res                
    
 
 def convolveH(image=None,kernel=None):
@@ -419,7 +452,7 @@ def des_image(exptime=100,mag=None, Nstar=1,ccd=None,seeing=[0.9,0.,0.],npix=npi
 
 
 
-def des_psf_image(exptime=100,mag=None,seeing=[0.9,0.,0.],setbkg=True):
+def des_psf_image(exptime=100,mag=None,seeing=[0.7,0.,0.],setbkg=True,moffat=False):
     
     """
     This code generate a PSF star with seeing and sky background (no optics psf)
@@ -435,7 +468,10 @@ def des_psf_image(exptime=100,mag=None,seeing=[0.9,0.,0.],setbkg=True):
     else:
         skyphoton = 8.460140*exptime #(sky level per pix per sec)
     bkg = skyphoton*gain  # background in ADU
-    psf = gauss_seeing(npix,seeing[0],seeing[1],seeing[2],scale = 0.27)
+    if moffat == True:
+        psf = moffat_psf(npix = npix,fwhm=seeing[0],beta=3.5,scale=0.27)
+    else:
+        psf = gauss_seeing(npix,seeing[0],seeing[1],seeing[2],scale = 0.27)
     img = (psf * objectphoton + skyphoton)*gain
     img = img + add_imageNoise(img)
     return img,bkg,psf
@@ -501,10 +537,63 @@ def complexMoments(data=None,sigma=None):
     return M20, M22, M31, M33
 
 
+def complex2ndMoments(data=None,sigma=None):
+    """
+    This one calcualte the 2nd moments with the Gaussian weights and then subract the weight contribution away
+    col : x direction
+    row : y direction
+    the centroid is using the adpative centroid.
+    sigma is the stand deviation of the measurement kernel in pixel
+    The output is in pixel coordinate
+    """
+    nrow,ncol=data.shape
+    Isum = data.sum()
+    Icol = data.sum(axis=0) # sum over all rows
+    Irow = data.sum(axis=1) # sum over all cols
+    colgrid = np.arange(ncol)
+    rowgrid = np.arange(nrow)
+    rowmean=np.sum(rowgrid*Irow)/Isum
+    colmean=np.sum(colgrid*Icol)/Isum
+    ROW,COL=np.indices((nrow,ncol))
+    maxItr = 50
+    EP = 0.0001
+    for i in range(maxItr):
+        wrmat = wr(ROW,COL,rowmean,colmean,sigma)
+        IWmat = data*wrmat
+        IWcol = IWmat.sum(axis=0)
+        IWrow = IWmat.sum(axis=1)
+        IWsum = IWmat.sum()
+        drowmean = np.sum((rowgrid-rowmean)*IWrow)/IWsum
+        dcolmean = np.sum((colgrid-colmean)*IWcol)/IWsum
+        rowmean = rowmean+2.*drowmean
+        colmean = colmean+2.*dcolmean
+        if drowmean**2+dcolmean**2 <= EP:
+            break
+    rowgrid = rowgrid - rowmean # centered
+    colgrid = colgrid - colmean
+    Mr = np.sum(rowgrid*IWrow)/IWsum
+    Mc = np.sum(colgrid*IWcol)/IWsum
+    Mrr = np.sum(rowgrid**2*IWrow)/IWsum
+    Mcc = np.sum(colgrid**2*IWcol)/IWsum
+    Mrc = np.sum(np.outer(rowgrid,colgrid)*IWmat)/IWsum
+    Cm = np.matrix([[Mcc,Mrc],[Mrc,Mrr]])
+    Cw = np.matrix([[sigma**2,0.],[0.,sigma**2]])
+    Cimg = (Cm.I - Cw.I).I
+    Mcc = Cimg[0,0]
+    Mrr = Cimg[1,1]
+    Mrc = Cimg[0,1]
+    #M20 = Mrr + Mcc
+    #M22 = complex(Mcc - Mrr,2*Mrc)
+    return Mcc, Mrr, Mrc
+
+
+
+
+
 
 #------------------------------
 
-def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,suband=None):
+def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,suband=None,moffat=False):
     #---generating the .par file------
     dir = os.getcwd()+'/'
     file = open(dir+'temp.par','w')
@@ -513,12 +602,13 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r'
     file.write('SCALE '+str(scale)+'\n')
     file.write('FWHM '+str(diffusionfwhm)+'\n')
     file.write('ZENITH '+str(zenith)+'\n')
-    file.write('FILTER '+filter +'\n')
+    file.write('FILTER '+filter+' \n')
     file.write('PHI '+corrector+' '+str(phi) +'\n')
     file.write('XMM '+str(xmm)+'\n')
     file.write('YMM '+str(ymm)+'\n')
     if suband is None:
-        file.write('WEIGHTS 1 0.9 0.8 0.7 0.6 \n')
+        #file.write('WEIGHTS 0.5 0.9 0.8 0.7 0.6 \n')
+        file.write('WEIGHTS 1 1 1 1 1 \n')
     elif suband == 1:
         file.write('WEIGHTS 1 0.00001 0.00001 0.00001 0.00001\n') #approximately monochromatic
     elif suband == 2:
@@ -544,7 +634,10 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r'
     #---output the result as an image vector
     b=pf.getdata(dir+'temp.fit')
     if seeing != 0.:
-        b=addseeingImgFFT(b,fwhm=seeing[0],e1=seeing[1],e2=seeing[2])
+        if moffat == True:
+            b=addseeingImgFFTmoffat(img = b,fwhm=seeing[0])
+        else:
+            b=addseeingImgFFT(b,fwhm=seeing[0],e1=seeing[1],e2=seeing[2])
     hdr = pf.getheader(dir+'temp.fit')
     ypstamp,xpstamp = nd.center_of_mass(b) # y -> row, x-> col
     bb = b.reshape(npix*npix)
@@ -553,7 +646,7 @@ def decamspot(xmm=None,ymm=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='r'
     return np.concatenate((pos,bb)),hdr
 
 
-def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='g', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,suband=None,regular=False):
+def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='g', theta=0., phi=0,corrector='corrector',x=None,y=None,z=None,suband=None,regular=False,moffat=False):
     """
     seeing is the rms in arcseconds
     syntax: genImgV(filename=None,Nstar=None,ccd=None,seeing=0,npix=40,zenith=0,filter='g', theta=0., corrector='corrector',x=None,y=None,z=None,suband=None)
@@ -570,7 +663,7 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=None,zenit
         for i in range(Nstar):
             xmm = np.random.rand()*225*randfactor[np.random.randint(0,2)]
             ymm = np.random.rand()*225*randfactor[np.random.randint(0,2)]
-            res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband)
+            res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, corrector=corrector,x=x,y=y,z=z,suband=suband,moffat=moffat)
             datalist.append(res[0])
             hdrlist.append(res[1])
         data = np.array(datalist)
@@ -586,7 +679,7 @@ def genImgV(filename=None,Nstar=None,ccd=None,seeing=[0.9,0.,0.],npix=None,zenit
                 else:
                     xmm = regridx[i]+ccd[1]
                     ymm = regridy[i]+ccd[2]
-            res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, phi=phi,corrector=corrector,x=x,y=y,z=z,suband=suband)
+            res = decamspot(xmm=xmm,ymm=ymm,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, phi=phi,corrector=corrector,x=x,y=y,z=z,suband=suband,moffat=moffat)
             datalist.append(res[0])
             hdrlist.append(res[1])
         data = np.array(datalist)
@@ -717,10 +810,10 @@ def disImgCCD(imgV=None,ccd=None):
     return 'The image is done!'
 
   
-def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,contour=False,sigma=1.08/scale,npix=None,phi=0,zenith=0):
+def imgCCDctr(ccd=None,filter='r',seeing=[0.9,0.,0.],x=0,y=0,z=0.,theta=0.,contour=False,sigma=None,npix=None,phi=0,zenith=0):
     xmm = ccd[1]
     ymm = ccd[2]
-    res = genImgV(Nstar=1, ccd = ccd,seeing=seeing,theta=theta,x=x,y=y,z=z,npix=npix,zenith=zenith,phi=phi)
+    res = genImgV(Nstar=1, ccd = ccd,filter=filter,seeing=seeing,theta=theta,x=x,y=y,z=z,npix=npix,zenith=zenith,phi=phi)
     data = res[0]
     img = data[0][4:].reshape(npix,npix)
     npix = npix/4
@@ -840,10 +933,12 @@ def addseeingImgFFT(img = None,fwhm=1.,e1=0.,e2=0.):
     covimg = covimg/covimg.sum()
     return covimg
 
-def addseeingImgFFTmoffat(img = None,alpha=None,beta=None):
+def addseeingImgFFTmoffat(img = None,fwhm=None):
     """
     fwhm input in the unit of the arcsec
     """
+    beta = 3.5
+    alpha = fwhm/scale/(2.*np.sqrt(2**(1/beta)-1))
     kern = moffat_seeing(npix,alpha=alpha,beta=beta)
     img = img.astype('f') # required for the fftconvolve
     covimg = convolveH(img,kern)
@@ -1016,6 +1111,113 @@ def measureDataComplexM_multiext(filename,sigma = 1.1,scale=0.27):
     hp.mwrfits(filename[:-7]+'_complexMoments_gausswt_'+str(sigma*scale)+'.fit',data.T,colnames=colnames)
     return '---done !-----'
 
+def whiskerStat_multiext(filename,sigma,noise=False,mag=None,exptime=None):
+    """
+    Note that here, the sigma is not fwhm. Sigma is given in arcsec
+    """
+    hdu=pf.open(filename)
+    data = []
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        Mcc=np.zeros(Nobj)
+        Mrr = np.zeros(Nobj)
+        Mrc = np.zeros(Nobj)
+        r50 = np.zeros(Nobj)
+        for i in range(Nobj):
+            print i
+            imgo = hdui.data[i][4:].reshape(160,160)
+            psf = rebin(imgo,(40,40))
+            if noise == True:
+                gain = 0.21 # convert electrons to ADU
+                zeropoint = 26.794176 # r band, from Nikolay
+                objectphoton = exptime*10**(0.4*(zeropoint - mag))
+                skyphoton = 8.460140*exptime
+                bkg = skyphoton*gain
+                img = (psf * objectphoton + skyphoton)*gain
+                img = img + add_imageNoise(img) - bkg
+            else:
+                img = psf
+            Mcc[i],Mrr[i],Mrc[i]=complex2ndMoments(img,sigma)
+            r50[i] = mfwhm(img)[5]
+        data.append([np.mean(Mcc),np.mean(Mrr),np.mean(Mrc),np.mean(r50)])
+    data = np.array(data)
+    datamean =np.array([robust_mean(data[:,0]),robust_mean(data[:,1]),robust_mean(data[:,2]),robust_mean(data[:,3])])
+    #r50 = 0.5*2.35482*np.sqrt((datamean[0]+datamean[1])/2.)*0.27
+    r50moffat = datamean[3]*0.27
+    whk = ((datamean[0]-datamean[1])**2 + (2.*datamean[2])**2)**(0.25)*0.27
+    phi = np.rad2deg(0.5*np.arctan2(2.*datamean[2],(datamean[0]-datamean[1])))
+    datasubmean = data - datamean
+    whkrms = (robust_mean((datasubmean[:,0] - datasubmean[:,1])**2 + 4.*datasubmean[:,2]**2))**(0.25)*0.27
+    np.savetxt(filename[0:-6]+'txt',[r50moffat,whk,phi,whkrms,datamean[0],datamean[1],datamean[2]],fmt='%10.5f')
+    return '---done !-----'
+
+
+def fwhmwhisker_multiext(filename,sigma,band,zenith):
+    """
+    Note that here, the sigma is not fwhm. Sigma is given in arcsec
+    """
+    hdu=pf.open(filename)
+    e1=[]
+    e2=[]
+    fwhmw=[]
+    whiskerw=[]
+    for hdui in hdu[1:]:
+        Nobj = hdui.data.shape[0]
+        for i in range(Nobj):
+            print i
+            img = hdui.data[i][4:].reshape(160,160)
+            imgrbin = rebin(img,(40,40))
+            res=wfwhm(imgrbin,sigma)
+            e1.append(res[0])
+            e2.append(res[1])
+            whiskerw.append(res[2]*0.27)
+            fwhmw.append(res[3]*0.27)
+    e1 = np.array(e1)
+    e2 = np.array(e2)
+    fwhmw = np.array(fwhmw)
+    whiskerw = np.array(whiskerw)
+    e1mean = e1.mean()
+    e1std = e1.std()
+    e2mean = e2.mean()
+    e2std = e2.std()
+    whiskerwmean = whiskerw.mean()
+    whiskerwstd = whiskerw.std()
+    fwhmwmean = fwhmw.mean()
+    fwhmwstd = fwhmw.std()
+    r50mean = np.mean(fwhmw/2.)
+    r50std = np.std(fwhmw/2.)
+    pl.figure(figsize=(15,10))
+    pl.subplot(2,3,1)
+    pl.hist(e1,bins=20,normed=True)
+    pl.xlabel('e1')
+    pl.title('mean: '+str(round(e1mean,6))+'  std: '+str(round(e1std,5)))
+    pl.subplot(2,3,2)
+    pl.hist(e2,bins=20,normed=True)
+    pl.xlabel('e2')
+    pl.title('mean: '+str(round(e2mean,6))+'  std: '+str(round(e2std,5)))
+    pl.subplot(2,3,3)
+    pl.hist(whiskerw,bins=20,normed=True)
+    pl.xlabel('whisker')
+    pl.title('mean: '+str(round(whiskerwmean,5))+'  std: '+str(round(whiskerwstd,5)))
+    pl.subplot(2,3,4)
+    pl.hist(fwhmw,bins=20,normed=True)
+    pl.xlabel('fwhm')
+    pl.title('mean: '+str(round(fwhmwmean,5))+'  std: '+str(round(fwhmwstd,5)))
+    pl.subplot(2,3,5)
+    pl.hist(fwhmw/2.,bins=20,normed=True)
+    pl.xlabel('r50')
+    pl.title('mean: '+str(round(r50mean,5))+'  std: '+str(round(r50std,5)))
+    pl.figtext(0.7,0.4,'band: '+band)
+    pl.figtext(0.7,0.37,'zenith angle: '+zenith +' deg')
+    pl.figtext(0.3,0.95,'Perfect focus/alignment, 0.7 arcsec fwhm circular seeing',fontsize=18,color='red')
+    pl.savefig(filename[0:-6]+'png')
+    np.savetxt(filename[0:-6]+'txt',[e1mean,e1std,e2mean,e2std,whiskerwmean,whiskerwstd,fwhmwmean,fwhmwstd,r50mean,r50std],fmt='%10.5f')
+    pl.close()
+    return '---done !-----'
+
+
+
+
 def wisker(data=None, sigma = None):
     """
     This code calculate the wisker length defined as sqrt(e1^2+e2^2)
@@ -1030,7 +1232,7 @@ def wisker(data=None, sigma = None):
 
 
 
-def genImgVallCCD(filename=None,Nstar=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False):
+def genImgVallCCD(filename=None,Nstar=None,seeing=[0.9,0.,0.],npix=None,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False, moffat=False):
     """
     Nstar is the number of stars on each CCD
     """
@@ -1058,7 +1260,7 @@ def genImgVallCCD(filename=None,Nstar=None,seeing=[0.9,0.,0.],npix=None,zenith=0
     hduList.append(hdu)
     for ccd in N[1:]+S[1:]:
         print ccd
-        res = genImgV(filename=filename,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, phi=phi,corrector=corrector,x=x,y=y,z=z,suband=suband,regular=regular)
+        res = genImgV(filename=filename,Nstar=Nstar,ccd=ccd,seeing=seeing,npix=npix,zenith=zenith,filter=filter, theta=theta, phi=phi,corrector=corrector,x=x,y=y,z=z,suband=suband,regular=regular,moffat=moffat)
         hdu = pf.PrimaryHDU(res[0])
         hdu.header.set('ccdPos',ccd[0])
         hdu.header.set('ccdXcen',ccd[1])
@@ -1131,6 +1333,9 @@ def zernikeFit(x, y, z,max_rad=225.,cm=[0,0],max_order=20):
     R2adj = 1-(1-R2)*(len(z[ok])-1)/(len(z[ok])-max_order)# adjusted R2 for quality of fit.            
     fitted = np.dot(dataX,beta) # fitted value
     return beta,betaErr,R2adj,fitted
+
+
+
 
 def testZernikeFit():
     x,y = np.meshgrid(np.arange(-50,50,1),np.arange(-50,50,1))
@@ -1470,6 +1675,8 @@ def validateMomentsCoeff202(datarry,Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=
     betaAll = np.array(betaAll)
     betaErrAll = np.array(betaErrAll)
     R2adjAll = np.array(R2adjAll)
+    hexHaoml = hexapod_multilinear(betaAll.flatten())
+    hexHaol = hexapodPosition(betaAll.flatten(),betaErrAll.flatten(),weighted=False) #see whether we can recover the value based on the linear model
     if betaErrAll == None:
         betaErrAll = np.zeros(len(ind))
     pl.figure(figsize=(14,14))
@@ -1525,7 +1732,7 @@ def validateMomentsCoeff202(datarry,Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=
         pl.ylim(-0.3,0.3)
         pl.ylabel(momname[i])
     pl.xticks(ind,('Piston','Tip','Tilt','Astignism','Defocus','Astignism','Trefoil','Coma','Coma','Trefoil','Ashtray','Astigm.5th','Spherical','Astigm.5th','Ashtray','16','17','18','19','20'),rotation=90)
-    return '---- done ---'
+    return hexHaoml,hexHaol
     
 
 
@@ -2141,6 +2348,59 @@ def standardizeData(tdata,vdata):
     return tdataNew, vdataNew
 
 
+def validateMultiLinearFit(Vfile=None):
+    b=p.load(open(Vfile))
+    nobs = len(b)
+    x = b[:,0]
+    y = b[:,1]
+    z = b[:,2]
+    theta = b[:,3]
+    phi = b[:,4]
+    fwhm = b[:,5]
+    e1 = b[:,6]
+    e2 = b[:,7]
+    thetax = theta*np.cos(np.deg2rad(phi))
+    thetay = theta*np.sin(np.deg2rad(phi))
+    xh =  x*1000  # convert to hexapod coordinate
+    yh = -y*1000
+    zh = -z*1000
+    xtilth = - thetay
+    ytilth = - thetax
+    dataX = b[:,8:68]
+    fit = hexapod_multilinear(dataX)
+    pl.figure(figsize=(21,12))
+    pl.subplot(2,3,1)
+    t=bp.bin_scatter(xh,fit[:,0],nbins=20,fmt='bo',scatter=True)
+    pl.plot([-100,100],[-100,100],'r-')
+    pl.ylabel('x-decenter True [micron]')
+    pl.ylabel('x-decenter Fitted [micron]')
+    pl.grid()
+    pl.subplot(2,3,2)
+    t=bp.bin_scatter(yh,fit[:,1],nbins=20,fmt='bo',scatter=True)
+    pl.plot([-100,100],[-100,100],'r-')
+    pl.ylabel('y-decenter True [micron]')
+    pl.ylabel('y-decenter Fitted [micron]')
+    pl.grid()
+    pl.subplot(2,3,3)
+    t=bp.bin_scatter(zh,fit[:,2],nbins=20,fmt='bo',scatter=True)
+    pl.plot([-100,100],[-100,100],'r-')
+    pl.ylabel('z-defocus True [micron]')
+    pl.ylabel('z-defocus Fitted [micron]')
+    pl.grid()
+    pl.subplot(2,3,4)
+    t=bp.bin_scatter(xtilth,fit[:,3],nbins=20,fmt='bo',scatter=True)
+    pl.plot([-50,50],[-50,50],'r-')
+    pl.ylabel('x-tilt True [micron]')
+    pl.ylabel('x-tilt Fitted [micron]')
+    pl.grid()
+    pl.subplot(2,3,5)
+    t=bp.bin_scatter(xtilth,fit[:,3],nbins=20,fmt='bo',scatter=True)
+    pl.plot([-50,50],[-50,50],'r-')
+    pl.ylabel('y-tilt True [micron]')
+    pl.ylabel('y-tilt Fitted [micron]')
+    pl.grid()
+    pl.savefig('MultilinearModel_hexapod_coordinate.png')
+    pl.close()
 
 
 def validateFit(Tfile=None,Vfile=None,PCA=False,alg='NNR'):
@@ -2447,6 +2707,68 @@ def correlationZernike():
     pl.yticks(ind,('Piston','Tip','Tilt','Astignism','Defocus','Astignism','Trefoil','Coma','Coma','Trefoil','Ashtray','Astigm.5th','Spherical','Astigm.5th','Ashtray','16','17','18','19','20','Piston','Tip','Tilt','Astignism','Defocus','Astignism','Trefoil','Coma','Coma','Trefoil','Ashtray','Astigm.5th','Spherical','Astigm.5th','Ashtray','16','17','18','19','20','Piston','Tip','Tilt','Astignism','Defocus','Astignism','Trefoil','Coma','Coma','Trefoil','Ashtray','Astigm.5th','Spherical','Astigm.5th','Ashtray','16','17','18','19','20'))
     pl.grid(color='yellow')
   
+def hexapodZernikeMultiLinearModel_hexapodcoordinate():
+    """
+    this code use multi linear model
+    """
+    Tfile='/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_training.cp'
+    Vfile = '/home/jghao/research/decamFocus/psf_withseeing/finerGrid_coeff_matrix/zernike_coeff_finerGrid_validate.cp'
+    b=p.load(open(Tfile))
+    vb=p.load(open(Vfile))
+    nobs = len(b)
+    x = b[:,0]
+    y = b[:,1]
+    z = b[:,2]
+    theta = b[:,3]
+    phi = b[:,4]
+    fwhm = b[:,5]
+    e1 = b[:,6]
+    e2 = b[:,7]
+    thetax = theta*np.cos(np.deg2rad(phi))
+    thetay = theta*np.sin(np.deg2rad(phi))
+    xh =  x*1000  # convert to hexapod coordinate
+    yh = -y*1000
+    zh = -z*1000
+    xtilth = - thetay
+    ytilth = - thetax
+    dataX = b[:,8:68]
+    coeff_xh = sm.WLS(xh,dataX).fit().params
+    coeff_yh = sm.WLS(yh,dataX).fit().params
+    coeff_zh = sm.WLS(zh,dataX).fit().params
+    coeff_xtilth = sm.WLS(xtilth,dataX).fit().params
+    coeff_ytilth = sm.WLS(ytilth,dataX).fit().params
+    coeff = np.array([coeff_xh,coeff_yh,coeff_zh,coeff_xtilth,coeff_ytilth])
+    vx = vb[:,0]
+    vy = vb[:,1]
+    vz = vb[:,2]
+    vtheta = vb[:,3]
+    vphi = vb[:,4]
+    vfwhm = vb[:,5]
+    ve1 = vb[:,6]
+    ve2 = vb[:,7]
+    vthetax = vtheta*np.cos(np.deg2rad(vphi))
+    vthetay = vtheta*np.sin(np.deg2rad(vphi))
+    vxh =  vx*1000  # convert to hexapod coordinate
+    vyh = -vy*1000
+    vzh = -vz*1000
+    vxtilth = - vthetay
+    vytilth = - vthetax
+    vdataX = vb[:,8:68]
+    fit = np.dot(vdataX,coeff.T)
+    bp.bin_scatter(vxh,fit[:,0],nbins=20,fmt='bo',scatter=True)
+    bp.bin_scatter(vyh,fit[:,1],nbins=20,fmt='bo',scatter=True)
+    bp.bin_scatter(vzh,fit[:,2],nbins=20,fmt='bo',scatter=True)
+    bp.bin_scatter(vxtilth,fit[:,3],nbins=20,fmt='bo',scatter=True)
+    bp.bin_scatter(vytilth,fit[:,4],nbins=20,fmt='bo',scatter=True)
+    
+    
+def hexapod_multilinear(beta):
+    coeff = p.load(open('multiLinearCoeff.p','r'))
+    res = np.dot(beta,coeff.T)
+    return res
+
+
+
 def hexapodZernikeLinearModel_hexapodcoordinate():
     """
     this code calculate the linear fit
@@ -2701,9 +3023,217 @@ def validateFitKnnObj(Vfile=None,scatter=True):
     pl.ylim(-40,40)
     return vparaTrue,vparaReg
 
+def getfromfile(dr,zenith,band):
+    f = gl.glob(dr+'zenith'+zenith+'_'+band+'_seeing*.txt')
+    f.sort()
+    r50=[]
+    whk=[]
+    whkstd=[]
+    for fi in f:
+        r50.append(np.genfromtxt(fi,dtype='float')[0])
+        whk.append(np.genfromtxt(fi,dtype='float')[1])
+        whkstd.append(np.genfromtxt(fi,dtype='float')[3])
+    return r50,whk,whkstd
 
 
+def misalign_whk_plot():
+    f = gl.glob('*.txt')
+    f.sort()
+    b=[]
+    for ff in f:
+        b.append(np.genfromtxt(ff))
+    b = np.array(b)
+    pl.figure(figsize=(19,10))
+    xshift=np.array([100,200,300,400,600,800,1000,1200,1400,1600,1800,2000])
+    #xshift=np.array([100,200,300,400,600])
+    #xshift = np.array([100,200,300,400,500,600,700,800,900])
+    pl.subplot(2,3,1)
+    pl.plot(xshift,b[:,0],'bo')
+    pl.xlabel('xshift [micron]')
+    pl.ylabel('R50 [arcsec]')
+    pl.grid()
+    pl.subplot(2,3,2)
+    pl.plot(xshift,b[:,1],'bo')
+    #pl.ylim(0,0.3)
+    pl.xlabel('xshift [micron]')
+    pl.ylabel('Whisker Length [arcsec]')
+    pl.grid()
+    pl.subplot(2,3,3)
+    pl.plot(xshift,b[:,3],'bo')
+    #pl.ylim(0,0.8)
+    pl.xlabel('xshift [micron]')
+    pl.ylabel('Whisker RMS [arcsec]')
+    pl.grid()
+    pl.subplot(2,3,4)
+    pl.plot(xshift,b[:,4] - b[:,5],'bo')
+    pl.xlabel('xshift [micron]')
+    pl.ylabel('Mxx - Myy [pix^2]')
+    #pl.ylim(-0.2,.2)
+    pl.grid()
+    pl.subplot(2,3,5)
+    pl.plot(xshift,2.*b[:,6],'bo')
+    #pl.ylim(-0.1,.1)
+    pl.xlabel('xshift [arcsec]')
+    pl.ylabel('2 Mxy [pix^2]')
+    pl.grid()
+    pl.subplot(2,3,6)
+    pl.plot(xshift,np.sqrt(abs(b[:,6]))*0.27,'bo')
+    #pl.ylim(0,.04)
+    pl.xlabel('xshift [micron]')
+    pl.ylabel('sqrt(abs(Mxy)) [arcsec]')
+    pl.grid()
+    pl.figtext(0.45,0.95,'z-band, zenith, optics model',fontsize=19)
 
+def r50_whisker_seeing():
+    #dr = '/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/imageQuality_gauss/'
+    #dr = '/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/imageQuality_moffat/noise_mag16_exp30/'
+    dr = '/home/jghao/research/ggsvn/decam-fermi/pyRaytrace/imageQuality_moffat/noisefree/'
+    seeing = np.array([0.5,0.7,0.9,1.1])
+    gr50 = getfromfile(dr,'0','g')[0]
+    gwhkrms = getfromfile(dr,'0','g')[2]
+    gwhk = getfromfile(dr,'0','g')[1]
+    rr50 = getfromfile(dr,'0','r')[0]
+    rwhkrms = getfromfile(dr,'0','r')[2]
+    rwhk = getfromfile(dr,'0','r')[1]
+    ir50 = getfromfile(dr,'0','i')[0]
+    iwhkrms = getfromfile(dr,'0','i')[2]
+    iwhk = getfromfile(dr,'0','i')[1]
+    zr50 = getfromfile(dr,'0','z')[0]
+    zwhkrms = getfromfile(dr,'0','z')[2]
+    zwhk = getfromfile(dr,'0','z')[1]
+    pl.figure(figsize=(17,10))
+    pl.subplot(2,3,1)
+    pl.plot(seeing,gr50,'go',label='g')
+    pl.plot(seeing,rr50,'ro',label='r')
+    pl.plot(seeing,ir50,'bo',label='i')
+    pl.plot(seeing,zr50,'co',label='z')
+    pl.grid()
+    pl.xlabel('Site Seeing [fwhm, arcsec]')
+    pl.ylabel('R50 [arcsec]')
+    pl.xlim(0.4,1.2)
+    pl.title('Zenith Angle: 0')
+    pl.subplot(2,3,2)
+    pl.plot(seeing,gwhk,'go-',label='g')
+    pl.plot(seeing,rwhk,'ro-',label='r')
+    pl.plot(seeing,iwhk,'bo-',label='i')
+    pl.plot(seeing,zwhk,'co-',label='z')
+    pl.grid()
+    pl.xlabel('Site Seeing [fwhm, arcsec]')
+    pl.ylabel('Whisker Length [arcsec]')
+    pl.xlim(0.4,1.2)
+    pl.title('Zenith Angle: 0')
+    pl.ylim(0.0,0.2)
+    pl.subplot(2,3,3)
+    pl.plot(seeing,gwhkrms,'go-',label='g')
+    pl.plot(seeing,rwhkrms,'ro-',label='r')
+    pl.plot(seeing,iwhkrms,'bo-',label='i')
+    pl.plot(seeing,zwhkrms,'co-',label='z')
+    pl.grid()
+    pl.xlabel('Site Seeing [fwhm, arcsec]')
+    pl.ylabel('Whisker Length RMS [arcsec]')
+    pl.xlim(0.4,1.2)
+    pl.ylim(0.02,0.2)
+    pl.legend(loc='center', bbox_to_anchor = (1.1, 1.1))
+    pl.title('Zenith Angle: 0')
+    gr50 = getfromfile(dr,'40','g')[0]
+    gwhkrms = getfromfile(dr,'40','g')[2]
+    gwhk = getfromfile(dr,'40','g')[1]
+    rr50 = getfromfile(dr,'40','r')[0]
+    rwhkrms = getfromfile(dr,'40','r')[2]
+    rwhk = getfromfile(dr,'40','r')[1]
+    ir50 = getfromfile(dr,'40','i')[0]
+    iwhkrms = getfromfile(dr,'40','i')[2]
+    iwhk = getfromfile(dr,'40','i')[1]
+    zr50 = getfromfile(dr,'40','z')[0]
+    zwhkrms = getfromfile(dr,'40','z')[2]
+    zwhk = getfromfile(dr,'40','z')[1]
+    pl.subplot(2,3,4)
+    pl.plot(seeing,gr50,'go',label='g')
+    pl.plot(seeing,rr50,'ro',label='r')
+    pl.plot(seeing,ir50,'bo',label='i')
+    pl.plot(seeing,zr50,'co',label='z')
+    pl.grid()
+    pl.xlabel('Site Seeing [fwhm, arcsec]')
+    pl.ylabel('R50 [arcsec]')
+    pl.xlim(0.4,1.2)
+    pl.title('Zenith Angle: 40')
+    pl.subplot(2,3,5)
+    pl.plot(seeing,gwhk,'go-',label='g')
+    pl.plot(seeing,rwhk,'ro-',label='r')
+    pl.plot(seeing,iwhk,'bo-',label='i')
+    pl.plot(seeing,zwhk,'co-',label='z')
+    pl.grid()
+    pl.xlabel('Site Seeing [fwhm, arcsec]')
+    pl.ylabel('Whisker Length [arcsec]')
+    pl.xlim(0.4,1.2)
+    pl.title('Zenith Angle: 40')
+    pl.ylim(0.0,0.2)
+    pl.subplot(2,3,6)
+    pl.plot(seeing,gwhkrms,'go-',label='g')
+    pl.plot(seeing,rwhkrms,'ro-',label='r')
+    pl.plot(seeing,iwhkrms,'bo-',label='i')
+    pl.plot(seeing,zwhkrms,'co-',label='z')
+    pl.grid()
+    pl.xlabel('Site Seeing [fwhm, arcsec]')
+    pl.ylabel('Whisker Length RMS [arcsec]')
+    pl.xlim(0.4,1.2)
+    pl.ylim(0.02,0.2)
+    pl.title('Zenith Angle: 40')
+    pl.figtext(0.35,0.95,'Optics Model plus Moffat Seeing without noise',color='blue',fontsize=20)
+    #pl.savefig('gauss_seeing_r50_whkrms.png')
+    #pl.savefig('moffat_seeing_moffatr50_whkrms_mag16_exp30.png')
+    pl.savefig('moffat_seeing_moffatr50_whkrms.png')
+    
+
+def test_moments(mag=16.,exptime=100.,setbkg=True,moffat=False):
+    """
+    test weighted moments
+    """
+    n= 1000
+    dataw = []
+    data = []
+    for i in range(1000):
+        print i
+        img,bkg,psf=des_psf_image(exptime=exptime,mag=mag,seeing=[0.7,0.,0.],setbkg=setbkg,moffat=moffat)
+        dataw.append(complex2ndMoments(img-bkg,2.))
+        data.append(moments2nd(img-bkg))
+    dataw = np.array(dataw)
+    data = np.array(data)
+    pl.figure(figsize=(15,10))
+    pl.subplot(2,3,1)
+    pl.hist(dataw[:,0],bins=20,normed=True)
+    pl.xlabel('Mcc')
+    pl.title('weighted: '+str(np.round(dataw[:,0].mean(),5)) +' +/- '+str(np.round(dataw[:,0].std(),5)))
+    pl.subplot(2,3,2)
+    pl.hist(dataw[:,1],bins=20,normed=True)
+    pl.xlabel('Mrr')
+    pl.title('weighted: '+str(np.round(dataw[:,1].mean(),5)) +' +/- '+str(np.round(dataw[:,1].std(),5)))
+    pl.subplot(2,3,3)
+    pl.hist(dataw[:,2],bins=20,normed=True)
+    pl.xlabel('Mrc')
+    pl.title('weighted: '+ str(np.round(dataw[:,2].mean(),5)) +' +/- '+str(np.round(dataw[:,2].std(),5)))
+    pl.subplot(2,3,4)
+    pl.hist(data[:,0],bins=20,normed=True)
+    pl.xlabel('Mcc')
+    pl.title('non-weighted: '+str(np.round(data[:,0].mean(),5)) +' +/- '+str(np.round(data[:,0].std(),5)))
+    pl.subplot(2,3,5)
+    pl.hist(data[:,1],bins=20,normed=True)
+    pl.xlabel('Mrr')
+    pl.title('non-weighted: '+str(np.round(data[:,1].mean(),5)) +' +/- '+str(np.round(data[:,1].std(),5)))
+    pl.subplot(2,3,6)
+    pl.hist(data[:,2],bins=20,normed=True)
+    pl.xlabel('Mrc')
+    pl.title('non-weighted: '+ str(np.round(data[:,2].mean(),5)) +' +/- '+str(np.round(data[:,2].std(),5)))
+    if moffat == False:
+        pl.figtext(0.45,0.95,'Gaussian Seeing, star Mag: '+str(round(mag,2)) + ', exptime: '+str(round(exptime,1)))
+    else:
+        pl.figtext(0.45,0.95,'Moffat Seeing, star Mag: '+str(round(mag,2)) + ', exptime: '+str(round(exptime,1)))
+    if moffat == True:
+        imgname = 'moffat_seeing_mag_'+str(round(mag,2))+'exptime_'+str(round(exptime,1))+'.png'
+    else:
+        imgname = 'gauss_seeing_mag_'+str(round(mag,2))+'exptime_'+str(round(exptime,1))+'.png'
+    pl.savefig(imgname)
+    return '--done!--'
 
 if __name__ == '__main__':
 
@@ -2742,8 +3272,7 @@ if __name__ == '__main__':
     training = f[idx[500:],]
     p.dump(training,open('zernike_coeff_finerGrid_training.cp','w'),2)
     p.dump(validate,open('zernike_coeff_finerGrid_validate.cp','w'),2)
-    """
-
+    
     t= moments_display(Nstar=1,npix = npix,noise=True,mag=15,sigma=2.)
     pl.savefig('moments_seeing0.9_mag15_exptime30.png')
     pl.close()
@@ -2780,8 +3309,7 @@ if __name__ == '__main__':
     t= moments_display(Nstar=1,theta=-30,phi=90,npix = npix,noise=True,mag=15,sigma=2.)
     pl.savefig('moments_seeing0.9_theta-30_phi90_mag15_exptime30.png')
     pl.close()
-    
-    """
+   
     #-----coeff ------
     t= coeff_display(Nstar=1,npix = npix)
     pl.savefig('coeff_seeing0.9.png')
@@ -2819,4 +3347,269 @@ if __name__ == '__main__':
     t= coeff_display(Nstar=1,theta=-30,phi=90,npix = npix)
     pl.savefig('coeff_seeing0.9_theta-30_phi90.png')
     pl.close()
+    
+    # --- make new look up plot -----
+    validateMomentsCoeff202([350,0,0,0,0],sigma=4.,noise=False,mag=13)
+    pl.savefig('lookup_hexcoord_x350.png')
+    pl.close()
+    validateMomentsCoeff202([-350,0,0,0,0],sigma=4.,noise=False,mag=13)
+    pl.savefig('lookup_hexcoord_x-350.png')
+    pl.close()
+    validateMomentsCoeff202([0,350,0,0,0],sigma=4.,noise=False,mag=13)
+    pl.savefig('lookup_hexcoord_y350.png')
+    pl.close()
+    validateMomentsCoeff202([0,-350,0,0,0],sigma=4.,noise=False,mag=13)
+    pl.savefig('lookup_hexcoord_y-350.png')
+    pl.close()
+    validateMomentsCoeff202([0,0,200,0,0],sigma=4.,noise=False,mag=13)
+    pl.savefig('lookup_hexcoord_z200.png')
+    pl.close()
+    validateMomentsCoeff202([0,0,-200,0,0],sigma=4.,noise=False,mag=13)
+    pl.savefig('lookup_hexcoord_z-200.png')
+    pl.close()
+   
+    validateMomentsCoeff202([0,0,0,200,0],sigma=4.,noise=False,mag=13)
+    pl.savefig('lookup_hexcoord_xtilt200.png')
+    pl.close()
+    validateMomentsCoeff202([0,0,0,-200,0],sigma=4.,noise=False,mag=13)
+    pl.savefig('lookup_hexcoord_xtilt-200.png')
+    pl.close()
+   
+    validateMomentsCoeff202([0,0,0,0,200],sigma=4.,noise=False,mag=13)
+    pl.savefig('lookup_hexcoord_ytilt200.png')
+    pl.close()
+    validateMomentsCoeff202([0,0,0,0,-200],sigma=4.,noise=False,mag=13)
+    pl.savefig('lookup_hexcoord_ytilt-200.png')
+    pl.close()
+    validateMomentsCoeff202([0,0,0,0,0],sigma=4.,noise=True,mag=13)
+    pl.savefig('lookup_hexcoord_perfect.png')
+    pl.close()
+   
+    #------gaussian model -------
+    t=genImgVallCCD(filename='zenith0_g_seeing_gaussian_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_r_seeing_gaussian_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_i_seeing_gaussian_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=0,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_z_seeing_gaussian_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+
+    t=genImgVallCCD(filename='zenith0_g_seeing_gaussian_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_r_seeing_gaussian_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_i_seeing_gaussian_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=0,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_z_seeing_gaussian_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+
+
+    t=genImgVallCCD(filename='zenith0_g_seeing_gaussian_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_r_seeing_gaussian_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_i_seeing_gaussian_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_z_seeing_gaussian_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+
+
+
+    t=genImgVallCCD(filename='zenith0_g_seeing_gaussian_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_r_seeing_gaussian_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_i_seeing_gaussian_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=0,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith0_z_seeing_gaussian_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+
+    #-----zenith angle = 40 ----
+    t=genImgVallCCD(filename='zenith40_g_seeing_gaussian_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=40,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_r_seeing_gaussian_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=40,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_i_seeing_gaussian_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=40,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_z_seeing_gaussian_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=40,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+
+    t=genImgVallCCD(filename='zenith40_g_seeing_gaussian_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=40,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_r_seeing_gaussian_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=40,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_i_seeing_gaussian_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=40,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_z_seeing_gaussian_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=40,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+
+    t=genImgVallCCD(filename='zenith40_g_seeing_gaussian_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_r_seeing_gaussian_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_i_seeing_gaussian_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_z_seeing_gaussian_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+
+    t=genImgVallCCD(filename='zenith40_g_seeing_gaussian_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=40,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_r_seeing_gaussian_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=40,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_i_seeing_gaussian_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=40,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+    t=genImgVallCCD(filename='zenith40_z_seeing_gaussian_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=40,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False)
+   
+    
+    #----moffat model ----
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_i_seeing_moffat_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=0,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_i_seeing_moffat_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=0,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+
+
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_i_seeing_moffat_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_i_seeing_moffat_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=0,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+
+    #-----zenith angle = 40 ----
+    t=genImgVallCCD(filename='zenith40_g_seeing_moffat_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=40,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=40,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_i_seeing_moffat_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=40,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_z_seeing_moffat_0.5.fit',Nstar=1,seeing=[0.5,0.,0.],npix=npix,zenith=40,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+
+    t=genImgVallCCD(filename='zenith40_g_seeing_moffat_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=40,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=40,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_i_seeing_moffat_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=40,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_z_seeing_moffat_0.7.fit',Nstar=1,seeing=[0.7,0.,0.],npix=npix,zenith=40,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+
+
+
+    t=genImgVallCCD(filename='zenith40_g_seeing_moffat_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_i_seeing_moffat_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_z_seeing_moffat_0.9.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+
+    t=genImgVallCCD(filename='zenith40_g_seeing_moffat_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=40,filter='g', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=40,filter='r', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_i_seeing_moffat_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=40,filter='i', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_z_seeing_moffat_1.1.fit',Nstar=1,seeing=[1.1,0.,0.],npix=npix,zenith=40,filter='z', theta=0.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    
+    ff = gl.glob('zenith*.gz')
+    for fi in ff:
+        t=whiskerStat_multiext(fi,20.)
+        #t=whiskerStat_multiext(fi,2.,noise=True,mag=16,exptime=30.)
+    
+
+    #----generate the mean whisker for different tilt/decenter/defocus---
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.9_theta100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='r', theta=100.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.9_theta200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='r', theta=200.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.9_theta300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='r', theta=130.,phi=0, corrector='corrector',x=0.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.9_xshift100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='r', theta=0.,phi=0, corrector='corrector',x=0.1,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.9_xshift200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='r', theta=0.,phi=0, corrector='corrector',x=0.2,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.9_xshift300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='r', theta=0.,phi=0, corrector='corrector',x=0.3,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_theta100_xshift100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=100.,phi=0, corrector='corrector',x=0.1,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_theta200_xshift200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=200.,phi=0, corrector='corrector',x=0.2,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_theta300_xshift300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=130.,phi=0, corrector='corrector',x=0.3,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.9_theta100_xshift100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='r', theta=100.,phi=0, corrector='corrector',x=0.1,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.9_theta200_xshift200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='r', theta=200.,phi=0, corrector='corrector',x=0.2,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith40_r_seeing_moffat_0.9_theta300_xshift300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=40,filter='r', theta=130.,phi=0, corrector='corrector',x=0.3,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    
+ 
+    #NEW one---
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift0100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.1,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift0200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.2,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift0300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.3,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift0400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.4,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift0600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.6,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift0800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=0.8,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift1000.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=1.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift1200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=1.2,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift1400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=1.4,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift1600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=1.6,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift1800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=1.8,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xshift2000.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',x=2.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift0100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=0.1,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift0200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=0.2,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift0300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=0.3,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift0400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=0.4,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift0600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=0.6,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift0800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=0.8,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift1000.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=1.,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift1200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=1.2,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift1400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=1.4,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift1600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=1.6,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift1800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=1.8,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_yshift2000.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',y=2.,x=0.,z=0.,suband=None,regular=False,moffat=True)
+
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_zshift0100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',z=0.1,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_zshift0200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',z=0.2,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_zshift0300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',z=0.3,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_zshift0400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',z=0.4,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_zshift0600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=0.,phi=0, corrector='corrector',z=0.6,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    
+    #-----zband-----
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift0100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.1,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift0200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.2,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift0300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.3,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.4,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.6,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=0.8,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift1000.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=1.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift1200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=1.2,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift1400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=1.4,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift1600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=1.6,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift1800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=1.8,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xshift2000.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',x=2.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift0100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=0.1,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift0200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=0.2,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift0300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=0.3,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift0400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=0.4,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift0600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=0.6,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift0800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=0.8,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift1000.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=1.,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift1200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=1.2,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift1400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=1.4,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift1600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=1.6,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift1800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=1.8,x=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_yshift2000.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',y=2.,x=0.,z=0.,suband=None,regular=False,moffat=True)
+
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_zshift0100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',z=0.1,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_zshift0200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',z=0.2,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_zshift0300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',z=0.3,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_zshift0400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',z=0.4,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_zshift0600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=0.,phi=0, corrector='corrector',z=0.6,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    
+
+    #----x tilt----
+
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xtilt100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=100.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xtilt200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=200.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xtilt300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=300.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xtilt400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=400.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xtilt500.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=500.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xtilt600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=600.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xtilt700.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=700.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xtilt800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=800.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_r_seeing_moffat_0.9_xtilt900.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='r', theta=900.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+
+
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xtilt100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=100.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xtilt200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=200.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xtilt300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=300.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xtilt400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=400.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xtilt500.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=500.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xtilt600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=600.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xtilt700.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=700.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xtilt800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=800.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_z_seeing_moffat_0.9_xtilt900.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='z', theta=900.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
     """
+    #----g band-----
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xtilt100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=100.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xtilt200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=200.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xtilt300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=300.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xtilt400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=400.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xtilt500.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=500.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xtilt600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=600.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xtilt700.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=700.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xtilt800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=800.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xtilt900.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=900.,phi=0, corrector='corrector',z=0.,x=0.,y=0.,suband=None,regular=False,moffat=True)
+
+    # shift
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift0100.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.1,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift0200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.2,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift0300.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.3,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift0400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.4,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift0600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.6,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift0800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=0.8,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift1000.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=1.,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift1200.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=1.2,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift1400.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=1.4,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift1600.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=1.6,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift1800.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=1.8,y=0.,z=0.,suband=None,regular=False,moffat=True)
+    t=genImgVallCCD(filename='zenith0_g_seeing_moffat_0.9_xshift2000.fit',Nstar=1,seeing=[0.9,0.,0.],npix=npix,zenith=0,filter='g', theta=0.,phi=0, corrector='corrector',x=2.,y=0.,z=0.,suband=None,regular=False,moffat=True)

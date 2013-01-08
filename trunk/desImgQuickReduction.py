@@ -42,7 +42,7 @@ else:
         hdu[0].header.update('PROCTYPE','Reduced')
         for ext in range(1,71):
             print ext
-            hdu[ext].data = oscanSub(hdu[ext].data
+            hdu[ext].data = oscanSub(hdu[ext].data)
         hdu.writeto(correctedFilename)
     endTime=time.time()
     elapseTime=endTime-startTime

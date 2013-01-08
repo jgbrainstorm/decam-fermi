@@ -6,9 +6,11 @@ from DECamCCD import *
 dir=os.getcwd()+'/'
 
 NameFits=gl.glob(dir+'/*.fits*')
-NameBias=dir+'/bias/median.fits'
+#NameBias=dir+'/bias/median.fits'
 NameFits.sort()
-NameFits=NameFits[0:20]
+#NameFits=NameFits[0:20]
+NameBias = NameFits[0] # use the first exposure as bias
+NameFits = NameFits[2:]
 hdu=pf.open(NameBias)
 Channel=range(1,len(hdu))
 
