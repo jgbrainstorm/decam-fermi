@@ -7,7 +7,7 @@ def getFileNameList(expid_start,expid_end,directory,skip=1):
     fileNameList=[]
     for eid in expid:
         fileNameList.append(directory+'DECam_00'+str(eid)+'.fits.fz')
-    return fileNmaeList
+    return fileNameList
 
 
 
@@ -135,22 +135,19 @@ def ptc(NameFits,NameBias,Channel,shift=None,left=None,overplot=False,pch='o',co
 
 if __name__ == "__main__":
     
-   dir_9_27_2012 = '/blue-orch/DTS/src/09272012/src/'
-   namebias_9_27_12=dir_9_27_2012+'DECam_00136715.fits.fz'
-   namefits_9_27_12 = getFileNameList(136717,136858,dir_9_27_2012)
+   dir_9_27_12 = '/blue-orch/DTS/src/20120927/src/'
+   namebias_9_27_12=dir_9_27_12+'DECam_00136715.fits.fz'
+   namefits_9_27_12 = getFileNameList(136717,136858,dir_9_27_12)
 
-   dir_10_2_2012 = '/blue-orch/DTS/src/10022012/src/'
-   namebias_10_2_12=dir_10_2_2012+'DECam_00137808.fits.fz'
-   namefits_10_2_12 = getFileNameList(137811,137880,dir_10_2_2012)
+   dir_10_2_12 = '/blue-orch/DTS/src/10121002/src/'
+   namebias_10_2_12=dir_10_2_12+'DECam_00137808.fits.fz'
+   namefits_10_2_12 = getFileNameList(137811,137880,dir_10_2_12)
 
-   dir_10_19_2012 = '/blue-orch/DTS/src/10192012/src/'
-   namebias_10_19_12=dir_10_19_2012+'DECam_00140391.fits.fz'
-   namefits_10_19_12 = getFileNameList(140394,140515,dir_10_24_2012)
+   dir_10_19_12 = '/blue-orch/DTS/src/20121019/src/'
+   namebias_10_19_12=dir_10_19_12+'DECam_00140391.fits.fz'
+   namefits_10_19_12 = getFileNameList(140394,140515,dir_10_19_12)
 
-   dir_10_24_2012 = '/blue-orch/DTS/src/10242012/src/'
-   namebias_10_24_12=dir_10_25_2012+'DECam_00142170.fits.fz'
-   namefits_10_24_12 = getFileNameList(142173,142310,dir_10_24_2012,3)
 
-   t=ptc(namefits_9_27_2012,namebias_9_27_2012,1,left=1,label='9/27/2012')
-   t=ptc(namefits_10_2_2012,namebias_10_2_2012,1,left=1,overplot=True,pch='*',color='blue',label='10/2/2012')
-   t=ptc(namefits_10_19_2012,namebias_10_19_2012,1,left=1,overplot=True,pch='+',color='blue',label='10/19/2012')
+   t=ptc(namefits_9_27_12,namebias_9_27_12,1,left=1,label='9/27/2012')
+   t=ptc(namefits_10_2_12,namebias_10_2_12,1,left=1,overplot=True,pch='*',color='blue',label='10/2/2012')
+   t=ptc(namefits_10_19_12,namebias_10_19_12,1,left=1,overplot=True,pch='+',color='blue',label='10/19/2012')
