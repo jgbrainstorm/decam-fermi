@@ -11,6 +11,7 @@ data5 = np.genfromtxt('/home/jghao/research/ccd/CTI_new/new_in_ctio/fullwell_10_
 data6 = np.genfromtxt('/home/jghao/research/ccd/CTI_new/new_in_ctio/fullwell_10_6_2012_veryshort.txt',dtype=None,names=['ccd','fw','gain'])
 data7 = np.genfromtxt('/home/jghao/research/ccd/CTI_new/new_in_ctio/fullwell_11_09_2012.txt',dtype=None,names=['ccd','fw','gain'])
 data8 = np.genfromtxt('/home/jghao/research/ccd/CTI_new/new_in_ctio/fullwell_11_19_2012.txt',dtype=None,names=['ccd','fw','gain'])
+data9 = np.genfromtxt('/home/jghao/research/ccd/CTI_new/new_in_ctio/fullwell_3_25_2013.txt',dtype=None,names=['ccd','fw','gain'])
 
 
 fw1 = data1['fw']
@@ -56,6 +57,11 @@ ccd8 = data8['ccd']
 gain8 = data8['gain']
 fwe8 = fw8/gain8
 
+fw9 = data9['fw']
+ccd9 = data9['ccd']
+gain9 = data9['gain']
+fwe9 = fw9/gain9
+
 
 n = len(gain1)
 
@@ -68,6 +74,7 @@ pl.bar(np.arange(n/4)+0.3,fwe4[0:n/4],width=0.1,color='red',label='10/2/2012')
 pl.bar(np.arange(n/4)+0.4,fwe5[0:n/4],width=0.1,color='yellow',label='10/5/2012')
 pl.bar(np.arange(n/4)+0.5,fwe7[0:n/4],width=0.1,color='black',label='11/9/2012')
 pl.bar(np.arange(n/4)+0.6,fwe8[0:n/4],width=0.1,color='c',label='11/19/2012')
+pl.bar(np.arange(n/4)+0.7,fwe9[0:n/4],width=0.1,color='red',label='3/25/2013')
 
 pl.xticks(np.arange(n/4)+0.5,ccd1[0:n/4],rotation=90)
 pl.hlines(130000,0,n/4,color='red',label='spec')
@@ -84,6 +91,7 @@ pl.bar(np.arange(n/4)+0.3,fwe4[n/4:n/2],width=0.1,color='red',label='10/2/2012')
 pl.bar(np.arange(n/4)+0.4,fwe5[n/4:n/2],width=0.1,color='yellow',label='10/5/2012')
 pl.bar(np.arange(n/4)+0.5,fwe7[n/4:n/2],width=0.1,color='black',label='11/9/2012')
 pl.bar(np.arange(n/4)+0.6,fwe8[n/4:n/2],width=0.1,color='c',label='11/19/2012')
+pl.bar(np.arange(n/4)+0.7,fwe9[n/4:n/2],width=0.1,color='red',label='3/25/2013')
 
 pl.xticks(np.arange(n/4)+0.5,ccd1[n/4:n/2],rotation=90)
 pl.hlines(130000,0,n/4,color='red',label='spec')
@@ -100,6 +108,9 @@ pl.bar(np.arange(n/4)+0.3,fwe4[n/4+n/4:n/2+n/4],width=0.1,color='red',label='10/
 pl.bar(np.arange(n/4)+0.4,fwe5[n/4+n/4:n/2+n/4],width=0.1,color='yellow',label='10/5/2012')
 pl.bar(np.arange(n/4)+0.5,fwe7[n/4+n/4:n/2+n/4],width=0.1,color='black',label='11/9/2012')
 pl.bar(np.arange(n/4)+0.6,fwe8[n/4+n/4:n/2+n/4],width=0.1,color='c',label='11/19/2012')
+pl.bar(np.arange(n/4)+0.7,fwe9[n/4+n/4:n/2+n/4],width=0.1,color='red',label='3/25/2013')
+
+
 pl.xticks(np.arange(n/4)+0.5,ccd1[n/4+n/4:n/2+n/4],rotation=90)
 pl.hlines(130000,0,n/4,color='red',label='spec')
 #pl.legend(loc = 'best')
@@ -115,6 +126,8 @@ pl.bar(np.arange(n/4)+0.3,fwe4[n/2+n/4:n/2+n/2],width=0.1,color='red',label='10/
 pl.bar(np.arange(n/4)+0.4,fwe5[n/2+n/4:n/2+n/2],width=0.1,color='yellow',label='10/5/2012')
 pl.bar(np.arange(n/4)+0.5,fwe7[n/2+n/4:n/2+n/2],width=0.1,color='black',label='11/9/2012')
 pl.bar(np.arange(n/4)+0.6,fwe8[n/2+n/4:n/2+n/2],width=0.1,color='c',label='11/19/2012')
+pl.bar(np.arange(n/4)+0.7,fwe9[n/2+n/4:n/2+n/2],width=0.1,color='red',label='3/25/2013')
+
 pl.xticks(np.arange(n/4)+0.5,ccd1[n/2+n/4:n/2+n/2],rotation=90)
 pl.hlines(130000,0,n/4,color='red',label='spec')
 #pl.legend(loc = 'best')
@@ -142,6 +155,7 @@ pl.bar(np.arange(n/4)+0.3,fw4[0:n/4],width=0.1,color='red',label='10/2/2012')
 pl.bar(np.arange(n/4)+0.4,fw5[0:n/4],width=0.1,color='yellow',label='10/5/2012')
 pl.bar(np.arange(n/4)+0.5,fw7[0:n/4],width=0.1,color='black',label='11/9/2012')
 pl.bar(np.arange(n/4)+0.6,fw8[0:n/4],width=0.1,color='c',label='11/19/2012')
+pl.bar(np.arange(n/4)+0.7,fw9[0:n/4],width=0.1,color='red',label='3/25/2013')
 
 pl.xticks(np.arange(n/4)+0.5,ccd1[0:n/4],rotation=90)
 pl.legend(loc = 'upper right',bbox_to_anchor=(1.,1.5))
@@ -157,6 +171,7 @@ pl.bar(np.arange(n/4)+0.3,fw4[n/4:n/2],width=0.1,color='red',label='10/2/2012')
 pl.bar(np.arange(n/4)+0.4,fw5[n/4:n/2],width=0.1,color='yellow',label='10/5/2012')
 pl.bar(np.arange(n/4)+0.5,fw7[n/4:n/2],width=0.1,color='black',label='11/9/2012')
 pl.bar(np.arange(n/4)+0.6,fw8[n/4:n/2],width=0.1,color='c',label='11/19/2012')
+pl.bar(np.arange(n/4)+0.7,fw9[n/4:n/2],width=0.1,color='red',label='3/25/2013')
 
 pl.xticks(np.arange(n/4)+0.5,ccd1[n/4:n/2],rotation=90)
 #pl.legend(loc = 'best')
@@ -172,6 +187,9 @@ pl.bar(np.arange(n/4)+0.3,fw4[n/4+n/4:n/2+n/4],width=0.1,color='red',label='10/2
 pl.bar(np.arange(n/4)+0.4,fw5[n/4+n/4:n/2+n/4],width=0.1,color='yellow',label='10/5/2012')
 pl.bar(np.arange(n/4)+0.5,fw7[n/4+n/4:n/2+n/4],width=0.1,color='black',label='11/9/2012')
 pl.bar(np.arange(n/4)+0.6,fw8[n/4+n/4:n/2+n/4],width=0.1,color='c',label='11/19/2012')
+pl.bar(np.arange(n/4)+0.7,fw9[n/4+n/4:n/2+n/4],width=0.1,color='red',label='3/25/2013')
+
+
 pl.xticks(np.arange(n/4)+0.5,ccd1[n/4+n/4:n/2+n/4],rotation=90)
 
 #pl.legend(loc = 'best')
@@ -187,6 +205,8 @@ pl.bar(np.arange(n/4)+0.3,fw4[n/2+n/4:n/2+n/2],width=0.1,color='red',label='10/2
 pl.bar(np.arange(n/4)+0.4,fw5[n/2+n/4:n/2+n/2],width=0.1,color='yellow',label='10/5/2012')
 pl.bar(np.arange(n/4)+0.5,fw7[n/2+n/4:n/2+n/2],width=0.1,color='black',label='11/9/2012')
 pl.bar(np.arange(n/4)+0.6,fw8[n/2+n/4:n/2+n/2],width=0.1,color='c',label='11/19/2012')
+pl.bar(np.arange(n/4)+0.7,fw9[n/2+n/4:n/2+n/2],width=0.1,color='red',label='3/25/2013')
+
 pl.xticks(np.arange(n/4)+0.5,ccd1[n/2+n/4:n/2+n/2],rotation=90)
 
 #pl.legend(loc = 'best')
