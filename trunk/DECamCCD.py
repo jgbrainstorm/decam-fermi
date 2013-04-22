@@ -540,11 +540,27 @@ def linearity(NameFits,NameBias,Channel,shift=None,left=None):
             rowmax=200 
     if detector[0]=='F':
         if detector[-1]=='N':
-            rowmin = 1850
-            rowmax = 1950
+            if left == None or left == 1:
+                colmin = 300
+                colmax = 800
+                rowmin = 1850
+                rowmax = 1950
+            else:
+                colmin = 1360
+                colmax = 1860
+                rowmin = 1850
+                rowmax = 1950
         if detector[-1]=='S':
-            rowmin=100
-            rowmax=200
+            if left == None or left == 1:
+                colmin = 1360
+                colmax = 1860
+                rowmin=100
+                rowmax=200
+            else:
+                colmin = 300
+                colmax = 800
+                rowmin = 100
+                rowmax = 200
     if shift == 1:
         colshift = np.random.random_integers(0,500,1)
         rowshift = np.random.random_integers(0,3000,1)
@@ -655,8 +671,9 @@ def linearity(NameFits,NameBias,Channel,shift=None,left=None):
     pl.text(0.1,0.9,'Fullwell:'+str(round(fw))+' (ADU)',transform = ax.transAxes)
     pl.text(0.1,0.85,'Fullwell:'+str(round(fw/gain))+' (e-)',transform = ax.transAxes)
     pl.xlabel('Bias subtracted mean counts (ADU)')
-    pl.ylabel('Relative deviation from the fitted line')    
-    return gain,fw
+    pl.ylabel('Relative deviation from the fitted line')   
+    # return: gain, fullwell, mean ADU, variance ADU, fractional difference between mean ADU and fit, fractional difference between variance ADU and fit. 
+    return gain,fw,mean_b,var_b, dff,diff
 
 
 # the distribution of gain when using random window
