@@ -539,7 +539,7 @@ def linearity(NameFits,NameBias,Channel,shift=None,left=None):
             rowmin=100
             rowmax=200 
     if detector[0]=='F':
-        if detector[-1]=='N':
+        if detector[1]=='N':
             if left == None or left == 1:
                 colmin = 300
                 colmax = 800
@@ -550,7 +550,7 @@ def linearity(NameFits,NameBias,Channel,shift=None,left=None):
                 colmax = 1860
                 rowmin = 1850
                 rowmax = 1950
-        if detector[-1]=='S':
+        if detector[1]=='S':
             if left == None or left == 1:
                 colmin = 1360
                 colmax = 1860
