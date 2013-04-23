@@ -21,7 +21,9 @@ for i in range(nfile):
     exptime[i] = pf.getheader(dir+'DECam_00'+str(expid[i])+'.fits.fz',0)['exptime']
             
 NameFits = np.array(NameFits)
-os.system('medianImg '+NameFits[0]+' '+NameFits[1]+' '+NameFits[2]+' '+NameFits[3]+' '+NameFits[4])
+
+if not os.path.isfile('median.fits'):
+    os.system('medianImg '+NameFits[0]+' '+NameFits[1]+' '+NameFits[2]+' '+NameFits[3]+' '+NameFits[4])
 
 NameFits = NameFits[5:]
 exptime = exptime[5:]
